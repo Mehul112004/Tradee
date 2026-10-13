@@ -2,7 +2,9 @@
 
 ## Agreed component working order
 
-For each component: **deep research and discussion → finalize its plan → user approval → implementation and verification**. Component numbers identify responsibilities; the working order follows their dependencies.
+Updated 14 September 2026. For each component: **deep research and discussion → finalize its plan → user approval → implementation and verification**. The user authorized C01 implementation with Binance; its first version is now implemented. See [README.md](/Users/artemis/Mehul/Tradee/README.md) for operation and verification.
+
+Status updated 13 October 2026: C01, C02, C03 and C06's funding scope are implemented. The user explicitly authorized C06 implementation and E2E tests. Next is C07. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks implemented scope, required remaining functionality and future upgrades for every component; update it with every implementation increment.
 
 | Order | Component | Initial scope |
 | --- | --- | --- |
@@ -26,7 +28,7 @@ For each component: **deep research and discussion → finalize its plan → use
 
 The numbers C01–C15 identify components, not build sequence. Each component initially delivers its agreed minimum scope and can be extended through later reviewed increments. The broader phases below group this work; this table is the current component working order.
 
-Original planning draft — 6 September 2026. The sequence above governs implementation.
+Original planning draft — 6 September 2026; implementation status updated 13 October 2026. C01–C03 and C06 funding are implemented; strategy evaluation and subsequent baseline components have not started.
 
 Expanded research: [Components for finding positive net expectancy setups](/Users/artemis/Mehul/Tradee/COMPONENT_RESEARCH.md), researched 9 September 2026, specifies fifteen modules, their evidence, dependencies and acceptance criteria.
 
@@ -238,6 +240,30 @@ Meaningful acceptance checks:
 - Portfolio accounting with simultaneous trades, open P&L, capital constraints, and cross-horizon conflicts.
 - Fold/holdout isolation, fitting boundaries, trade ownership, and reproducible runs.
 
+### End-to-end testing milestones — agreed requirement added 13 October 2026
+
+E2E verification is a completion requirement alongside unit and integration tests. Build and test complete workflows as their dependencies become available; a full-platform E2E suite is possible programmatically, with separate manual acceptance of the actual user experience.
+
+| Available after | Workflow the user can exercise | Scope of acceptance |
+| --- | --- | --- |
+| C03 — available now | Market observations → persisted replay → features and readiness | Existing recorded Binance capture/replay smoke covers this foundation; trading setup/outcome logic is still absent |
+| C06 — available now | Raw metadata/candles/funding/mark imports → replay/features → exact funding reports | Automated current-foundation E2E uses 26 actual CLI commands, fixed expected amounts and recovery after a failed write; preserves old reports after corrections and flags missing/ambiguous funding |
+| C08 | Historical replay → features → baseline candidates with explanations | Inspect detected/rejected setups and the information available at detection; no completed backtest ledger yet |
+| C11 | Dataset → features → candidates → entry/fills → fees/funding → exits → net outcome ledger/report | First complete historical trading workflow, using C06/C07/C08/C09 and the same shared rules as later live operation |
+| C12, then C13 integration | Earlier-data fitting/selection → frozen later-period evaluation → reports; then finite-capital combined-policy evaluation | Test fold isolation and experiment reproducibility; rerun C12 validation after adding C13 portfolio admission/risk rules |
+| C14 | Live/replayed feed → decision gates → persisted signal/outbox → Telegram test delivery | Full alert flow, expiry, restart, freshness, delivery failure and retry behavior; actual Telegram use is an explicit opt-in test |
+| C15 | Signal → forward paper lifecycle → matured outcome → monitoring/reconciliation | Complete signal-to-outcome feedback loop, including pause reasons and historical/live comparison |
+
+**Automated deterministic E2E:** invoke the public runner/CLI against isolated databases, a frozen configuration and controlled raw market observations. Exercise the real parsing, feature, strategy, execution, lifecycle and persistence code available at that milestone. Replace external network services with controllable boundary adapters, rather than mocking each internal component. A replayed sequence should deliberately trigger known setup, suppression, entry, exit and cost cases, with enough pre-roll for its declared features. Assert expected decisions, state transitions, timestamps, signed cash flows and final ledger totals against independent expectations. Exit status alone is insufficient.
+
+Include missing/partial/duplicate/late observations, stale context, gaps, process restart, failed database writes, simultaneous candidates and notification failures. Check stable internal signal identities and recovery; delivery timeouts can remain ambiguous and may cause duplicate external messages, so verify the declared reconciliation policy rather than promise exactly-once delivery. Keep research/data/code/config hashes and logs with each test run. No external API keys or outbound notifications are required in ordinary CI.
+
+**External-service smoke:** keep a separate opt-in check of public Binance connectivity and a dedicated Telegram test destination once C14 exists. Use deterministic replay to guarantee a test setup instead of waiting indefinitely for a natural live opportunity. Tag test messages clearly and isolate test state. A separate bounded live session checks actual feed ingestion and timing. An HTTP/API success is evidence of service acceptance; the user manually verifies visibility and message usability.
+
+**Manual acceptance:** provide a repeatable operator checklist using the same fixed scenarios and expected results. Before C14, the user can inspect CLI reports and trade ledgers, verify setup timestamps and costs, and interrupt/restart a run. At C14/C15, verify the actual test message, entry/stop/target/expiry presentation, traceable evidence ID, paper lifecycle and recovery after a controlled interruption. This checklist is usable through CLI/Telegram; a dashboard is a separate interface milestone.
+
+All E2E test outcomes concern functional correctness and recovery. Strategy promotion additionally requires C12 evidence from unseen data. Before larger C11 experiments, characterize C03 with representative history lengths and symbol counts; its current one-day benchmark does not establish multi-year throughput. Concrete runner commands and automated E2E cases will be delivered with each corresponding component, not represented as already implemented here.
+
 ## 11. Build sequence and completion gates
 
 | Phase | Deliverable | Completion gate |
@@ -253,6 +279,10 @@ Start recording live data during Phase 1 while historical tooling is developed. 
 
 The immediate implementation milestone is an audited data pipeline and one completely specified strategy replay with a trade-by-trade cost ledger. That establishes a trustworthy basis for subsequent strategy research and Telegram delivery.
 
-## Implementation status
+## Implementation status — 13 October 2026
 
-C01, C02 and C03 are implemented within their agreed scope. The offline suite contains 196 tests. See [C01 verification](C01_VERIFICATION.md), [C02 verification](C02_VERIFICATION.md) and [C03 verification](C03_VERIFICATION.md). Subsequent components follow the agreed sequence.
+C01, the initial C02 data/replay increment, C03's feature-engine scope and C06 funding accounting are implemented. See [C02 contracts](C02_IMPLEMENTATION.md), [C03 verification](C03_VERIFICATION.md), [C06 contracts](C06_IMPLEMENTATION.md) and [C06 verification](C06_VERIFICATION.md). The full offline suite has 240 passing tests, including 44 C06 tests and actual-process E2E. Public C06 funding/mark capture and recorded replay also passed. Sustained recording, large-universe load validation and all deferred prospects remain tracked in [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md).
+
+## C03 implementation package — 21 September 2026
+
+References: [C03 architecture and dependencies](C03_RESEARCH_PLAN.md), [exact feature formulas and indicator conventions](C03_FEATURE_SPEC.md), [validation specification](C03_VALIDATION_PLAN.md), and [completed verification and limits](C03_VERIFICATION.md). C03 provides 14 baseline outputs, 43 named definitions plus parameterized simple returns, explicit availability/warm-up policies, optional diagnostics, atomic checkpoints and an inspection/run CLI. It supplies measurements to later components; strategy expectancy and Telegram signals remain downstream work.

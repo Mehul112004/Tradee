@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tradee"
 version = "0.1.0"
-description = "Reproducible crypto signal research — registry, market data, replay and causal features"
+description = "Reproducible crypto signal research — registry, market data, causal features and funding accounting"
 requires-python = ">=3.11"
 dependencies = []
 

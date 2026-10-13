@@ -1,0 +1,12 @@
+{
+  "provenance": "Hand-calculated synthetic fixture, not exchange performance data. Long: -2*100*.001 + 1*120*.002 = .04; short: 3*100*.001 - 3*120*.002 = -.42. First rate correction to .0015 changes totals to -.06 and -.27.",
+  "start_ms": 1788220800000,
+  "window_hours": 5,
+  "settlements": [
+    {"offset_hours": 1, "rate": "0.001", "mark_price": "100"},
+    {"offset_hours": 2, "rate": "-0.002", "mark_price": "120"},
+    {"offset_hours": 4, "rate": "0", "mark_price": "110"}
+  ],
+  "expected_totals_usdt": ["0.04", "-0.42"],
+  "corrected_totals_usdt": ["-0.06", "-0.27"]
+}

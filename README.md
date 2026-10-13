@@ -1,6 +1,6 @@
 # Tradee
 
-Component-based crypto signal research. **C01, C02 and C03 are implemented:** instrument metadata, market-data replay and causal mathematical features. Funding, strategies, backtests and Telegram delivery follow.
+Component-based crypto signal research. **C01, C02, C03 and C06 funding accounting are available:** instrument metadata, market-data recording/replay, causal features and exact funding calculations. Strategy generation, backtests and Telegram delivery are later components.
 
 ## Development environment
 
@@ -134,7 +134,7 @@ python3 -m tradee data import-archive BTCUSDT BTCUSDT-1m-2026-08.zip BTCUSDT-1m-
 
 Local imports record receipt **now**; JSONL files cannot claim original live receipt times. Use a separate database for fixtures: `python3 -m tradee --db /tmp/c01.sqlite3 data --market-db /tmp/c02.sqlite3 …`. Global C01 arguments go before `data`; `--market-db` goes before its action.
 
-See [C02 implementation contracts and limits](C02_IMPLEMENTATION.md) and [C02 verification](C02_VERIFICATION.md). The full suite contains 196 passing tests, including C03. Live exchange connectivity passed on 21 September 2026; sustained recording/load remains an operational check.
+See [C02 implementation contracts and limits](C02_IMPLEMENTATION.md) and [C02 verification](C02_VERIFICATION.md). The full suite now contains 240 passing tests, including C03 and C06. Live exchange connectivity passed on 21 September 2026; sustained recording/load remains an operational check.
 
 
 ## Check Binance connectivity
@@ -211,3 +211,47 @@ python -m scripts.verify_c03 --replay --output data/c03_checks/public_session
 ```
 
 Only `--live` connects to public Binance endpoints; it captures up to 75 seconds of WebSocket data and requires the existing live dependency. No keys or orders are used. `--replay` rechecks that saved capture offline. This v1 retains candle history and reconstructs derived state, so multi-year/many-symbol throughput needs further optimization and validation. Strategy rules, net-expectancy evaluation and Telegram delivery belong to later components.
+
+## C06 funding accounting
+
+C06 calculates exact signed USDT funding cash flows from settled C02 records and a caller-supplied position quantity timeline. It supports partial quantity changes, estimates the next funding from an available mark observation, preserves later corrections as new reports, and resumes atomic checkpoints. [C06 implementation](C06_IMPLEMENTATION.md) documents schemas, formulas and ownership; [verification](C06_VERIFICATION.md) records actual results.
+
+```sh
+conda activate tradee
+python -m tradee funding explain
+python -m tradee --db data/c01.sqlite3 funding \
+  --market-db data/c02.sqlite3 --funding-db data/c06.sqlite3 \
+  run DATASET_HASH --positions positions.json --calendar calendar.json
+python -m tradee funding summary RUN_HASH
+python -m tradee funding report REPORT_HASH
+```
+
+The dataset must be recorded and include the relevant funding/mark observations. An explicit settlement calendar is required for a complete total; the result is conditional on its evidence. Missing calendar/rates or ambiguous exposure produce null totals and exit code 2 for `run`. Default strict policy flags quantity changes within ±15 seconds of nominal settlement. Exact unrounded cash flows are calculations for supplied exposure, not reconciliation with actual account transactions. C09 will own executable position state and booking.
+
+Run the current-foundation E2E and retain a manual demo:
+
+```sh
+python -m unittest tests.test_c06_e2e -v
+python -m scripts.verify_c06 --output data/c06_checks/demo1
+```
+
+Use a fresh output directory. The demo runs **26 actual CLI processes/commands** through C01/C02/C03/C06, including recovery in a new process after an injected SQLite write failure. It checks hand-calculated amounts and error scenarios, and leaves databases, raw inputs, positions/calendars, a command log and `e2e_report.json`. It uses synthetic scenarios with no network, orders or credentials. Inspect a demo report with:
+
+```sh
+python -m tradee funding --funding-db data/c06_checks/demo1/c06.sqlite3 report REPORT_HASH
+```
+
+Get the hash from that demo's `e2e_report.json`. Complete trading and Telegram E2E follow the [platform milestones](PLATFORM_PLAN.md#end-to-end-testing-milestones--agreed-requirement-added-13-october-2026).
+
+The optional public check captures funding records and a mark update, then compares saved replay at its input availability time:
+
+```sh
+python -m scripts.verify_c06_live --output data/c06_checks/public1
+python -m scripts.verify_c06_live --replay --output data/c06_checks/public1
+```
+
+Only the first command needs public Binance connectivity and the existing live dependency. It uses synthetic exposure, not account access or trading.
+
+## Component scope and upgrades
+
+[COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) is the maintained register for **all fifteen components**. It distinguishes implemented scope, required unbuilt baseline work, deferred/conditional extensions, validation gaps, dependencies and completion gates. Update it after every component implementation. C06 predictive premium/OI/liquidation work and automated calendar acquisition are recorded there; the next implementation component is C07 execution and tradability.

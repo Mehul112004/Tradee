@@ -10,6 +10,7 @@ import time
 from .c01 import BinanceProvider, Policy, ProviderError, Registry
 from .c02 import cli as data_cli
 from .c03 import cli as feature_cli
+from .c06 import cli as funding_cli
 
 
 def timestamp(text):
@@ -20,7 +21,7 @@ def timestamp(text):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Tradee — registry, market data and causal features")
+    parser = argparse.ArgumentParser(description="Tradee — registry, market data, features and funding accounting")
     parser.add_argument("--db", default="data/c01.sqlite3")
     parser.add_argument("--enabled", default="BTCUSDT,ETHUSDT", help="Comma-separated explicit universe")
     parser.add_argument("--max-age-seconds", type=int, default=1800)
@@ -43,8 +44,13 @@ def main(argv=None):
     watch.add_argument("--interval-seconds", type=int, default=900)
     data_cli.register(sub)
     feature_cli.register(sub)
+    funding_cli.register(sub)
     args = parser.parse_args(argv)
     try:
+        if args.command == "funding":
+            result = funding_cli.execute(args, timestamp)
+            print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
+            return 2 if args.funding_command == "run" and not result['ready'] else 0
         if args.command == "features":
             result = feature_cli.execute(args, timestamp)
             print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))

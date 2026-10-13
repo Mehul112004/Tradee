@@ -1,0 +1,5 @@
+{
+  "boundary_policy": "strict",
+  "boundary_guard_ms": 15000,
+  "max_mark_age_ms": 5000
+}

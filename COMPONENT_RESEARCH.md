@@ -2,7 +2,7 @@
 
 Research and proposed specification — 9 September 2026.
 
-Status: C01, C02 and C03 are implemented; remaining components follow the agreed working order.
+Status updated 13 October 2026: **C01, C02, C03 and C06's funding scope are implemented**. The matrix and contracts below guide subsequent component review; the current working order is at the top of PLATFORM_PLAN.md, and remaining functionality is tracked in [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md).
 
 Scope: Binance USDT-margined perpetual futures; intraday and swing; Telegram signals for manual execution. This extends [the platform plan](/Users/artemis/Mehul/Tradee/PLATFORM_PLAN.md). It does not report a completed empirical test of any Tradee strategy.
 
@@ -267,6 +267,8 @@ Treat supply/demand zones, order blocks, fair-value gaps, BOS/CHOCH and liquidit
 **Acceptance:** level snapshots do not change retroactively. Each complex level method must beat or complement a simpler range/ATR baseline on later data. The platform must work without this component if it adds no measurable value.
 
 ### C06 — Derivatives and positioning context
+
+**Implementation status — 13 October 2026:** Mandatory funding scope is implemented with current-foundation E2E tests. See [C06 contracts](C06_IMPLEMENTATION.md), [verification](C06_VERIFICATION.md), and [deferred derivatives/data upgrades](COMPONENT_UPGRADES.md#c06-funding-and-derivatives-context). The broader predictive scope below remains future work.
 
 **Depends on / receives from:** D: [C02](#c02--point-in-time-market-data-and-deterministic-replay); O: [C03](#c03--feature-engine).
 
