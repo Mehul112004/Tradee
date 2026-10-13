@@ -1,6 +1,20 @@
 # Tradee
 
-Component-based crypto signal research. **C01 and C02 are implemented:** instrument metadata, market-data recording, audited history and deterministic replay. Features, strategies, backtests and Telegram delivery follow.
+Component-based crypto signal research. **C01 and C02 are implemented:** instrument metadata, market-data recording, audited history and deterministic replay. Use the dedicated tradee Conda environment.
+
+## Development environment
+
+Use the dedicated Conda environment for this project:
+
+```sh
+conda activate tradee
+python -m unittest discover -v
+python -m tradee.check_connectivity
+```
+
+To recreate it on another machine, run `conda env create -f environment.yml` from this directory. The specification installs Python 3.13 and this project in editable mode with its live WebSocket dependency. It is an environment specification, not an exact dependency lockfile.
+
+Without activating your shell, use `conda run -n tradee python -m unittest discover -v`. Project work should use this environment rather than the base Conda environment or system Python.
 
 ## Run C01
 
