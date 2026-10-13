@@ -2,7 +2,7 @@
 
 Research and proposed specification — 9 September 2026.
 
-Status: C01 is implemented; remaining components follow the agreed working order.
+Status: C01 and C02 are implemented; remaining components follow the agreed working order.
 
 Scope: Binance USDT-margined perpetual futures; intraday and swing; Telegram signals for manual execution. This extends [the platform plan](/Users/artemis/Mehul/Tradee/PLATFORM_PLAN.md). It does not report a completed empirical test of any Tradee strategy.
 

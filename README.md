@@ -1,6 +1,6 @@
 # Tradee
 
-Component-based crypto signal research. **C01 is implemented:** instrument identity, trading rules and metadata history. Subsequent components add market data, features, strategies, backtests and Telegram delivery.
+Component-based crypto signal research. **C01 and C02 are implemented:** instrument metadata, market-data recording, audited history and deterministic replay. Features, strategies, backtests and Telegram delivery follow.
 
 ## Run C01
 
@@ -78,3 +78,61 @@ See [C01 verification](C01_VERIFICATION.md) for measured results, including the 
 ### C01 regression tests
 
 Run `python3 -m unittest discover -v` for the full offline suite. C01 contributes 80 tests covering validation, historical consistency, database rollback, immutable snapshots, transport failure handling and CLI polling. Tests use temporary databases and mocked transport; they do not contact Binance or alter the runtime database. See [C01_VERIFICATION.md](C01_VERIFICATION.md) for the test map, fixes and verification limits.
+
+
+## Run C02
+
+C02 uses C01 metadata and its own database (`data/c02.sqlite3`). Offline/REST/archive operations use the standard library. For live WebSockets, install the optional transport:
+
+```sh
+python3 -m pip install -e '.[live]'
+python3 -m tradee refresh
+python3 -m tradee data backfill BTCUSDT --start 2026-09-01T00:00:00Z --end 2026-09-02T00:00:00Z
+python3 -m tradee data archive BTCUSDT 2026-08
+python3 -m tradee data collect --symbols BTCUSDT,ETHUSDT --streams candle,trade,quote,mark
+```
+
+`collect` runs in the foreground until Ctrl-C. It starts separate routed connections as needed and repairs recent candle gaps. The default stream is `candle`; request the others explicitly. No exchange credentials are required. This records data only; it does not issue orders or signals.
+
+Backfill derivatives through `--kind funding` or `--kind open_interest`. Binance endpoint retention limits still apply; a successful request does not establish complete historical coverage. Use `data repair SYMBOL --start … --end …` to revisit a range. Backfill resumes its exact range's saved checkpoint; repair bypasses that cursor.
+
+Pin a historical candle dataset with an explicit availability assumption:
+
+```sh
+python3 -m tradee data snapshot --symbols BTCUSDT --start 2026-09-01T00:00:00Z --end 2026-09-02T00:00:00Z --mode modeled --delay-ms 1000
+python3 -m tradee data dataset DATASET_HASH
+python3 -m tradee data quality DATASET_HASH --as-of 2026-09-02T00:00:01Z
+python3 -m tradee data replay DATASET_HASH
+python3 -m tradee data bars DATASET_HASH --minutes 15
+```
+
+Replace `DATASET_HASH` with the snapshot result. The example's one-second delay is a declared research assumption, **not a measured Binance latency**. Omit `--mode modeled --delay-ms …` for recorded availability. Downloaded historical candles then become available only when actually ingested. Saved datasets are immutable; create a new one to include later repairs.
+
+Replay emits JSON lines in availability order, including revisions and partial updates for recorded datasets. `--as-of` bounds replay/view availability; `--after-id` resumes after a particular event within that saved ordering. `bars` emits only complete finalized aggregates. `quality` exits 2 when the requested candle window is incomplete or stale, and 0 when complete/fresh. This is data readiness, not strategy or trade readiness.
+
+Offline imports are also available:
+
+```sh
+python3 -m tradee data import-rest BTCUSDT candles.json
+python3 -m tradee data import-ws recorded-messages.jsonl
+python3 -m tradee data import-archive BTCUSDT BTCUSDT-1m-2026-08.zip BTCUSDT-1m-2026-08.zip.CHECKSUM
+```
+
+Local imports record receipt **now**; JSONL files cannot claim original live receipt times. Use a separate database for fixtures: `python3 -m tradee --db /tmp/c01.sqlite3 data --market-db /tmp/c02.sqlite3 …`. Global C01 arguments go before `data`; `--market-db` goes before its action.
+
+See [C02 implementation contracts and limits](C02_IMPLEMENTATION.md) and [C02 verification](C02_VERIFICATION.md). The full suite contains 137 passing tests. Live exchange connectivity passed on 21 September 2026; sustained recording/load remains an operational check.
+
+
+## Check Binance connectivity
+
+No Binance API key, secret or `.env` file is needed for the C01/C02 public data feeds. From this repository, run:
+
+```sh
+python3 -m tradee.check_connectivity
+```
+
+If WebSocket dependencies are missing, first run `python3 -m pip install -e '.[live]'` in your Python environment. The command checks live exchange metadata, three recent closed BTCUSDT candles, funding, open interest, a recent daily archive and its checksum, and both WebSocket routes (candles/trades/mark updates and quotes). It uses the actual adapters with TLS verification, writes only to temporary databases, closes connections and removes those databases afterward. No credentials or account endpoints are used.
+
+Each check emits JSON with `passed: true` or an error. The final line must show `"passed": true`; exit code 0 means all seven checks passed, and 1 means at least one failed or dependent checks were skipped. This is a brief connectivity/ingestion check, not a sustained-uptime test. Running within a sandbox may require network permission.
+
+All seven checks passed locally on 21 September 2026, without credentials.

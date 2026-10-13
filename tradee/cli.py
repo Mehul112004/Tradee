@@ -8,6 +8,7 @@ import sys
 import time
 
 from .c01 import BinanceProvider, Policy, ProviderError, Registry
+from .c02 import cli as data_cli
 
 
 def timestamp(text):
@@ -18,7 +19,7 @@ def timestamp(text):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Tradee C01 — Binance instrument registry")
+    parser = argparse.ArgumentParser(description="Tradee — instrument registry and market data")
     parser.add_argument("--db", default="data/c01.sqlite3")
     parser.add_argument("--enabled", default="BTCUSDT,ETHUSDT", help="Comma-separated explicit universe")
     parser.add_argument("--max-age-seconds", type=int, default=1800)
@@ -39,10 +40,16 @@ def main(argv=None):
     snap.add_argument("hash")
     watch = sub.add_parser("watch", help="Refresh at startup, then periodically; Ctrl-C stops")
     watch.add_argument("--interval-seconds", type=int, default=900)
+    data_cli.register(sub)
     args = parser.parse_args(argv)
     try:
         policy = Policy(tuple(s.strip().upper() for s in args.enabled.split(",")), args.max_age_seconds)
         registry = Registry(args.db)
+        if args.command == "data":
+            result = data_cli.execute(args, registry, timestamp)
+            if result is not None:
+                print(json.dumps(result, indent=2, sort_keys=True))
+            return 2 if args.data_command == "quality" and not result["ready"] else 0
         if args.command == "watch":
             if args.interval_seconds <= 0:
                 raise ValueError("Refresh interval must be positive")
