@@ -252,3 +252,7 @@ Meaningful acceptance checks:
 Start recording live data during Phase 1 while historical tooling is developed. The platform can be considered functionally complete even if all strategies are rejected; those strategies remain in research. Engineering milestones can be scheduled, but evidence accumulation depends on signal frequency and observed market conditions.
 
 The immediate implementation milestone is an audited data pipeline and one completely specified strategy replay with a trade-by-trade cost ledger. That establishes a trustworthy basis for subsequent strategy research and Telegram delivery.
+
+## Implementation status
+
+C01 are implemented within their agreed scope. The offline suite contains 80 tests. See [C01 verification](C01_VERIFICATION.md). Subsequent components follow the agreed sequence.
