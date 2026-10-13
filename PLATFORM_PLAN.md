@@ -255,4 +255,4 @@ The immediate implementation milestone is an audited data pipeline and one compl
 
 ## Implementation status
 
-C01 and C02 are implemented within their agreed scope. The offline suite contains 137 tests. See [C01 verification](C01_VERIFICATION.md) and [C02 verification](C02_VERIFICATION.md). Subsequent components follow the agreed sequence.
+C01, C02 and C03 are implemented within their agreed scope. The offline suite contains 196 tests. See [C01 verification](C01_VERIFICATION.md), [C02 verification](C02_VERIFICATION.md) and [C03 verification](C03_VERIFICATION.md). Subsequent components follow the agreed sequence.

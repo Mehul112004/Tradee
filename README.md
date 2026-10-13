@@ -1,6 +1,6 @@
 # Tradee
 
-Component-based crypto signal research. **C01 and C02 are implemented:** instrument metadata, market-data recording, audited history and deterministic replay. Use the dedicated tradee Conda environment.
+Component-based crypto signal research. **C01, C02 and C03 are implemented:** instrument metadata, market-data replay and causal mathematical features. Funding, strategies, backtests and Telegram delivery follow.
 
 ## Development environment
 
@@ -134,7 +134,7 @@ python3 -m tradee data import-archive BTCUSDT BTCUSDT-1m-2026-08.zip BTCUSDT-1m-
 
 Local imports record receipt **now**; JSONL files cannot claim original live receipt times. Use a separate database for fixtures: `python3 -m tradee --db /tmp/c01.sqlite3 data --market-db /tmp/c02.sqlite3 …`. Global C01 arguments go before `data`; `--market-db` goes before its action.
 
-See [C02 implementation contracts and limits](C02_IMPLEMENTATION.md) and [C02 verification](C02_VERIFICATION.md). The full suite contains 137 passing tests. Live exchange connectivity passed on 21 September 2026; sustained recording/load remains an operational check.
+See [C02 implementation contracts and limits](C02_IMPLEMENTATION.md) and [C02 verification](C02_VERIFICATION.md). The full suite contains 196 passing tests, including C03. Live exchange connectivity passed on 21 September 2026; sustained recording/load remains an operational check.
 
 
 ## Check Binance connectivity
@@ -150,3 +150,64 @@ If WebSocket dependencies are missing, first run `python3 -m pip install -e '.[l
 Each check emits JSON with `passed: true` or an error. The final line must show `"passed": true`; exit code 0 means all seven checks passed, and 1 means at least one failed or dependent checks were skipped. This is a brief connectivity/ingestion check, not a sustained-uptime test. Running within a sandbox may require network permission.
 
 All seven checks passed locally on 21 September 2026, without credentials.
+
+
+## C03 feature engine
+
+- [Research and implementation plan](C03_RESEARCH_PLAN.md): dependencies, consumers, baseline feature set, files and build order.
+- [Mathematical specification](C03_FEATURE_SPEC.md): formulas, periods, initialization, units, missingness and optional/deferred indicators.
+- [Validation plan](C03_VALIDATION_PLAN.md): independent examples, causality, batch/stream parity, recovery and later ablation research.
+
+C03 v1 is implemented. It provides 14 baseline outputs and optional raw indicators, Bollinger bands, candle geometry, session VWAP and top-of-book diagnostics. Features use finalized C02 replay prefixes, explicit UTC boundaries, strict gaps and versioned formula conventions. [Verification and limits](C03_VERIFICATION.md) includes the independent numerical checks and public Binance replay comparison.
+
+From the repository root, use the dedicated environment:
+
+```sh
+conda activate tradee
+python -m tradee features list
+python -m tradee features explain ema20_distance_atr14
+python -m unittest discover -s tests -q
+```
+
+First create a pinned C02 dataset using the commands above. Substitute its actual hash for `DATASET_HASH`:
+
+```sh
+python -m tradee --db data/c01.sqlite3 features \
+  --market-db data/c02.sqlite3 --feature-db data/c03.sqlite3 \
+  run DATASET_HASH --config configs/c03_baseline.json
+python -m tradee features summary RUN_HASH
+python -m tradee features manifest RUN_HASH
+python -m tradee features snapshot SNAPSHOT_HASH
+python -m tradee features lineage LINEAGE_HASH
+```
+
+Use `--feature-db` before each action when inspecting a nondefault database. `run` returns the run hash, snapshot counts and latest snapshot hashes. Repeating the same pinned run resumes its atomic checkpoint and does not duplicate outputs. Code, configuration or dataset changes create a different run. A successful command exits 0 even when snapshots are not ready; inspect `ready` and each value's `status`/`stable` fields. Invalid commands/configurations exit 1 with a JSON error.
+
+The baseline uses 15m, 1h, 4h and 1d bars. `1m` is also supported for diagnostics. EMA50 seed stabilization needs **396 contiguous bars at the chosen timeframe**, including 396 days for daily readiness. Keep pre-roll inside the pinned dataset; optional `run --start ISO_TIME --end ISO_TIME` restricts outputs without discarding earlier warm-up inputs. Bounds are timezone-aware and end-exclusive. Missing input and undefined denominators produce JSON nulls with reasons, never invented zero values.
+
+For historical downloads, use an explicitly **modeled** C02 candle dataset with the intended close-to-availability delay. A **recorded** dataset preserves download receipt time; it cannot pretend historical candles were observed live. The configuration separately pins `processing_delay_ms` for assumed feature-processing latency. Actual computation timestamps live outside deterministic snapshot hashes.
+
+An optional quote diagnostic need not block candle readiness: list all desired outputs in `features`, and only mandatory outputs in `required_features`. Quote freshness defaults to strictly less than five seconds. Session VWAP requires every minute from UTC midnight. Quote-only evaluations use the Python API; automatic `run` decisions are triggered by completed requested candle buckets and revisions.
+
+```python
+from tradee.c03 import FeatureConfig, FeatureEngine
+
+engine = FeatureEngine(market.dataset(dataset_hash), FeatureConfig())
+for event in market.replay(dataset_hash):
+    for snapshot in engine.advance(event):
+        consume(snapshot.document())  # later strategy/runtime integration
+# Explicit context evaluation uses the same current prefix:
+# engine.evaluate(instrument_id, "4h", decision_ms)
+```
+
+`market`, `dataset_hash`, and `consume` above are caller-provided. `push` ingests without automatic decisions, `evaluate` evaluates that prefix, and `advance` combines ingestion with candle-triggered decisions. C03 opens no Binance connection itself. Prior snapshots remain immutable after a correction; revised evaluations carry `trigger="revision"`.
+
+Opt-in checks (use a fresh benchmark directory):
+
+```sh
+python -m scripts.verify_c03 --output data/c03_checks/benchmark_run1
+python -m scripts.verify_c03 --live --output data/c03_checks/public_session
+python -m scripts.verify_c03 --replay --output data/c03_checks/public_session
+```
+
+Only `--live` connects to public Binance endpoints; it captures up to 75 seconds of WebSocket data and requires the existing live dependency. No keys or orders are used. `--replay` rechecks that saved capture offline. This v1 retains candle history and reconstructs derived state, so multi-year/many-symbol throughput needs further optimization and validation. Strategy rules, net-expectancy evaluation and Telegram delivery belong to later components.

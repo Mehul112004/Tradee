@@ -9,6 +9,7 @@ import time
 
 from .c01 import BinanceProvider, Policy, ProviderError, Registry
 from .c02 import cli as data_cli
+from .c03 import cli as feature_cli
 
 
 def timestamp(text):
@@ -19,7 +20,7 @@ def timestamp(text):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Tradee — instrument registry and market data")
+    parser = argparse.ArgumentParser(description="Tradee — registry, market data and causal features")
     parser.add_argument("--db", default="data/c01.sqlite3")
     parser.add_argument("--enabled", default="BTCUSDT,ETHUSDT", help="Comma-separated explicit universe")
     parser.add_argument("--max-age-seconds", type=int, default=1800)
@@ -41,8 +42,13 @@ def main(argv=None):
     watch = sub.add_parser("watch", help="Refresh at startup, then periodically; Ctrl-C stops")
     watch.add_argument("--interval-seconds", type=int, default=900)
     data_cli.register(sub)
+    feature_cli.register(sub)
     args = parser.parse_args(argv)
     try:
+        if args.command == "features":
+            result = feature_cli.execute(args, timestamp)
+            print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
+            return 0
         policy = Policy(tuple(s.strip().upper() for s in args.enabled.split(",")), args.max_age_seconds)
         registry = Registry(args.db)
         if args.command == "data":

@@ -1,0 +1,9 @@
+{
+  "features": ["log_return_1", "log_return_4", "log_return_12", "ema20_distance_atr14", "ema20_50_spread_atr14", "ema20_slope5_atr14", "return_sd20", "atr14_fraction", "return_surprise20_prior", "close_z20_prior", "vwap20_distance_atr14", "relative_quote_volume20_prior", "taker_base_imbalance20", "rsi14"],
+  "timeframes": ["15m", "1h", "4h", "1d"],
+  "require_stable": true,
+  "seed_threshold": 0.000001,
+  "max_quote_age_ms": 5000,
+  "candle_grace_ms": 5000,
+  "processing_delay_ms": 0
+}

@@ -1,0 +1,10 @@
+{
+  "provenance": "Hand-derived C03_VALIDATION_PLAN.md examples; rational arithmetic and Decimal cross-checks; no external indicator library used.",
+  "ema": {"input": [1,2,3,4], "period": 3, "expected": [null,null,2,3]},
+  "rma": {"input": [1,2,3,4], "period": 3, "expected": [null,null,2,2.6666666666666665]},
+  "rsi": {"input": [100,101,100,101,100], "period": 3, "expected": [null,null,null,66.66666666666667,44.44444444444444]},
+  "atr": {"tr": [3,5,4,7], "period": 3, "expected": [null,null,4,5]},
+  "bands": {"input": [1,2,3,4,5], "expected": {"middle": 3, "upper": 5.82842712474619, "lower": 0.1715728752538097, "width": 1.8856180831641267, "pct_b": 0.8535533905932736}},
+  "vwap": {"base": [2,3], "quote": [200,330], "expected": 106},
+  "prior_z": {"prior": [1,2,3], "current": 5, "expected": 3.6742346141747673}
+}
