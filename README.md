@@ -1,6 +1,6 @@
 # Tradee
 
-Component-based crypto signal research. **C01, C02, C03 and C06 funding accounting are available:** instrument metadata, market-data recording/replay, causal features and exact funding calculations. Strategy generation, backtests and Telegram delivery are later components.
+Component-based crypto signal research. **C01, C02, C03, C06 and C07 are available:** instrument metadata, market-data recording/replay, causal features, exact funding calculations and paper execution/cost scenarios. Strategy generation, backtests and Telegram delivery are later components.
 
 ## Development environment
 
@@ -134,7 +134,7 @@ python3 -m tradee data import-archive BTCUSDT BTCUSDT-1m-2026-08.zip BTCUSDT-1m-
 
 Local imports record receipt **now**; JSONL files cannot claim original live receipt times. Use a separate database for fixtures: `python3 -m tradee --db /tmp/c01.sqlite3 data --market-db /tmp/c02.sqlite3 …`. Global C01 arguments go before `data`; `--market-db` goes before its action.
 
-See [C02 implementation contracts and limits](C02_IMPLEMENTATION.md) and [C02 verification](C02_VERIFICATION.md). The full suite now contains 240 passing tests, including C03 and C06. Live exchange connectivity passed on 21 September 2026; sustained recording/load remains an operational check.
+See [C02 implementation contracts and limits](C02_IMPLEMENTATION.md) and [C02 verification](C02_VERIFICATION.md). The full suite now contains 298 passing tests, including C03, C06 and C07. Live exchange connectivity passed on 21 September 2026; sustained recording/load remains an operational check.
 
 
 ## Check Binance connectivity
@@ -254,4 +254,33 @@ Only the first command needs public Binance connectivity and the existing live d
 
 ## Component scope and upgrades
 
-[COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) is the maintained register for **all fifteen components**. It distinguishes implemented scope, required unbuilt baseline work, deferred/conditional extensions, validation gaps, dependencies and completion gates. Update it after every component implementation. C06 predictive premium/OI/liquidation work and automated calendar acquisition are recorded there; the next implementation component is C07 execution and tradability.
+[COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) is the maintained register for **all fifteen components**. It distinguishes implemented scope, required unbuilt baseline work, deferred/conditional extensions, validation gaps, dependencies and completion gates. Update it after every component implementation. C06 predictive premium/OI/liquidation work and automated calendar acquisition are recorded there; C07 market execution/cost scope is now implemented; the next component is C08 candidate generation.
+
+
+## C07 execution and tradability
+
+C07 checks proposed market entries/exits against observed rules, fresh quotes/marks, spread, quantity/liquidity budgets, manual delay, expiry and optional required C03 readiness. It returns paper fill prices, explicit taker fees, drift/spread/slippage attribution, cost bps/R and separate next-funding estimates from C06. [Implementation contracts](C07_IMPLEMENTATION.md) and [verification](C07_VERIFICATION.md) document assumptions, formulas and limits.
+
+```sh
+conda activate tradee
+python -m tradee execution explain
+python -m tradee --db data/c01.sqlite3 execution \
+  --market-db data/c02.sqlite3 --execution-db data/c07.sqlite3 \
+  run DATASET_HASH --intents intents.json --fees configs/c07_fee_assumptions.json \
+  --config configs/c07_execution.json --features features.json
+```
+
+The intent/feature schemas are in the implementation document. Required C03 artifacts must come from the same pinned dataset. Fee rates are explicit illustrative assumptions, not verified account tiers. The quote preset waits 30 seconds after detection by default. Historical candles need the explicit `c07_modeled_bar.json` preset, which labels synthetic spread, volume/mark proxies and current-metadata assumptions; it does not supply an exact intrabar fill or historical funding forecast.
+
+Exit 0 means all scenarios admitted under the declared model; exit 2 saves rejected scenarios with reasons and null fills; exit 1 means invalid input or operational failure. Admission does not certify a profitable setup. Use `execution report REPORT_HASH`, `manifest RUN_HASH` or `summary RUN_HASH`, with `--execution-db` before the action when inspecting a nondefault database.
+
+Run the connected E2E and retain artifacts for manual review:
+
+```sh
+conda run -n tradee python -m unittest tests.test_c07_e2e -v
+conda run -n tradee python -m scripts.verify_c07 --output data/c07_checks/demo1
+```
+
+Use a fresh output directory. The demo runs 27 real CLI commands/processes through C01/C02/C03/C06/C07, verifies independent buy/sell price/fee/funding amounts, recovers from a failed database write in another process, and exercises delay, expiry, quantity, passive-order, spread and coarse-bar cases. Read `e2e_report.json` and `e2e_commands.json`; inspect reports and repeat a completed command to check unchanged hashes/counts. All prices/exposures/rules are synthetic, with actual import receipt times and no network, orders or Telegram.
+
+The full offline suite has **298 passing tests**, including **58 C07 tests**. An opt-in public metadata/quote/mark capture also passed direct-versus-persisted replay checks; see verification for exact results. Passive/partial fills, calibrated cost/delay distributions, account reconciliation and richer historical coverage remain in the upgrade register. C08 is next; complete trade-ledger E2E arrives at C11 and Telegram E2E at C14.

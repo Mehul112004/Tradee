@@ -300,6 +300,8 @@ Binance currently documents only the latest month for its open-interest statisti
 
 ### C07 — Execution, costs and tradability
 
+**Implementation status — 13 October 2026:** Market execution/cost scope is implemented with required-feature joins, C06 estimates, exact monetary attribution, durable replay and actual-process E2E. See [C07 contracts](C07_IMPLEMENTATION.md), [verification](C07_VERIFICATION.md) and [remaining fidelity/calibration upgrades](COMPONENT_UPGRADES.md#c07-execution-and-tradability). Passive fills and empirically calibrated execution remain future work.
+
 **Depends on / receives from:** D: [C01](#c01--instrument-and-universe-registry), [C02](#c02--point-in-time-market-data-and-deterministic-replay), [C03](#c03--feature-engine), [C06](#c06--derivatives-and-positioning-context).
 
 **Used by / supplies to:** D: [C09](#c09--trade-policy-and-outcome-labelling), [C10](#c10--conditional-net-expectancy-and-uncertainty), [C11](#c11--historical-simulation-and-attribution), [C13](#c13--portfolio-risk-and-alert-selection), [C14](#c14--live-decision-and-telegram-lifecycle), [C15](#c15--forward-measurement-and-degradation-monitoring).
@@ -312,7 +314,7 @@ Binance currently documents only the latest month for its open-interest statisti
 - Detection-to-entry delay and passive fill scenarios
 - Cost estimates, entry-drift limits and tradability reasons
 
-**Output contracts:** ExecutionEstimate; FillEvent; TradabilityDecision. Names are proposed domain records, not finalized code APIs.
+**Output contracts:** `ExecutionIntent`, `FeeSchedule`, `ExecutionConfig`, immutable `ExecutionRecord` estimates/reports and embedded simulated fill/tradability decisions. Fill records are paper scenarios; C09 owns booking.
 
 **Ownership boundary:** Estimates costs and produces simulated fills when asked by a runner. C09 owns position/exit semantics; C13 proposes size and requests evaluation at that size.
 

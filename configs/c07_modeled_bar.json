@@ -1,0 +1,10 @@
+{
+  "market_model": "modeled_bar",
+  "metadata_mode": "research_assumption",
+  "bar_mark_proxy": "bar_close",
+  "manual_delay_ms": 30000,
+  "synthetic_spread_bps": "10",
+  "extra_slippage_bps": "2",
+  "max_bar_volume_fraction": "0.001",
+  "bar_impact_bps_per_participation": "100"
+}

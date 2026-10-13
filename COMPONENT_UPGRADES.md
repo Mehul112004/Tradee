@@ -1,6 +1,6 @@
 # Component implementation and future upgrades
 
-Updated 13 October 2026. Tradee implements each component's agreed initial scope, verifies that scope, and extends it when its dependencies and evidence are available. C01, C02 and C03 are complete within their documented initial scope; C06 adds the agreed funding-accounting scope. Some broader functionality and operational validation remain outstanding. The tables below make those gaps explicit for all fifteen components.
+Updated 13 October 2026. Tradee implements each component's agreed initial scope, verifies that scope, and extends it when its dependencies and evidence are available. C01, C02 and C03 are complete within their documented initial scope; C06 adds funding-accounting scope and C07 adds market execution/cost scope. Some broader functionality and operational validation remain outstanding. The tables below make those gaps explicit for all fifteen components.
 
 This register consolidates the currently identified work in [the platform plan](PLATFORM_PLAN.md), [component research](COMPONENT_RESEARCH.md) and component verification reports. It is a maintained backlog, not a promise to implement every possible indicator or predictive model. New prospects belong here when identified; unnecessary extensions can be rejected with a recorded reason.
 
@@ -24,7 +24,7 @@ Each backlog entry has an ID, purpose, dependencies and a completion gate. After
 | C04 | Market-state interpretation and filters | Deferred optional component | Establish added value against the baseline strategy |
 | C05 | Causal price levels and structure | Deferred optional component | Define levels and demonstrate added value |
 | C06 | Exact funding cash flows, observed estimates, coverage/boundary statuses, durable reports and E2E | Implemented funding scope | Audited calendar acquisition, account reconciliation and predictive derivatives extensions |
-| C07 | Execution and tradability | Required next | Fees, fills, slippage and manual-action delay |
+| C07 | Market scenarios, exact fees/costs, rule/readiness/delay gates, durable replay and E2E | Implemented market scope | Passive/partial fills, empirical calibration, historical fidelity and account integration |
 | C08 | Candidate generation | Required next | One precisely specified strategy and complete candidate inventory |
 | C09 | Shared trade lifecycle and outcomes | Required next | Entries/exits, actual quantity timelines, ledger booking and labels |
 | C10 | Expectancy and uncertainty | Required next after C11 | Estimates from earlier matured outcomes and uncertainty |
@@ -34,7 +34,7 @@ Each backlog entry has an ID, purpose, dependencies and a completion gate. After
 | C14 | Live orchestration and Telegram | Required next | Persistent runtime, eligibility, delivery lifecycle and live E2E |
 | C15 | Forward measurement and monitoring | Required next | Signal-to-outcome tracking, reconciliation and degradation rules |
 
-The next component after C06 is C07. C04/C05 and predictive C06 additions remain optional. Full historical workflow testing arrives at C11, Telegram workflow testing at C14 and the complete forward feedback loop at C15. These milestones do not imply an existing dashboard or automated exchange orders.
+The next component after C07 is C08 candidate generation. C04/C05 and predictive C06 additions remain optional. Full historical workflow testing arrives at C11, Telegram workflow testing at C14 and the complete forward feedback loop at C15. These milestones do not imply an existing dashboard or automated exchange orders.
 
 ## C01 Instrument and universe registry
 
@@ -119,14 +119,19 @@ The default boundary guard flags quantity changes within inclusive ±15 seconds 
 
 ## C07 Execution and tradability
 
-Required next after C06; no implementation yet.
+Implemented evidence: [C07 contracts and boundaries](C07_IMPLEMENTATION.md), [verification](C07_VERIFICATION.md).
+
+Implemented now: independent full market-fill scenarios under explicit liquidity caps, observed quote/mark freshness, exact quantity/tick/fee arithmetic, drift/spread/slippage attribution, manual action delay/expiry, required C03 artifact joins, separate next-funding estimates, immutable reports, atomic restart, CLI, connected E2E and public-source replay. Historical candle execution is an explicit coarse model with labeled metadata/mark assumptions; no exact intrabar price or historical funding forecast is invented.
 
 | ID | Work | Type | Dependencies and completion gate |
 | --- | --- | --- | --- |
-| C07-U01 | Fee assumptions, market fills, spread/slippage, freshness and manual-action delay | Required baseline | C01/C02/C03/C06; hand-calculated costs, conservative fill scenarios and explicit unsupported coverage |
+| C07-U01 | Fee assumptions, market fills, spread/slippage, freshness and manual-action delay | Implemented initial scope | C01/C02/C03/C06; independent amounts, feature/funding integration, 58 new tests, CLI-process E2E and public-source parity; admission is model-conditional |
 | C07-U02 | Passive/partial fills, synchronized depth and size-dependent impact | Conditional fidelity upgrade | C02-U02 and forward observations; do not award a fill or maker fee merely from a bar touch |
 | C07-U03 | Empirical human/delivery delay and cost calibration | Validation outstanding after implementation | C14/C15; compare estimates with recorded execution/delay and stress adverse scenarios |
 | C07-U04 | Venue-specific execution and account-specific fee tiers | Conditional extension | Explicit sources/account scope and C01 product support; preserve policy versions and avoid double-counted costs |
+| C07-U05 | Verified historical metadata, quote/mark/depth coverage and multi-settlement funding projections | Data/fidelity upgrade before broad cost claims | C01-U01/C02-U03/C06-U07; current-metadata and bar-close mark proxies stay explicit research assumptions; no exact intrabar or full-horizon funding claim |
+| C07-U06 | Shared lifecycle, realized fills and ledger/account constraints | Required downstream wiring | C09/C11/C13/C14; book fills/fees/funding once, reconcile revisions, consume shared capital/liquidity, validate strategy again at action time; test complete trade outcomes |
+| C07-U07 | Representative throughput, storage retention and unattended recovery | Operational validation outstanding | C02/C03/C14; benchmark history/universe sizes and cold restarts, migration/backup and physical failure recovery beyond statement rollback |
 
 ## C08 Candidate generation
 

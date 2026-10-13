@@ -1,0 +1,6 @@
+{
+  "taker_rate": "0.0005",
+  "maker_rate": "0.0002",
+  "source_kind": "assumption",
+  "evidence": "operator_assumption:illustrative fees, not verified account rates or historical fee evidence"
+}

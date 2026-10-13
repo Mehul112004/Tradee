@@ -4,7 +4,7 @@
 
 Updated 14 September 2026. For each component: **deep research and discussion → finalize its plan → user approval → implementation and verification**. The user authorized C01 implementation with Binance; its first version is now implemented. See [README.md](/Users/artemis/Mehul/Tradee/README.md) for operation and verification.
 
-Status updated 13 October 2026: C01, C02, C03 and C06's funding scope are implemented. The user explicitly authorized C06 implementation and E2E tests. Next is C07. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks implemented scope, required remaining functionality and future upgrades for every component; update it with every implementation increment.
+Status updated 13 October 2026: C01, C02, C03, C06 funding and C07 market execution/cost scope are implemented. The user authorized C07 under the same implementation, E2E, documentation and commit rules as C06. Next is C08 candidate generation. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks implemented scope, required remaining functionality and future upgrades for every component; update it with every implementation increment.
 
 | Order | Component | Initial scope |
 | --- | --- | --- |
@@ -28,7 +28,7 @@ Status updated 13 October 2026: C01, C02, C03 and C06's funding scope are implem
 
 The numbers C01–C15 identify components, not build sequence. Each component initially delivers its agreed minimum scope and can be extended through later reviewed increments. The broader phases below group this work; this table is the current component working order.
 
-Original planning draft — 6 September 2026; implementation status updated 13 October 2026. C01–C03 and C06 funding are implemented; strategy evaluation and subsequent baseline components have not started.
+Original planning draft — 6 September 2026; implementation status updated 13 October 2026. C01–C03, C06 funding and C07 paper execution are implemented; strategy evaluation and subsequent baseline components have not started.
 
 Expanded research: [Components for finding positive net expectancy setups](/Users/artemis/Mehul/Tradee/COMPONENT_RESEARCH.md), researched 9 September 2026, specifies fifteen modules, their evidence, dependencies and acceptance criteria.
 
@@ -248,6 +248,7 @@ E2E verification is a completion requirement alongside unit and integration test
 | --- | --- | --- |
 | C03 — available now | Market observations → persisted replay → features and readiness | Existing recorded Binance capture/replay smoke covers this foundation; trading setup/outcome logic is still absent |
 | C06 — available now | Raw metadata/candles/funding/mark imports → replay/features → exact funding reports | Automated current-foundation E2E uses 26 actual CLI commands, fixed expected amounts and recovery after a failed write; preserves old reports after corrections and flags missing/ambiguous funding |
+| C07 — available now | Raw candles/quotes/marks → same-dataset C03 readiness → C06 estimate → C07 paper fills/costs/rejections | 27 actual CLI commands, independent costs, persisted restart/idempotency, immutable revisions and explicit coarse-bar limitations |
 | C08 | Historical replay → features → baseline candidates with explanations | Inspect detected/rejected setups and the information available at detection; no completed backtest ledger yet |
 | C11 | Dataset → features → candidates → entry/fills → fees/funding → exits → net outcome ledger/report | First complete historical trading workflow, using C06/C07/C08/C09 and the same shared rules as later live operation |
 | C12, then C13 integration | Earlier-data fitting/selection → frozen later-period evaluation → reports; then finite-capital combined-policy evaluation | Test fold isolation and experiment reproducibility; rerun C12 validation after adding C13 portfolio admission/risk rules |
@@ -281,7 +282,7 @@ The immediate implementation milestone is an audited data pipeline and one compl
 
 ## Implementation status — 13 October 2026
 
-C01, the initial C02 data/replay increment, C03's feature-engine scope and C06 funding accounting are implemented. See [C02 contracts](C02_IMPLEMENTATION.md), [C03 verification](C03_VERIFICATION.md), [C06 contracts](C06_IMPLEMENTATION.md) and [C06 verification](C06_VERIFICATION.md). The full offline suite has 240 passing tests, including 44 C06 tests and actual-process E2E. Public C06 funding/mark capture and recorded replay also passed. Sustained recording, large-universe load validation and all deferred prospects remain tracked in [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md).
+C01, the initial C02 data/replay increment, C03 features, C06 funding accounting and C07 paper market execution/costs are implemented. See [C02 contracts](C02_IMPLEMENTATION.md), [C03 verification](C03_VERIFICATION.md), [C06 contracts](C06_IMPLEMENTATION.md), [C06 verification](C06_VERIFICATION.md), [C07 contracts](C07_IMPLEMENTATION.md) and [C07 verification](C07_VERIFICATION.md). The full offline suite has 298 passing tests, including 58 C07 tests and actual-process E2E. Public C06 funding/mark and C07 quote/mark capture plus recorded replay passed. Next is C08 candidate generation. Sustained recording, large-universe load validation and all deferred prospects remain tracked in [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md).
 
 ## C03 implementation package — 21 September 2026
 
