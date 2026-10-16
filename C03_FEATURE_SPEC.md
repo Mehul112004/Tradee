@@ -2,6 +2,8 @@
 
 Implemented v1 — 21 September 2026. This is the approved formula contract for [the implementation plan](C03_RESEARCH_PLAN.md). See [verification results](C03_VERIFICATION.md). A feature is a measurement, not evidence of profitability or a trading instruction.
 
+C08 extension — 16 October 2026: `ema20_prior` and `ema50_prior` add reusable one-bar-lagged EMA measurements for pullback/recovery detection. Existing baseline formulas remain unchanged.
+
 ## 1. Shared notation and conventions
 
 Bars belong to one instrument and timeframe, have consecutive integer indices starting at 0, and are finalized and available at the evaluation cursor. `O_t, H_t, L_t, C_t` are prices; `V_t` is base-asset volume; `Q_t` is quote-asset volume; `TB_t` and `TQ_t` are taker-buy base and quote volumes. All sums below require complete, contiguous windows. A missing bar is not a zero-volume bar.
@@ -36,6 +38,10 @@ First output: index `n-1`, after `n` closes. Recommended reusable periods: 20; o
 For `t >= n`: `EMA_n(t) = EMA_n(t-1) + alpha*(C_t-EMA_n(t-1))`.
 
 First output: `n` closes. Proposed periods: 20 and 50. Seed, segment start and smoothing coefficient are part of the definition. [TA-Lib EMA implementation](https://raw.githubusercontent.com/TA-Lib/ta-lib/main/src/ta_func/ta_EMA.c).
+
+### One bar prior EMA
+
+`ema20_prior(t) = EMA20(t-1)` and `ema50_prior(t) = EMA50(t-1)` over the same contiguous segment. They require 21/51 bars respectively and exclude the current close from the returned measurement. Their definitions inherit the EMA seed and add one bar of lag to the seed-weight/readiness calculation. Under threshold `1e-6`, prior EMA50 needs 397 contiguous bars; current EMA50 needs 396. C08 uses these current-prefix measurements to avoid treating a historical-target snapshot as a fresh indicator. EMA values remain C03 float64 analytical outputs.
 
 ### Wilder running average, RMA
 

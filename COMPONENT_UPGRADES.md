@@ -1,6 +1,6 @@
 # Component implementation and future upgrades
 
-Updated 13 October 2026. Tradee implements each component's agreed initial scope, verifies that scope, and extends it when its dependencies and evidence are available. C01, C02 and C03 are complete within their documented initial scope; C06 adds funding-accounting scope and C07 adds market execution/cost scope. Some broader functionality and operational validation remain outstanding. The tables below make those gaps explicit for all fifteen components.
+Updated 16 October 2026. Tradee implements each component's agreed initial scope, verifies that scope, and extends it when its dependencies and evidence are available. C01, C02 and C03 are complete within their documented initial scope; C06 adds funding accounting, C07 adds market execution/costs, and C08 adds two independent setup families. Some broader functionality and operational validation remain outstanding. The tables below make those gaps explicit for all fifteen components.
 
 This register consolidates the currently identified work in [the platform plan](PLATFORM_PLAN.md), [component research](COMPONENT_RESEARCH.md) and component verification reports. It is a maintained backlog, not a promise to implement every possible indicator or predictive model. New prospects belong here when identified; unnecessary extensions can be rejected with a recorded reason.
 
@@ -25,7 +25,7 @@ Each backlog entry has an ID, purpose, dependencies and a completion gate. After
 | C05 | Causal price levels and structure | Deferred optional component | Define levels and demonstrate added value |
 | C06 | Exact funding cash flows, observed estimates, coverage/boundary statuses, durable reports and E2E | Implemented funding scope | Audited calendar acquisition, account reconciliation and predictive derivatives extensions |
 | C07 | Market scenarios, exact fees/costs, rule/readiness/delay gates, durable replay and E2E | Implemented market scope | Passive/partial fills, empirical calibration, historical fidelity and account integration |
-| C08 | Candidate generation | Required next | One precisely specified strategy and complete candidate inventory |
+| C08 | Independent 15m range-breakout and EMA recovery setups, full inventories and causal restart | Implemented two-family scope | C09 action/lifecycle wiring, C11/C12 after-cost evidence, more horizons/context and scale |
 | C09 | Shared trade lifecycle and outcomes | Required next | Entries/exits, actual quantity timelines, ledger booking and labels |
 | C10 | Expectancy and uncertainty | Required next after C11 | Estimates from earlier matured outcomes and uncertainty |
 | C11 | Historical simulator | Required next after C09 | First complete trading E2E workflow and reconciled ledgers |
@@ -34,7 +34,7 @@ Each backlog entry has an ID, purpose, dependencies and a completion gate. After
 | C14 | Live orchestration and Telegram | Required next | Persistent runtime, eligibility, delivery lifecycle and live E2E |
 | C15 | Forward measurement and monitoring | Required next | Signal-to-outcome tracking, reconciliation and degradation rules |
 
-The next component after C07 is C08 candidate generation. C04/C05 and predictive C06 additions remain optional. Full historical workflow testing arrives at C11, Telegram workflow testing at C14 and the complete forward feedback loop at C15. These milestones do not imply an existing dashboard or automated exchange orders.
+The next component after C08 is C09 trade policy and outcomes. C04/C05 and predictive C06 additions remain optional. Full historical workflow testing arrives at C11, Telegram workflow testing at C14 and the complete forward feedback loop at C15. These milestones do not imply an existing dashboard or automated exchange orders.
 
 ## C01 Instrument and universe registry
 
@@ -76,7 +76,7 @@ Implemented evidence: [C03 formula contract](C03_FEATURE_SPEC.md), [C03 verifica
 | C03-U04 | Derivatives, cross-asset/context and fitted ML transforms | Conditional extensions | C04/C06 and C12 fold-controlled fitting; transforms preserve availability and fit boundaries |
 | C03-U05 | Predictive feature-family ablation after costs | Validation outstanding | C07/C08/C09/C11/C12; compare matched opportunities, costs, sample loss and uncertainty on later data |
 
-The current 43 named definitions and parameterized simple returns are implemented. Adding more indicators does not substitute for C03-U01 or predictive evidence. Default daily EMA50 readiness needs 396 contiguous daily bars; a one-day benchmark does not validate that workload.
+The current 45 named definitions and parameterized simple returns are implemented, including C08-required `ema20_prior`/`ema50_prior`. Adding more indicators does not substitute for C03-U01 or predictive evidence. Default daily EMA50 readiness needs 396 contiguous daily bars; a one-day benchmark does not validate that workload.
 
 ## C04 Market state
 
@@ -135,11 +135,18 @@ Implemented now: independent full market-fill scenarios under explicit liquidity
 
 ## C08 Candidate generation
 
+Implemented evidence: [C08 research definitions](C08_RESEARCH_PLAN.md), [contracts and boundaries](C08_IMPLEMENTATION.md), [verification](C08_VERIFICATION.md).
+
+The user explicitly expanded the initial scope to **both range breakout and trend continuation** on 16 October 2026. Implemented now: separate hypothesis/spec hashes and 15m presets, strict prior-range/recovery predicates, shared C03 indicators and lagged EMA readiness, observed metadata timelines or labeled research assumptions, complete per-direction diagnostics/coverage, revision-only recorded corrections, immutable artifacts, atomic restart, CLI pagination/inspection and two-family E2E. No strategy has performance-based approval.
+
 | ID | Work | Type | Dependencies and completion gate |
 | --- | --- | --- | --- |
-| C08-U01 | One explicit strategy, triggers, candidate snapshots and rejection reasons | Required baseline | C01/C03 and reviewed C09/C12 concepts; deterministic causal candidate E2E |
-| C08-U02 | Additional strategy families and second trading horizon | Conditional extension | First complete C11/C12 pipeline; record every hypothesis/variant and evaluate intraday/swing separately |
+| C08-U01 | Explicit strategy triggers, candidate snapshots and rejection reasons | Implemented for two initial families | C01/C03; independent formulas and long/short fixtures, full opportunities, causal metadata/revisions and CLI-process recovery E2E |
+| C08-U02 | Further strategy families and separate swing horizon | Deferred beyond the two user-authorized initial families | C09/C11/C12 first; record every hypothesis/variant and validate intraday/swing separately. General timeframe configuration is not evidence that another horizon has been validated |
 | C08-U03 | Market-state, levels and positioning inputs | Conditional extension | C04/C05/C06 predictors; added value survives costs and opportunity loss |
+| C08-U04 | Executable action-time thesis checks, lifecycle and cost/outcome validation | Required downstream wiring | C09/C07/C06/C11/C12; stops/targets/holding/size and correction cancellation are explicit, fills/charges booked once, families compared independently after costs and against declared baselines |
+| C08-U05 | Multi-year/universe throughput, incremental state and storage retention | Operational validation outstanding | C02/C03/C11/C14; current reference engine retains/reconstructs history, so benchmark realistic lengths and restart/backup behavior before broad experiments |
+| C08-U06 | Complete trials, fit/holdout isolation and promotion registry | Required C12 scope | C11/C12; C08 definition hashes/rationale/inventories supply evidence but do not count trials or authorize live alerts |
 
 ## C09 Trade policy and outcomes
 

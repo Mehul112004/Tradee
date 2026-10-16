@@ -59,6 +59,7 @@ for horizon in (1, 4, 12):
 add('sma20', 'price', 20, 'mean(C[t-19:t+1])')
 for n in (20, 50):
     add(f'ema{n}', 'price', n, f'SMA seed over {n} closes, then alpha=2/({n}+1)', smoothers=((n,n,'ema',0),))
+    add(f'ema{n}_prior', 'price', n+1, f'EMA{n}[t-1]; current close excluded', (f'ema{n}',), ((n,n,'ema',1),))
 add('tr', 'price', 2, 'max(H-L, abs(H-Cprev), abs(L-Cprev)); no TR0')
 add('atr14', 'price', 15, 'SMA(TR[1:15]) seed then RMA alpha=1/14', ('tr',), ((14,15,'rma',0),))
 add('atr14_fraction', 'fraction', 15, 'ATR14/C', ('atr14',))

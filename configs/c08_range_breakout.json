@@ -1,0 +1,1 @@
+{"family":"prior_range_breakout","version":1,"timeframe":"15m","lookback_bars":20,"sides":["long","short"],"entry_window_ms":300000,"cooldown_bars":0}

@@ -12,6 +12,7 @@ from .c02 import cli as data_cli
 from .c03 import cli as feature_cli
 from .c06 import cli as funding_cli
 from .c07 import cli as execution_cli
+from .c08 import cli as candidate_cli
 
 
 def timestamp(text):
@@ -47,8 +48,13 @@ def main(argv=None):
     feature_cli.register(sub)
     funding_cli.register(sub)
     execution_cli.register(sub)
+    candidate_cli.register(sub)
     args = parser.parse_args(argv)
     try:
+        if args.command == "candidates":
+            result = candidate_cli.execute(args)
+            print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
+            return 0
         if args.command == "execution":
             result = execution_cli.execute(args, timestamp)
             print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))

@@ -87,6 +87,8 @@ class Evaluator:
             return mean_trade_notional(rows[-1])
         if name in ('ema20','ema50'):
             return self.series(name)[-1]
+        if name in ('ema20_prior','ema50_prior'):
+            return self.series(name.removesuffix('_prior'))[-2]
         if name == 'atr14':
             return self.series('atr')[-1]
         if name == 'rsi14':

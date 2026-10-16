@@ -332,6 +332,8 @@ For depth features, reconstruct the local book from a buffered stream and REST s
 
 ### C08 — Candidate generation and hypothesis registry
 
+**Implementation status — 16 October 2026:** At the user's request, both prior-range breakout and EMA pullback continuation are implemented as independent initial 15m families. See [research definitions](C08_RESEARCH_PLAN.md), [contracts](C08_IMPLEMENTATION.md), [verification](C08_VERIFICATION.md) and [remaining upgrades](COMPONENT_UPGRADES.md#c08-candidate-generation). The strategy-definition catalog does not replace C12 trial accounting or performance promotion.
+
 **Depends on / receives from:** D: [C01](#c01--instrument-and-universe-registry), [C03](#c03--feature-engine); O: [C04](#c04--market-state-context), [C05](#c05--price-structure-supportresistance-and-level-construction), [C06](#c06--derivatives-and-positioning-context).
 
 **Used by / supplies to:** D: [C09](#c09--trade-policy-and-outcome-labelling), [C11](#c11--historical-simulation-and-attribution), [C14](#c14--live-decision-and-telegram-lifecycle).
@@ -344,7 +346,7 @@ For depth features, reconstruct the local book from a buffered stream and REST s
 - Deterministic state and cooldown rules where strategy-specific
 - Strategy versioning and complete candidate inventory
 
-**Output contracts:** CandidateSpec; candidate rejection/diagnostic records. Names are proposed domain records, not finalized code APIs.
+**Output contracts:** Validated immutable `CandidateSpec`, per-direction `CandidateRecord` diagnostics, `StrategySpec` definitions and `CandidateConfig` eligibility policy, with pinned C03/C01/source evidence.
 
 **Ownership boundary:** Owns setup detection and strategy specifications. C12 owns the experiment/trial ledger; C09 owns the executable trade policy.
 
@@ -361,7 +363,7 @@ Suggested experiments, with no profitability claim:
 | Conditional reversion | Large normalized deviation with a separately tested context condition | Initially intraday |
 | Funding/positioning extension | Add one derivatives-context feature to an established baseline | Later, where historical coverage supports it |
 
-Implement one family end to end first. Keep triggers, features, exit policy, and eligibility policy independently versioned. Save all candidates, including rejected ones, to measure what later gates remove.
+The initial implementation includes range breakout and trend continuation as separate families, as requested on 16 October 2026. Keep triggers, features, exit policy, and eligibility policy independently versioned. Save all candidates, including rejected ones, to measure what later gates remove.
 
 **Acceptance:** write the economic rationale and alternative explanation before testing. Compare against simple market-exposure and no-trade baselines. A renamed indicator combination remains part of its original hypothesis family for trial accounting.
 

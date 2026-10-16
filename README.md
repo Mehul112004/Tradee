@@ -1,6 +1,6 @@
 # Tradee
 
-Component-based crypto signal research. **C01, C02, C03, C06 and C07 are available:** instrument metadata, market-data recording/replay, causal features, exact funding calculations and paper execution/cost scenarios. Strategy generation, backtests and Telegram delivery are later components.
+Component-based crypto signal research. **C01, C02, C03, C06, C07 and C08 are available:** instrument metadata, market-data recording/replay, causal features, funding calculations, paper execution/costs and two independent setup families. Trade lifecycle, backtests and Telegram delivery are later components.
 
 ## Development environment
 
@@ -134,7 +134,7 @@ python3 -m tradee data import-archive BTCUSDT BTCUSDT-1m-2026-08.zip BTCUSDT-1m-
 
 Local imports record receipt **now**; JSONL files cannot claim original live receipt times. Use a separate database for fixtures: `python3 -m tradee --db /tmp/c01.sqlite3 data --market-db /tmp/c02.sqlite3 …`. Global C01 arguments go before `data`; `--market-db` goes before its action.
 
-See [C02 implementation contracts and limits](C02_IMPLEMENTATION.md) and [C02 verification](C02_VERIFICATION.md). The full suite now contains 298 passing tests, including C03, C06 and C07. Live exchange connectivity passed on 21 September 2026; sustained recording/load remains an operational check.
+See [C02 implementation contracts and limits](C02_IMPLEMENTATION.md) and [C02 verification](C02_VERIFICATION.md). The full suite now contains 350 passing tests, including C03, C06, C07 and C08. Live exchange connectivity passed on 21 September 2026; sustained recording/load remains an operational check.
 
 
 ## Check Binance connectivity
@@ -254,7 +254,7 @@ Only the first command needs public Binance connectivity and the existing live d
 
 ## Component scope and upgrades
 
-[COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) is the maintained register for **all fifteen components**. It distinguishes implemented scope, required unbuilt baseline work, deferred/conditional extensions, validation gaps, dependencies and completion gates. Update it after every component implementation. C06 predictive premium/OI/liquidation work and automated calendar acquisition are recorded there; C07 market execution/cost scope is now implemented; the next component is C08 candidate generation.
+[COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) is the maintained register for **all fifteen components**. It distinguishes implemented scope, required unbuilt baseline work, deferred/conditional extensions, validation gaps, dependencies and completion gates. Update it after every component implementation. C06 predictive premium/OI/liquidation work and automated calendar acquisition are recorded there; C07 market execution/cost scope is now implemented; C08 now provides range-breakout and trend-continuation candidates; C09 trade lifecycle is next.
 
 
 ## C07 execution and tradability
@@ -283,4 +283,33 @@ conda run -n tradee python -m scripts.verify_c07 --output data/c07_checks/demo1
 
 Use a fresh output directory. The demo runs 27 real CLI commands/processes through C01/C02/C03/C06/C07, verifies independent buy/sell price/fee/funding amounts, recovers from a failed database write in another process, and exercises delay, expiry, quantity, passive-order, spread and coarse-bar cases. Read `e2e_report.json` and `e2e_commands.json`; inspect reports and repeat a completed command to check unchanged hashes/counts. All prices/exposures/rules are synthetic, with actual import receipt times and no network, orders or Telegram.
 
-The full offline suite has **298 passing tests**, including **58 C07 tests**. An opt-in public metadata/quote/mark capture also passed direct-versus-persisted replay checks; see verification for exact results. Passive/partial fills, calibrated cost/delay distributions, account reconciliation and richer historical coverage remain in the upgrade register. C08 is next; complete trade-ledger E2E arrives at C11 and Telegram E2E at C14.
+The full offline suite has **350 passing tests**, including **58 C07 tests** and **52 C08 tests**. An opt-in public metadata/quote/mark capture also passed direct-versus-persisted replay checks; see verification for exact results. Passive/partial fills, calibrated cost/delay distributions, account reconciliation and richer historical coverage remain in the upgrade register. C08 candidate generation is now implemented; complete trade-ledger E2E arrives at C11 and Telegram E2E at C14.
+
+
+## C08 range breakout and trend continuation
+
+C08 implements two separate 15m hypothesis families. Range breakout requires a close strictly outside the previous 20 bars' high/low range. Trend continuation requires EMA20/EMA50 direction plus recovery across EMA20 after the prior close was on the pullback side. Shorts use the reverse rules. Each family has independent versions, runs and opportunity inventories. [Research definitions](C08_RESEARCH_PLAN.md), [implementation contracts](C08_IMPLEMENTATION.md) and [verification](C08_VERIFICATION.md) describe formulas, dependencies and results.
+
+```sh
+conda activate tradee
+python -m tradee candidates list
+python -m tradee candidates explain prior_range_breakout
+python -m tradee candidates explain ema_pullback_continuation
+python -m tradee --db data/c01.sqlite3 candidates \
+  --market-db data/c02.sqlite3 --candidate-db data/c08.sqlite3 \
+  run DATASET_HASH --strategy configs/c08_range_breakout.json \
+  --config configs/c08_candidates.json
+```
+
+Run the second family with `configs/c08_trend_continuation.json`. For explicitly modeled historical candles using current metadata as an assumption, choose `configs/c08_modeled_candidates.json`. Observed mode keeps actual metadata/receipt timing. Both presets use a five-minute exclusive entry window and a separate one-minute detection-lag budget. Trend readiness needs 397 contiguous bars because both current and lagged EMA50 must be stabilized.
+
+Inspect `candidates summary RUN_HASH`, `manifest RUN_HASH`, `records RUN_HASH --status emitted`, `evaluation EVALUATION_HASH` and `feature SNAPSHOT_HASH`. Database options precede the action. Paginate all opportunities with `--limit`/`--after-sequence`; warmup, nontrigger, suppression and revision records remain available. Successful zero-candidate runs exit 0; inspect completion, coverage and reasons. A candidate has no invented stops, targets, quantity, probability or proven expectancy.
+
+```sh
+conda run -n tradee python -m unittest tests.test_c08_e2e -v
+conda run -n tradee python -m scripts.verify_c08 --output data/c08_checks/demo1
+```
+
+Use a fresh directory. The E2E imports raw synthetic BTC/ETH paths, processes both default 15m families through real C03 calculations, retains 1616 direction/bar evaluations per family, detects independently expected long/short setups, and recovers in a new process after a failed database write. Raw inputs, bound candidates, SQLite state, command log and `e2e_report.json` remain for manual review. The full suite has **350 passing tests**, including **52 C08 tests**.
+
+C09 is next: executable entry/exit policy, position quantities and one-time fee/funding booking. Complete trading outcomes and backtests still require C09/C11; walk-forward evidence and promotion require C12. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks remaining families/horizons, context filters and operational work.

@@ -4,7 +4,7 @@
 
 Updated 14 September 2026. For each component: **deep research and discussion → finalize its plan → user approval → implementation and verification**. The user authorized C01 implementation with Binance; its first version is now implemented. See [README.md](/Users/artemis/Mehul/Tradee/README.md) for operation and verification.
 
-Status updated 13 October 2026: C01, C02, C03, C06 funding and C07 market execution/cost scope are implemented. The user authorized C07 under the same implementation, E2E, documentation and commit rules as C06. Next is C08 candidate generation. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks implemented scope, required remaining functionality and future upgrades for every component; update it with every implementation increment.
+Status updated 16 October 2026: C01, C02, C03, C06 funding, C07 execution/costs and C08 candidate generation are implemented. The user authorized both range-breakout and trend-continuation families under the same testing, E2E, documentation and commit rules. Next is C09 trade policy and outcomes. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks implemented scope, required remaining functionality and future upgrades for every component; update it with every implementation increment.
 
 | Order | Component | Initial scope |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ Status updated 13 October 2026: C01, C02, C03, C06 funding and C07 market execut
 | 3 | C03 — Feature engine | Minimal shared mathematical measurements |
 | 4 | C06 — Funding fundamentals | Settlement accounting; predictive positioning features deferred |
 | 5 | C07 — Execution and tradability | Fills, fees, slippage and manual-entry delay |
-| 6 | C08 — Candidate generation | One explicit baseline strategy |
+| 6 | C08 — Candidate generation | Independent range-breakout and trend-continuation baselines |
 | 7 | C09 — Trade policy and outcomes | Shared entry/exit lifecycle and outcome definitions |
 | 8 | C11 — Historical simulator | Independent candidate evaluation and verifiable ledgers first |
 | 9 | C10 — Expectancy and uncertainty | Estimates from earlier matured outcome artifacts |
@@ -28,7 +28,7 @@ Status updated 13 October 2026: C01, C02, C03, C06 funding and C07 market execut
 
 The numbers C01–C15 identify components, not build sequence. Each component initially delivers its agreed minimum scope and can be extended through later reviewed increments. The broader phases below group this work; this table is the current component working order.
 
-Original planning draft — 6 September 2026; implementation status updated 13 October 2026. C01–C03, C06 funding and C07 paper execution are implemented; strategy evaluation and subsequent baseline components have not started.
+Original planning draft — 6 September 2026; implementation status updated 16 October 2026. C01–C03, C06 funding, C07 execution and C08 setup detection are implemented; executable trade outcomes and performance evaluation remain downstream.
 
 Expanded research: [Components for finding positive net expectancy setups](/Users/artemis/Mehul/Tradee/COMPONENT_RESEARCH.md), researched 9 September 2026, specifies fifteen modules, their evidence, dependencies and acceptance criteria.
 
@@ -47,7 +47,7 @@ Proposed first-release scope:
 - Intraday decisions on 15m/1h candles, with 4h context; swing decisions on 4h candles, with daily context. Each strategy declares its exact inputs and holding horizon.
 - Closed-candle strategy evaluation. Live quotes support freshness, spread checks, and outcome tracking.
 - Separate validation for intraday and swing strategies, plus joint risk evaluation when their signals overlap.
-- Begin with one simple strategy to validate the entire pipeline. Add a second horizon once that pipeline is trustworthy.
+- Implement range-breakout and trend-continuation as separate initial hypotheses, as requested on 16 October 2026. Add a second horizon after the complete trading/validation pipeline is trustworthy.
 
 ## 2. What TBot teaches us
 
@@ -246,10 +246,10 @@ E2E verification is a completion requirement alongside unit and integration test
 
 | Available after | Workflow the user can exercise | Scope of acceptance |
 | --- | --- | --- |
-| C03 — available now | Market observations → persisted replay → features and readiness | Existing recorded Binance capture/replay smoke covers this foundation; trading setup/outcome logic is still absent |
+| C03 — available now | Market observations → persisted replay → features and readiness | Existing recorded Binance capture/replay smoke covers this foundation; C03 itself supplies measurements without setup/outcome logic |
 | C06 — available now | Raw metadata/candles/funding/mark imports → replay/features → exact funding reports | Automated current-foundation E2E uses 26 actual CLI commands, fixed expected amounts and recovery after a failed write; preserves old reports after corrections and flags missing/ambiguous funding |
 | C07 — available now | Raw candles/quotes/marks → same-dataset C03 readiness → C06 estimate → C07 paper fills/costs/rejections | 27 actual CLI commands, independent costs, persisted restart/idempotency, immutable revisions and explicit coarse-bar limitations |
-| C08 | Historical replay → features → baseline candidates with explanations | Inspect detected/rejected setups and the information available at detection; no completed backtest ledger yet |
+| C08 — available now | Raw candles → shared C03 indicators → two independent 15m candidate inventories | Actual-process E2E detects expected long/short range/recovery setups, retains all direction/bar diagnostics and checks fault recovery, coverage, metadata availability and correction vintages; no backtest ledger yet |
 | C11 | Dataset → features → candidates → entry/fills → fees/funding → exits → net outcome ledger/report | First complete historical trading workflow, using C06/C07/C08/C09 and the same shared rules as later live operation |
 | C12, then C13 integration | Earlier-data fitting/selection → frozen later-period evaluation → reports; then finite-capital combined-policy evaluation | Test fold isolation and experiment reproducibility; rerun C12 validation after adding C13 portfolio admission/risk rules |
 | C14 | Live/replayed feed → decision gates → persisted signal/outbox → Telegram test delivery | Full alert flow, expiry, restart, freshness, delivery failure and retry behavior; actual Telegram use is an explicit opt-in test |
@@ -280,10 +280,10 @@ Start recording live data during Phase 1 while historical tooling is developed. 
 
 The immediate implementation milestone is an audited data pipeline and one completely specified strategy replay with a trade-by-trade cost ledger. That establishes a trustworthy basis for subsequent strategy research and Telegram delivery.
 
-## Implementation status — 13 October 2026
+## Implementation status — 16 October 2026
 
-C01, the initial C02 data/replay increment, C03 features, C06 funding accounting and C07 paper market execution/costs are implemented. See [C02 contracts](C02_IMPLEMENTATION.md), [C03 verification](C03_VERIFICATION.md), [C06 contracts](C06_IMPLEMENTATION.md), [C06 verification](C06_VERIFICATION.md), [C07 contracts](C07_IMPLEMENTATION.md) and [C07 verification](C07_VERIFICATION.md). The full offline suite has 298 passing tests, including 58 C07 tests and actual-process E2E. Public C06 funding/mark and C07 quote/mark capture plus recorded replay passed. Next is C08 candidate generation. Sustained recording, large-universe load validation and all deferred prospects remain tracked in [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md).
+C01, the initial C02 data/replay increment, C03 features, C06 funding accounting, C07 paper market execution/costs and C08 two-family setup detection are implemented. See [C02 contracts](C02_IMPLEMENTATION.md), [C03 verification](C03_VERIFICATION.md), [C06 contracts](C06_IMPLEMENTATION.md), [C06 verification](C06_VERIFICATION.md), [C07 contracts](C07_IMPLEMENTATION.md), [C07 verification](C07_VERIFICATION.md), [C08 contracts](C08_IMPLEMENTATION.md) and [C08 verification](C08_VERIFICATION.md). The full offline suite has 350 passing tests, including 52 C08 tests and actual-process E2E. Public C06 funding/mark, C07 quote/mark and C08 candle capture plus saved replay checks passed. Next is C09 trade policy and outcomes. Sustained recording, large-universe load validation and all deferred prospects remain tracked in [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md).
 
 ## C03 implementation package — 21 September 2026
 
-References: [C03 architecture and dependencies](C03_RESEARCH_PLAN.md), [exact feature formulas and indicator conventions](C03_FEATURE_SPEC.md), [validation specification](C03_VALIDATION_PLAN.md), and [completed verification and limits](C03_VERIFICATION.md). C03 provides 14 baseline outputs, 43 named definitions plus parameterized simple returns, explicit availability/warm-up policies, optional diagnostics, atomic checkpoints and an inspection/run CLI. It supplies measurements to later components; strategy expectancy and Telegram signals remain downstream work.
+References: [C03 architecture and dependencies](C03_RESEARCH_PLAN.md), [exact feature formulas and indicator conventions](C03_FEATURE_SPEC.md), [validation specification](C03_VALIDATION_PLAN.md), and [completed verification and limits](C03_VERIFICATION.md). C03 provides 14 baseline outputs, 45 named definitions (including the C08-required one-bar-prior EMAs) plus parameterized simple returns, explicit availability/warm-up policies, optional diagnostics, atomic checkpoints and an inspection/run CLI. It supplies measurements to later components; strategy expectancy and Telegram signals remain downstream work.
