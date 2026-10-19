@@ -369,6 +369,8 @@ The initial implementation includes range breakout and trend continuation as sep
 
 ### C09 — Trade policy and outcome labelling
 
+**Implementation status — 19 October 2026:** Shared independent paper lifecycle, fixed outcome policy, C07 admitted fills, quantities/partials, C06 keyed funding reconciliation, maturity/unresolved labels, atomic replay and actual-process E2E are implemented. See [research decisions](C09_RESEARCH_PLAN.md), [contracts](C09_IMPLEMENTATION.md), [verification](C09_VERIFICATION.md) and [remaining upgrades](COMPONENT_UPGRADES.md#c09-trade-policy-and-outcomes). C11 remains the full historical simulator and C12 owns strategy validation.
+
 **Depends on / receives from:** D: [C08](#c08--candidate-generation-and-hypothesis-registry), [C01](#c01--instrument-and-universe-registry), [C06](#c06--derivatives-and-positioning-context), [C07](#c07--execution-costs-and-tradability); O: [C05](#c05--price-structure-supportresistance-and-level-construction).
 
 **Used by / supplies to:** D: [C10](#c10--conditional-net-expectancy-and-uncertainty), [C11](#c11--historical-simulation-and-attribution), [C12](#c12--walk-forward-selection-control-and-experiment-registry), [C13](#c13--portfolio-risk-and-alert-selection), [C14](#c14--live-decision-and-telegram-lifecycle), [C15](#c15--forward-measurement-and-degradation-monitoring).
@@ -381,7 +383,7 @@ The initial implementation includes range breakout and trend continuation as sep
 - Net/gross ledger and one-time funding booking
 - Outcome labels, maturity times, excursions and unresolved states
 
-**Output contracts:** TradeIntent; PositionState; OutcomeRecord; TradeLedger. Names are proposed domain records, not finalized code APIs.
+**Output contracts:** Validated `TradeIntent`/`TradePolicy`, immutable `LifecycleRecord` transitions/reports, embedded position/quantity state, keyed current ledger and distinct event/profit/maturity outcomes. These describe model paper trades, not authenticated orders.
 
 **Ownership boundary:** A shared deterministic policy/state machine used by historical and forward runners. It consumes market/fill events; it does not fetch future data or run its own historical loop.
 

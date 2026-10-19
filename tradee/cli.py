@@ -13,6 +13,7 @@ from .c03 import cli as feature_cli
 from .c06 import cli as funding_cli
 from .c07 import cli as execution_cli
 from .c08 import cli as candidate_cli
+from .c09 import cli as lifecycle_cli
 
 
 def timestamp(text):
@@ -49,8 +50,13 @@ def main(argv=None):
     funding_cli.register(sub)
     execution_cli.register(sub)
     candidate_cli.register(sub)
+    lifecycle_cli.register(sub)
     args = parser.parse_args(argv)
     try:
+        if args.command == "lifecycle":
+            result = lifecycle_cli.execute(args)
+            print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
+            return 2 if args.lifecycle_command == "run" and not result['ready'] else 0
         if args.command == "candidates":
             result = candidate_cli.execute(args)
             print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))

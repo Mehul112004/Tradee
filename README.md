@@ -1,6 +1,6 @@
 # Tradee
 
-Component-based crypto signal research. **C01, C02, C03, C06, C07 and C08 are available:** instrument metadata, market-data recording/replay, causal features, funding calculations, paper execution/costs and two independent setup families. Trade lifecycle, backtests and Telegram delivery are later components.
+Component-based crypto signal research. **C01, C02, C03, C06, C07, C08 and C09 are available:** instrument metadata, market-data recording/replay, causal features, funding, execution/cost scenarios, two setup families and independent paper trade lifecycles/ledgers. Full strategy simulation, walk-forward validation and Telegram delivery remain downstream.
 
 ## Development environment
 
@@ -134,7 +134,7 @@ python3 -m tradee data import-archive BTCUSDT BTCUSDT-1m-2026-08.zip BTCUSDT-1m-
 
 Local imports record receipt **now**; JSONL files cannot claim original live receipt times. Use a separate database for fixtures: `python3 -m tradee --db /tmp/c01.sqlite3 data --market-db /tmp/c02.sqlite3 …`. Global C01 arguments go before `data`; `--market-db` goes before its action.
 
-See [C02 implementation contracts and limits](C02_IMPLEMENTATION.md) and [C02 verification](C02_VERIFICATION.md). The full suite now contains 350 passing tests, including C03, C06, C07 and C08. Live exchange connectivity passed on 21 September 2026; sustained recording/load remains an operational check.
+See [C02 implementation contracts and limits](C02_IMPLEMENTATION.md) and [C02 verification](C02_VERIFICATION.md). The full suite now contains 404 passing tests, including C03, C06, C07 and C08. Live exchange connectivity passed on 21 September 2026; sustained recording/load remains an operational check.
 
 
 ## Check Binance connectivity
@@ -254,7 +254,7 @@ Only the first command needs public Binance connectivity and the existing live d
 
 ## Component scope and upgrades
 
-[COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) is the maintained register for **all fifteen components**. It distinguishes implemented scope, required unbuilt baseline work, deferred/conditional extensions, validation gaps, dependencies and completion gates. Update it after every component implementation. C06 predictive premium/OI/liquidation work and automated calendar acquisition are recorded there; C07 market execution/cost scope is now implemented; C08 now provides range-breakout and trend-continuation candidates; C09 trade lifecycle is next.
+[COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) is the maintained register for **all fifteen components**. It distinguishes implemented scope, required unbuilt baseline work, deferred/conditional extensions, validation gaps, dependencies and completion gates. Update it after every component implementation. C06 predictive premium/OI/liquidation work and automated calendar acquisition are recorded there; C07 market execution/cost scope is now implemented; C08 now provides range-breakout and trend-continuation candidates; C09 trade lifecycle is now implemented; C11 historical simulation is next.
 
 
 ## C07 execution and tradability
@@ -283,7 +283,7 @@ conda run -n tradee python -m scripts.verify_c07 --output data/c07_checks/demo1
 
 Use a fresh output directory. The demo runs 27 real CLI commands/processes through C01/C02/C03/C06/C07, verifies independent buy/sell price/fee/funding amounts, recovers from a failed database write in another process, and exercises delay, expiry, quantity, passive-order, spread and coarse-bar cases. Read `e2e_report.json` and `e2e_commands.json`; inspect reports and repeat a completed command to check unchanged hashes/counts. All prices/exposures/rules are synthetic, with actual import receipt times and no network, orders or Telegram.
 
-The full offline suite has **350 passing tests**, including **58 C07 tests** and **52 C08 tests**. An opt-in public metadata/quote/mark capture also passed direct-versus-persisted replay checks; see verification for exact results. Passive/partial fills, calibrated cost/delay distributions, account reconciliation and richer historical coverage remain in the upgrade register. C08 candidate generation is now implemented; complete trade-ledger E2E arrives at C11 and Telegram E2E at C14.
+The full offline suite has **404 passing tests**, including **58 C07 tests** and **52 C08 tests**. An opt-in public metadata/quote/mark capture also passed direct-versus-persisted replay checks; see verification for exact results. Passive/partial fills, calibrated cost/delay distributions, account reconciliation and richer historical coverage remain in the upgrade register. C08 candidate generation is now implemented; complete trade-ledger E2E arrives at C11 and Telegram E2E at C14.
 
 
 ## C08 range breakout and trend continuation
@@ -310,6 +310,36 @@ conda run -n tradee python -m unittest tests.test_c08_e2e -v
 conda run -n tradee python -m scripts.verify_c08 --output data/c08_checks/demo1
 ```
 
-Use a fresh directory. The E2E imports raw synthetic BTC/ETH paths, processes both default 15m families through real C03 calculations, retains 1616 direction/bar evaluations per family, detects independently expected long/short setups, and recovers in a new process after a failed database write. Raw inputs, bound candidates, SQLite state, command log and `e2e_report.json` remain for manual review. The full suite has **350 passing tests**, including **52 C08 tests**.
+Use a fresh directory. The E2E imports raw synthetic BTC/ETH paths, processes both default 15m families through real C03 calculations, retains 1616 direction/bar evaluations per family, detects independently expected long/short setups, and recovers in a new process after a failed database write. Raw inputs, bound candidates, SQLite state, command log and `e2e_report.json` remain for manual review. The full suite has **404 passing tests**, including **52 C08 tests**.
 
-C09 is next: executable entry/exit policy, position quantities and one-time fee/funding booking. Complete trading outcomes and backtests still require C09/C11; walk-forward evidence and promotion require C12. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks remaining families/horizons, context filters and operational work.
+C09 now supplies executable paper entry/exit policy, position quantities and one-time fee/funding booking. Full strategy backtests still require C11; walk-forward evidence and promotion require C12. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks remaining families/horizons, context filters and operational work.
+
+
+## C09 paper trade lifecycle and outcomes
+
+C09 connects evidence-bound C08 candidates to C07 market fills and C06 settled-funding accounting. It owns fixed stops/targets, optional partial exits, time/invalidation closes, remaining quantities and exact keyed ledgers. Both stop/target event labels and after-cost profit labels remain explicit; unknown funding and incomplete paths produce unresolved labels. [Research decisions](C09_RESEARCH_PLAN.md), [contracts](C09_IMPLEMENTATION.md) and [verification](C09_VERIFICATION.md) document the implementation.
+
+Default policy: 1% reference-price stop, 2R reference target, four-hour hold and contract-trade triggers. These are unoptimized engineering assumptions. Entry retains C07's manual-delay model; exit delay is separately explicit. Candle-only research can select close-only or range triggers, but C07 supplies only an explicitly modeled close execution. A stop/target conflict in one range bar stays unresolved rather than inventing intrabar ordering or a fill price.
+
+```sh
+conda activate tradee
+python -m tradee lifecycle explain
+python -m tradee --db data/c01.sqlite3 lifecycle \
+  --market-db data/c02.sqlite3 --lifecycle-db data/c09.sqlite3 \
+  run DATASET_HASH --intents intents.json --fees configs/c07_fee_assumptions.json \
+  --execution configs/c07_execution.json --funding configs/c06_funding.json \
+  --calendar calendar.json
+```
+
+Each intent contains the complete emitted candidate, its actual C03 feature artifact, quantity and policy; use the implementation document or generated E2E inputs for the schema. All evidence must share the pinned dataset. Funding calendars remain declared evidence/assumptions. A published next-funding estimate is never booked as settled cash flow.
+
+Inspect `lifecycle summary RUN_HASH`, `manifest RUN_HASH`, `report REPORT_HASH` and `transition TRANSITION_HASH`, with `--lifecycle-db` before the action for nondefault stores. Exit 0 means ready outcomes/valid unfilled cases, 2 means saved unresolved outcomes, and 1 means invalid input or operational failure. Replay completion does not imply every trade has a mature outcome.
+
+```sh
+conda run -n tradee python -m unittest tests.test_c09_e2e -v
+conda run -n tradee python -m scripts.verify_c09 --output data/c09_checks/demo1
+```
+
+Use a fresh directory. The connected E2E runs 22 actual CLI commands through raw imports, real C08/C03 candidates, C07 fills, C06 coverage and C09 outcomes, including recovery after a failed write. Exact synthetic nets are **2.4965 USDT long** and **2.5035 USDT short**, under explicitly overridden zero manual delay, 25bps spread budget and empty synthetic settlement calendars. Raw inputs, configs, SQLite state, `e2e_report.json` and command log remain for manual inspection. The full suite has **404 passing tests**, including **54 C09 tests**.
+
+The optional [public replay script](scripts/verify_c09_public_replay.py) reuses the retained C08 Binance candle capture and checks direct/persisted lifecycle parity under explicit modeled assumptions. It makes no fresh live-feed or profitability claim. Next is **C11 historical simulation**; C10 follows with expectancy estimates from matured outcomes. [The upgrade register](COMPONENT_UPGRADES.md) tracks research, execution/account fidelity and operational work.

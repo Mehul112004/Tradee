@@ -1,0 +1,1 @@
+{"version":1,"stop_fraction":"0.01","target_r":"2","max_holding_ms":14400000,"trigger_source":"contract_trade","partial_target_r":null,"exit_delay_ms":0,"max_exit_wait_ms":60000,"max_trigger_age_ms":5000,"max_path_gap_ms":60000}
