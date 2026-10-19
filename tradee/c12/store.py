@@ -175,11 +175,27 @@ class ResearchStore:
         if Path(self.path).resolve()==Path(simulations.path).resolve(): raise ValidationError('C11 and C12 stores must differ')
         if m['code_hash']!=code_hash() or m['python']!=platform.python_version(): raise ValidationError('Experiment code/runtime changed; register a new counted trial')
         self.events(h)
-        store=self
+        experiment=Experiment.from_dict(m['experiment']); pins=experiment.source_report_hashes.document(); store=self
+        development_runs={r for v in experiment.variants for r in v.development_runs}
+        class Sources:
+            path=simulations.path
+            def __getattr__(self,name): return getattr(simulations,name)
+            def summary(self,run):
+                if run in development_runs:
+                    source=simulations.manifest(run)
+                    if source['decision_window_ms'][1]>experiment.holdout.split.test.start_ms or source['dataset']['as_of_ms']>experiment.holdout.split.test.start_ms:
+                        raise ValidationError('Development source contains sealed-period decisions or later revisions')
+                result=simulations.summary(run)
+                if pins.get(run)!=result['report_hash']:
+                    raise ValidationError('C11 report differs from frozen evidence; run IDs alone are store-local')
+                return result
+        checked=Sources()
+        # Cached jobs must not silently accept a different development database.
+        for run in sorted(development_runs): checked.summary(run)
         class Jobs:
-            def __init__(self): self.simulations=simulations
+            def __init__(self): self.simulations=checked
             def __call__(self,key,operation): return store._job(h,key,operation)
-        return Experiment.from_dict(m['experiment']),Jobs()
+        return experiment,Jobs()
 
     def run(self,h,simulations):
         with self._lock():
@@ -198,6 +214,8 @@ class ResearchStore:
             if not opened:
                 with self.connection() as db: self._event(db,h,'holdout_opened',dict(development_hash=expected,reason=reason,
                     winner=development['final_selection']['winner'],model_hash=development['final_training']['model_hash'],attestation=e.holdout_attestation,status=e.holdout_status))
+            # Holdout content is checked only after the one-way access journal.
+            for run in sorted({r for v in e.variants for r in v.holdout_runs}): jobs.simulations.summary(run)
             # Access stays consumed if a subsequent job fails; same frozen job can resume.
             result=jobs('report/holdout',lambda:engine.holdout(e,development,jobs))
             jobs('release/decision',lambda:self._release(h,e,development,result))

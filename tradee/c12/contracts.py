@@ -164,6 +164,7 @@ class Experiment:
     folds: tuple
     holdout: dict
     holdout_attestation: str
+    source_report_hashes: dict | None = None
     holdout_status: str = 'development_only'
     policy: dict | None = None
     version: int = 1
@@ -195,11 +196,17 @@ class Experiment:
         # A percentile estimate needs enough draws to resolve the declared tail.
         if p.bootstrap_replicates*Fraction(p.alpha)/(2*self.family_trial_budget)<1:
             raise ValidationError('Too few bootstrap draws for family-adjusted tail probability')
+        refs=self.source_report_hashes
+        all_runs={h for v in vs for h in (*v.development_runs,*v.holdout_runs)}
+        if (not isinstance(refs,dict) or not all_runs<=set(refs) or len(refs)>6400 or
+                any(not isinstance(k,str) or not re.fullmatch('[a-f0-9]{64}',k) or not isinstance(v,str) or not re.fullmatch('[a-f0-9]{64}',v) for k,v in refs.items())):
+            raise ValidationError('Every C11 run requires its pinned content-addressed report hash')
+        object.__setattr__(self,'source_report_hashes',FrozenRecord.create(refs))
         object.__setattr__(self,'variants',vs); object.__setattr__(self,'folds',fs); object.__setattr__(self,'holdout',h); object.__setattr__(self,'policy',p)
 
     def document(self):
         return dict(version=self.version,name=self.name,family=self.family,thesis=self.thesis,prior_research=self.prior_research,
-                    historical_trials=self.historical_trials,family_trial_budget=self.family_trial_budget,variants=[v.document() for v in self.variants],
+                    historical_trials=self.historical_trials,family_trial_budget=self.family_trial_budget,source_report_hashes=self.source_report_hashes.document(),variants=[v.document() for v in self.variants],
                     folds=[f.document() for f in self.folds],holdout=self.holdout.document(),holdout_status=self.holdout_status,
                     holdout_attestation=self.holdout_attestation,policy=self.policy.document())
 
