@@ -53,3 +53,16 @@ class SimulationAnalysisTests(unittest.TestCase):
             ctx.prec=3
             b=Simulator(s.dataset,s.scenarios,s.snapshots,s.versions,s.fees,s.execution,calendars=s.calendars).run(lambda:iter(events))
         self.assertEqual(a.report,b.report)
+
+    def test_immutable_record_digest_is_cached_without_mutable_document_aliases(self):
+        from dataclasses import FrozenInstanceError
+        from unittest.mock import patch
+        from tradee.c01.domain import fingerprint
+        from tradee.c11 import SimulationRecord
+        record=SimulationRecord.create({'nested':{'value':1}})
+        with patch('tradee.c03.contracts.fingerprint',wraps=fingerprint) as hashed:
+            first=record.digest; doc=record.document(); doc['nested']['value']=99
+            self.assertEqual(record.digest,first); self.assertEqual(hashed.call_count,1)
+        self.assertEqual(record.document(),{'nested':{'value':1}})
+        with self.assertRaises(FrozenInstanceError): record.serialized='{}'
+        with self.assertRaises(AttributeError): record.digest='invalid'

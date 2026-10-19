@@ -1,5 +1,6 @@
 """Immutable public records, serialized without NaN or mutable aliases."""
 from dataclasses import asdict, dataclass
+from functools import cached_property
 import json
 import math
 from tradee.c01.domain import canonical, fingerprint
@@ -70,6 +71,10 @@ class FrozenRecord:
 
     @property
     def digest(self):
+        return self._cached_digest
+
+    @cached_property
+    def _cached_digest(self):
         return fingerprint(self.document())
 
 
