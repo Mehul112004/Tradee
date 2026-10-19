@@ -1,6 +1,6 @@
 # Tradee
 
-Component-based crypto signal research. **C01, C02, C03, C06, C07, C08, C09 and C11 are available:** instrument metadata, market-data recording/replay, causal features, funding, execution/cost scenarios, two setup families, paper trade ledgers and independent historical simulation/attribution. Expectancy, walk-forward validation, shared-capital portfolios and Telegram remain downstream.
+Component-based crypto signal research. **C01, C02, C03, C06, C07, C08, C09, C10 and C11 are available:** instrument metadata, market-data recording/replay, causal features, funding, execution/cost scenarios, two setup families, paper trade ledgers, independent historical simulation/attribution and frozen cohort expectancy with time-block uncertainty. Walk-forward selection control, shared-capital portfolios and Telegram remain downstream.
 
 ## Development environment
 
@@ -254,7 +254,7 @@ Only the first command needs public Binance connectivity and the existing live d
 
 ## Component scope and upgrades
 
-[COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) is the maintained register for **all fifteen components**. It distinguishes implemented scope, required unbuilt baseline work, deferred/conditional extensions, validation gaps, dependencies and completion gates. Update it after every component implementation. C06 predictive premium/OI/liquidation work and automated calendar acquisition are recorded there; C07 market execution/cost scope is now implemented; C08 now provides range-breakout and trend-continuation candidates; C09 trade lifecycle and C11 historical simulation/attribution are implemented; C10 expectancy is next.
+[COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) is the maintained register for **all fifteen components**. It distinguishes implemented scope, required unbuilt baseline work, deferred/conditional extensions, validation gaps, dependencies and completion gates. Update it after every component implementation. C06 predictive premium/OI/liquidation work and automated calendar acquisition are recorded there; C07 market execution/cost scope is now implemented; C08 now provides range-breakout and trend-continuation candidates; C09 trade lifecycle, C11 historical simulation/attribution and C10 cohort expectancy are implemented; C12 research control is next.
 
 
 ## C07 execution and tradability
@@ -340,9 +340,9 @@ conda run -n tradee python -m unittest tests.test_c09_e2e -v
 conda run -n tradee python -m scripts.verify_c09 --output data/c09_checks/demo1
 ```
 
-Use a fresh directory. The connected E2E runs 22 actual CLI commands through raw imports, real C08/C03 candidates, C07 fills, C06 coverage and C09 outcomes, including recovery after a failed write. Exact synthetic nets are **2.4965 USDT long** and **2.5035 USDT short**, under explicitly overridden zero manual delay, 25bps spread budget and empty synthetic settlement calendars. Raw inputs, configs, SQLite state, `e2e_report.json` and command log remain for manual inspection. At C09 completion, the suite had **404 passing tests**, including **54 C09 tests**; current full-suite results are recorded in [C11 verification](C11_VERIFICATION.md).
+Use a fresh directory. The connected E2E runs 22 actual CLI commands through raw imports, real C08/C03 candidates, C07 fills, C06 coverage and C09 outcomes, including recovery after a failed write. Exact synthetic nets are **2.4965 USDT long** and **2.5035 USDT short**, under explicitly overridden zero manual delay, 25bps spread budget and empty synthetic settlement calendars. Raw inputs, configs, SQLite state, `e2e_report.json` and command log remain for manual inspection. At C09 completion, the suite had **404 passing tests**, including **54 C09 tests**; current full-suite results are recorded in [C10 verification](C10_VERIFICATION.md).
 
-The optional [public replay script](scripts/verify_c09_public_replay.py) reuses the retained C08 Binance candle capture and checks direct/persisted lifecycle parity under explicit modeled assumptions. It makes no fresh live-feed or profitability claim. **C11 historical simulation is now implemented**; C10 follows with expectancy estimates from causally available matured outcomes. [The upgrade register](COMPONENT_UPGRADES.md) tracks research, execution/account fidelity and operational work.
+The optional [public replay script](scripts/verify_c09_public_replay.py) reuses the retained C08 Binance candle capture and checks direct/persisted lifecycle parity under explicit modeled assumptions. It makes no fresh live-feed or profitability claim. **C11 historical simulation is now implemented**; C10 now provides cohort expectancy from causally available matured outcomes. [The upgrade register](COMPONENT_UPGRADES.md) tracks research, execution/account fidelity and operational work.
 
 
 ## C11 historical simulation and attribution
@@ -365,4 +365,25 @@ The demo requires a fresh directory and runs actual CLI processes from raw impor
 
 Run all tests with `conda run -n tradee python -m unittest discover -s tests -q`. Optional saved public replay: `python -m scripts.verify_c11_public_replay --source data/c08_verification/public1 --output data/c11_checks/public1`. It reuses real Binance candles with explicit modeled assumptions; funding/net remain null.
 
-A completed run can contain unresolved outcomes and exit 2 while retaining its report. Earlier data supplies warm-up; half-open detection windows and the pinned tail define which outcomes are measured. Completed runs publish atomically; interrupted runs restart deterministically. Independent scenarios do not share capital/liquidity and their P&L is not portfolio return/Sharpe. C10 consumes revision-aware matured evidence next; C12 adds walk-forward isolation, and C13 enables funded portfolio simulation. Remaining scope stays in the upgrade register.
+A completed run can contain unresolved outcomes and exit 2 while retaining its report. Earlier data supplies warm-up; half-open detection windows and the pinned tail define which outcomes are measured. Completed runs publish atomically; interrupted runs restart deterministically. Independent scenarios do not share capital/liquidity and their P&L is not portfolio return/Sharpe. C10 now consumes revision-aware matured evidence; C12 adds walk-forward isolation next, and C13 enables funded portfolio simulation. Remaining scope stays in the upgrade register.
+
+
+## C10 cohort expectancy and uncertainty
+
+[Research decisions](C10_RESEARCH_PLAN.md), [implementation and commands](C10_IMPLEMENTATION.md), [verification](C10_VERIFICATION.md). C10 trains from the last C11 outcome revision actually knowable before a cutoff, keeps unresolved/unfilled coverage, matches strategy/policy/cost/feature protocols and estimates broad cohorts with synchronized circular time-block uncertainty. Sparse, stale, incompatible or degenerate evidence abstains.
+
+```sh
+conda activate tradee
+python -m tradee expectancy explain
+python -m tradee expectancy fit --runs C11_RUN_HASH --window path/to/training_window.json
+python -m tradee expectancy summary MODEL_HASH
+python -m tradee expectancy estimate MODEL_HASH --request path/to/candidate_request.json
+python -m tradee expectancy evaluate MODEL_HASH --runs LATER_C11_RUN_HASH --window path/to/later_window.json
+python -m scripts.verify_c10 --output data/c10_checks/demo1
+```
+
+Use a fresh demo directory. The E2E demo ingests raw Binance-shaped data through production APIs with explicitly injected synthetic receipt clocks, generates 36 genuine simulated trading outcomes across 36 days, fits the default 30-trade/20-bin/10-span C10 gates and scores four separate later candidates through real CLI processes. Inputs, database state, publication-failure recovery evidence, requests and reports remain for manual review. It uses synthetic prices/rules, size 1, zero manual entry delay, assumed fees and empty synthetic funding calendars; it is not a market-profitability experiment.
+
+Training windows contain `start_ms`, exclusive detection `end_ms` and later knowledge `cutoff_ms`. Publication uses actual completion time unless historical research explicitly supplies `--modeled-available-ms`. Frozen inference never reads a candidate's later outcome. Mean net R is conditional on fill and mature evidence; empirical win frequency is not a calibrated probability. `ready` means usable evidence, while `eligible` separately checks a predeclared lower-bound buffer. Neither grants release/trading approval.
+
+The saved-public check, `python -m scripts.verify_c10_public_evidence --source data/c11_verification/public1 --output data/c10_checks/public1`, confirms that modeled candle outcomes with unknown funding cannot become training labels. No new network or credentials are required. Next is **C12 walk-forward and experiment control**; [the upgrade register](COMPONENT_UPGRADES.md) tracks real-data validation, optional predictive/calibrated models and later C11/C13/C14 integration.

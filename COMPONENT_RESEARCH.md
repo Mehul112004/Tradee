@@ -401,6 +401,8 @@ Do not train a target-before-stop model and present its probability as positive 
 
 ### C10 — Conditional net expectancy and uncertainty
 
+Implementation status, 19 October 2026: revision-aware training, broad frozen cohorts, circular time-block uncertainty, coverage/abstention, applicable inference and later diagnostic evaluation are implemented. See [research decisions](C10_RESEARCH_PLAN.md), [operator contract](C10_IMPLEMENTATION.md) and [verification](C10_VERIFICATION.md). Demonstrating improvement on untouched later real data remains a C12/C13 research gate; predictive/calibrated models and richer context remain in [the upgrade register](COMPONENT_UPGRADES.md).
+
 **Depends on / receives from:** D: [C03](#c03--feature-engine), [C07](#c07--execution-costs-and-tradability), [C09](#c09--trade-policy-and-outcome-labelling); O: [C04](#c04--market-state-context), [C06](#c06--derivatives-and-positioning-context); A: [C11](#c11--historical-simulation-and-attribution); R: [C12](#c12--walk-forward-selection-control-and-experiment-registry).
 
 **Used by / supplies to:** D: [C13](#c13--portfolio-risk-and-alert-selection), [C14](#c14--live-decision-and-telegram-lifecycle), [C15](#c15--forward-measurement-and-degradation-monitoring); O: [C11](#c11--historical-simulation-and-attribution); A: [C12](#c12--walk-forward-selection-control-and-experiment-registry).
