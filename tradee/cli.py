@@ -16,6 +16,7 @@ from .c08 import cli as candidate_cli
 from .c09 import cli as lifecycle_cli
 from .c11 import cli as simulation_cli
 from .c10 import cli as expectancy_cli
+from .c12 import cli as research_cli
 
 
 def timestamp(text):
@@ -55,8 +56,13 @@ def main(argv=None):
     lifecycle_cli.register(sub)
     simulation_cli.register(sub)
     expectancy_cli.register(sub)
+    research_cli.register(sub)
     args = parser.parse_args(argv)
     try:
+        if args.command == "research":
+            result = research_cli.execute(args)
+            print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
+            return 2 if args.research_command in ("run", "open-holdout", "decision") and not result["ready"] else 0
         if args.command == "expectancy":
             result = expectancy_cli.execute(args)
             print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
