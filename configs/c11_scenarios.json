@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "scenarios": [
+    {
+      "name": "range_intraday",
+      "horizon": "intraday",
+      "strategy": {"family": "prior_range_breakout", "timeframe": "15m", "lookback_bars": 20},
+      "policy": {"trigger_source": "contract_trade", "stop_fraction": "0.01", "target_r": "2", "max_holding_ms": 14400000},
+      "quantity": "0.001"
+    },
+    {
+      "name": "trend_intraday",
+      "horizon": "intraday",
+      "strategy": {"family": "ema_pullback_continuation", "timeframe": "15m"},
+      "policy": {"trigger_source": "contract_trade", "stop_fraction": "0.01", "target_r": "2", "max_holding_ms": 14400000},
+      "quantity": "0.001"
+    }
+  ]
+}

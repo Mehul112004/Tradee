@@ -14,6 +14,7 @@ from .c06 import cli as funding_cli
 from .c07 import cli as execution_cli
 from .c08 import cli as candidate_cli
 from .c09 import cli as lifecycle_cli
+from .c11 import cli as simulation_cli
 
 
 def timestamp(text):
@@ -51,8 +52,13 @@ def main(argv=None):
     execution_cli.register(sub)
     candidate_cli.register(sub)
     lifecycle_cli.register(sub)
+    simulation_cli.register(sub)
     args = parser.parse_args(argv)
     try:
+        if args.command == "simulate":
+            result = simulation_cli.execute(args)
+            print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
+            return 2 if args.simulation_command == "run" and not result['ready'] else 0
         if args.command == "lifecycle":
             result = lifecycle_cli.execute(args)
             print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
