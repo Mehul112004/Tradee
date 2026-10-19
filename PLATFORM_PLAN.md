@@ -4,7 +4,7 @@
 
 Updated 14 September 2026. For each component: **deep research and discussion → finalize its plan → user approval → implementation and verification**. The user authorized C01 implementation with Binance; its first version is now implemented. See [README.md](/Users/artemis/Mehul/Tradee/README.md) for operation and verification.
 
-Status updated 19 October 2026: C01, C02, C03, C06 funding, C07 execution/costs, C08 two-family candidate generation, C09 paper trade lifecycles/ledgers, C11 independent historical simulation/attribution and C10 causal cohort expectancy/uncertainty are implemented. C10 follows the same robust-testing, E2E, documentation and phased-commit workflow. Next is C12 walk-forward, experiment accounting and selection control. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks implemented scope, required remaining functionality and future upgrades for every component; update it with every implementation increment.
+Status updated 19 October 2026: C01, C02, C03, C06 funding, C07 execution/costs, C08 two-family candidate generation, C09 paper trade lifecycles/ledgers, C11 independent historical simulation/attribution, C10 causal cohort expectancy/uncertainty and C12 nested walk-forward/experiment accounting are implemented. C12 follows the same robust-testing, raw-input E2E, documentation and phased-commit workflow. Next is C13 portfolio risk and alert selection. C12 research releases do not grant live approval. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks implemented scope, required remaining functionality and future upgrades for every component; update it with every implementation increment.
 
 | Order | Component | Initial scope |
 | --- | --- | --- |
@@ -28,7 +28,7 @@ Status updated 19 October 2026: C01, C02, C03, C06 funding, C07 execution/costs,
 
 The numbers C01–C15 identify components, not build sequence. Each component initially delivers its agreed minimum scope and can be extended through later reviewed increments. The broader phases below group this work; this table is the current component working order.
 
-Original planning draft — 6 September 2026; implementation status updated 19 October 2026. C01–C03, C06 funding, C07 execution, C08 setup detection, C09 paper outcomes, C11 independent historical simulation and C10 frozen cohort expectancy are implemented. Finite-capital simulation awaits C13; walk-forward selection control and empirical performance validation remain downstream.
+Original planning draft — 6 September 2026; implementation status updated 19 October 2026. C01–C03, C06 funding, C07 execution, C08 setup detection, C09 paper outcomes, C11 independent historical simulation, C10 frozen cohort expectancy and C12 chronological selection/holdout control are implemented. Finite-capital validation awaits C13; representative real-data profitability and live operational validation remain outstanding.
 
 Expanded research: [Components for finding positive net expectancy setups](/Users/artemis/Mehul/Tradee/COMPONENT_RESEARCH.md), researched 9 September 2026, specifies fifteen modules, their evidence, dependencies and acceptance criteria.
 

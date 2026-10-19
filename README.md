@@ -1,6 +1,6 @@
 # Tradee
 
-Component-based crypto signal research. **C01, C02, C03, C06, C07, C08, C09, C10 and C11 are available:** instrument metadata, market-data recording/replay, causal features, funding, execution/cost scenarios, two setup families, paper trade ledgers, independent historical simulation/attribution and frozen cohort expectancy with time-block uncertainty. Walk-forward selection control, shared-capital portfolios and Telegram remain downstream.
+Component-based crypto signal research. **C01, C02, C03, C06, C07, C08, C09, C10, C11 and C12 are available:** instrument metadata, market-data recording/replay, causal features, funding, execution/cost scenarios, two setup families, paper trade ledgers, independent historical simulation/attribution, frozen cohort expectancy with time-block uncertainty, and chronological walk-forward/experiment control. Shared-capital portfolios and Telegram remain downstream.
 
 ## Development environment
 
@@ -340,7 +340,7 @@ conda run -n tradee python -m unittest tests.test_c09_e2e -v
 conda run -n tradee python -m scripts.verify_c09 --output data/c09_checks/demo1
 ```
 
-Use a fresh directory. The connected E2E runs 22 actual CLI commands through raw imports, real C08/C03 candidates, C07 fills, C06 coverage and C09 outcomes, including recovery after a failed write. Exact synthetic nets are **2.4965 USDT long** and **2.5035 USDT short**, under explicitly overridden zero manual delay, 25bps spread budget and empty synthetic settlement calendars. Raw inputs, configs, SQLite state, `e2e_report.json` and command log remain for manual inspection. At C09 completion, the suite had **404 passing tests**, including **54 C09 tests**; current full-suite results are recorded in [C10 verification](C10_VERIFICATION.md).
+Use a fresh directory. The connected E2E runs 22 actual CLI commands through raw imports, real C08/C03 candidates, C07 fills, C06 coverage and C09 outcomes, including recovery after a failed write. Exact synthetic nets are **2.4965 USDT long** and **2.5035 USDT short**, under explicitly overridden zero manual delay, 25bps spread budget and empty synthetic settlement calendars. Raw inputs, configs, SQLite state, `e2e_report.json` and command log remain for manual inspection. At C09 completion, the suite had **404 passing tests**, including **54 C09 tests**; current full-suite results are recorded in [C12 verification](C12_VERIFICATION.md).
 
 The optional [public replay script](scripts/verify_c09_public_replay.py) reuses the retained C08 Binance candle capture and checks direct/persisted lifecycle parity under explicit modeled assumptions. It makes no fresh live-feed or profitability claim. **C11 historical simulation is now implemented**; C10 now provides cohort expectancy from causally available matured outcomes. [The upgrade register](COMPONENT_UPGRADES.md) tracks research, execution/account fidelity and operational work.
 
@@ -365,7 +365,7 @@ The demo requires a fresh directory and runs actual CLI processes from raw impor
 
 Run all tests with `conda run -n tradee python -m unittest discover -s tests -q`. Optional saved public replay: `python -m scripts.verify_c11_public_replay --source data/c08_verification/public1 --output data/c11_checks/public1`. It reuses real Binance candles with explicit modeled assumptions; funding/net remain null.
 
-A completed run can contain unresolved outcomes and exit 2 while retaining its report. Earlier data supplies warm-up; half-open detection windows and the pinned tail define which outcomes are measured. Completed runs publish atomically; interrupted runs restart deterministically. Independent scenarios do not share capital/liquidity and their P&L is not portfolio return/Sharpe. C10 now consumes revision-aware matured evidence; C12 adds walk-forward isolation next, and C13 enables funded portfolio simulation. Remaining scope stays in the upgrade register.
+A completed run can contain unresolved outcomes and exit 2 while retaining its report. Earlier data supplies warm-up; half-open detection windows and the pinned tail define which outcomes are measured. Completed runs publish atomically; interrupted runs restart deterministically. Independent scenarios do not share capital/liquidity and their P&L is not portfolio return/Sharpe. C10 now consumes revision-aware matured evidence; C12 now adds walk-forward isolation and experiment control; C13 enables funded portfolio simulation. Remaining scope stays in the upgrade register.
 
 
 ## C10 cohort expectancy and uncertainty
@@ -386,4 +386,28 @@ Use a fresh demo directory. The E2E demo ingests raw Binance-shaped data through
 
 Training windows contain `start_ms`, exclusive detection `end_ms` and later knowledge `cutoff_ms`. Publication uses actual completion time unless historical research explicitly supplies `--modeled-available-ms`. Frozen inference never reads a candidate's later outcome. Mean net R is conditional on fill and mature evidence; empirical win frequency is not a calibrated probability. `ready` means usable evidence, while `eligible` separately checks a predeclared lower-bound buffer. Neither grants release/trading approval.
 
-The saved-public check, `python -m scripts.verify_c10_public_evidence --source data/c11_verification/public1 --output data/c10_checks/public1`, confirms that modeled candle outcomes with unknown funding cannot become training labels. No new network or credentials are required. Next is **C12 walk-forward and experiment control**; [the upgrade register](COMPONENT_UPGRADES.md) tracks real-data validation, optional predictive/calibrated models and later C11/C13/C14 integration.
+The saved-public check, `python -m scripts.verify_c10_public_evidence --source data/c11_verification/public1 --output data/c10_checks/public1`, confirms that modeled candle outcomes with unknown funding cannot become training labels. No new network or credentials are required. **C12 walk-forward and experiment control is now implemented**; [the upgrade register](COMPONENT_UPGRADES.md) tracks real-data validation, optional predictive/calibrated models and later C11/C13/C14 integration.
+
+
+## C12 walk-forward and experiment control
+
+**566 tests pass, including 64 dedicated C12 tests and the raw-input E2E.**
+
+[Research and dependency map](C12_RESEARCH_PLAN.md), [implementation and commands](C12_IMPLEMENTATION.md), [verification](C12_VERIFICATION.md). C12 freezes all variants and trial budgets, selects only inside earlier chronological history, purges boundary labels, and evaluates later windows with the frozen C10 model. It checks neighboring parameters and adverse costs, retains failed/rejected trials, and logs final holdout access before reading it.
+
+```sh
+conda activate tradee
+python -m tradee research explain
+python -m tradee research register --manifest path/to/experiment.json
+python -m tradee research run EXPERIMENT_HASH
+python -m tradee research jobs EXPERIMENT_HASH
+python -m tradee research ledger FAMILY_NAME
+python -m tradee research open-holdout EXPERIMENT_HASH --reason 'Final policy frozen; first inspection'
+python -m tradee research release EXPERIMENT_HASH
+python -m scripts.verify_c12 --output data/c12_checks/demo1
+python -m scripts.verify_c12 --output data/c12_checks/negative1 --negative-holdout
+```
+
+Use fresh demo directories. Both demos should pass engineering verification: the negative mode must produce a research rejection. The connected E2E ingests raw synthetic Binance-shaped inputs through production APIs, generates actual C11 outcomes, runs nested selection across two outer windows, verifies fee/parameter robustness, injects an atomic-write failure and retries, then explicitly opens the sealed final window. Raw receipts, configs, stores, experiment JSON and reports remain for manual inspection. The fixture uses six-outcome/six-span thresholds, four-minute bins, 200 bootstrap draws, zero manual delay, assumed fees and empty synthetic funding calendars; it makes no real-market profitability claim.
+
+The example [experiment JSON](configs/c12_experiment.example.json) deliberately contains unusable placeholder hashes and an unattested development-only holdout. Prepare separate pinned single-protocol C11 sources and honest research-history disclosures before registering a real experiment. Final access is an application-level research control and cannot prevent inspection of raw files outside C12. All frozen releases say `live_approved: false`; next is **C13 shared portfolio risk and alert selection**. Deferred scope is recorded in [the upgrade register](COMPONENT_UPGRADES.md).
