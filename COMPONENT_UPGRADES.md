@@ -26,15 +26,15 @@ Each backlog entry has an ID, purpose, dependencies and a completion gate. After
 | C06 | Exact funding cash flows, observed estimates, coverage/boundary statuses, durable reports and E2E | Implemented funding scope | Audited calendar acquisition, account reconciliation and predictive derivatives extensions |
 | C07 | Market scenarios, exact fees/costs, rule/readiness/delay gates, durable replay and E2E | Implemented market scope | Passive/partial fills, empirical calibration, historical fidelity and account integration |
 | C08 | Independent 15m range-breakout and EMA recovery setups, full inventories and causal restart | Implemented two-family scope | C09 paper lifecycle now wired; C11/C12 after-cost evidence, more horizons/context and scale remain |
-| C09 | Independent paper lifecycle, fixed/partial/time/invalidation exits, exact ledger and maturity/unresolved outcomes | Implemented initial scope | C11/C12 full strategy experiments, finer path/execution, external action journaling and account effects |
-| C10 | Expectancy and uncertainty | Required next after C11 | Estimates from earlier matured outcomes and uncertainty |
-| C11 | Historical simulator | Required next after C09 | Full candidate-to-trade historical workflow, experiment inventories and reconciled ledgers |
+| C09 | Independent paper lifecycle, fixed/partial/time/invalidation exits, exact ledger and maturity/unresolved outcomes | Implemented initial scope | C11 historical wiring complete; C12 controlled experiments, finer path/execution, external action journaling and account effects remain |
+| C10 | Expectancy and uncertainty | Required next | Estimates from earlier matured outcomes and uncertainty |
+| C11 | Independent historical simulation, causal revisions, reconciled ledgers, regular P&L and cost/delay sensitivity | Implemented independent scope | C10/C13 injection, finite-capital equity/risk, C12 controlled experiments and scale/fidelity upgrades |
 | C12 | Research validation and registry | Required next | Walk-forward orchestration, isolation, trial accounting and promotion |
 | C13 | Portfolio and alert selection | Required next | Shared capital/risk constraints and combined-policy validation |
 | C14 | Live orchestration and Telegram | Required next | Persistent runtime, eligibility, delivery lifecycle and live E2E |
 | C15 | Forward measurement and monitoring | Required next | Signal-to-outcome tracking, reconciliation and degradation rules |
 
-The next component after C09 is C11 historical simulation, followed by C10 expectancy on matured outcomes. C04/C05 and predictive C06 additions remain optional. Full historical workflow testing arrives at C11, Telegram workflow testing at C14 and the complete forward feedback loop at C15. These milestones do not imply an existing dashboard or automated exchange orders.
+C11 independent historical simulation is now implemented. The next component is C10 expectancy on earlier available matured-outcome revisions, followed by C12 research validation. C04/C05 and predictive C06 additions remain optional. Historical candidate-to-outcome workflow testing is now available in C11; Telegram workflow testing arrives at C14 and the complete forward feedback loop at C15. These milestones do not imply an existing dashboard or automated exchange orders.
 
 ## C01 Instrument and universe registry
 
@@ -70,7 +70,7 @@ Implemented evidence: [C03 formula contract](C03_FEATURE_SPEC.md), [C03 verifica
 
 | ID | Remaining work | Type | Dependencies and completion gate |
 | --- | --- | --- | --- |
-| C03-U01 | Incremental numerical caches, efficient lineage/checkpoints and long-history throughput | Validation outstanding; priority before large C11 runs | Representative datasets; exact prefix/correction/restart parity preserved. Current reference reconstruction can accumulate quadratic work |
+| C03-U01 | Incremental numerical caches, efficient lineage/checkpoints and long-history throughput | Validation outstanding; priority before large C11 runs | Representative datasets; exact prefix/correction/restart parity preserved. Immutable record digests are now cached after the C11 public-replay bottleneck; current feature reference reconstruction can still accumulate quadratic work |
 | C03-U02 | MACD, ADX, Supertrend, stochastic RSI and Keltner channels | Conditional feature extensions | Freeze formulas/seeds/zeros first; independent fixtures and later C12 ablation justify use |
 | C03-U03 | OBV/CVD, depth/order-flow, volume profiles and swing-anchored VWAP | Conditional extensions | C02 evidence continuity and, where needed, C05 anchors; no fabricated tick/depth coverage |
 | C03-U04 | Derivatives, cross-asset/context and fitted ML transforms | Conditional extensions | C04/C06 and C12 fold-controlled fitting; transforms preserve availability and fit boundaries |
@@ -160,7 +160,7 @@ Implemented now: exact C08 source-prefix activation, pending thesis/expiry check
 | C09-U02 | Outcome labels, maturity, excursions and unresolved tails | Implemented initial evidence contract; downstream validation required | Policy-specific gross/net R, event versus profit labels, stable outcome-revision recognition time, sampled excursions and null unresolved labels; C11/C12 must respect availability and unresolved counts |
 | C09-U03 | More exit policies, trailing stops and finer intrabar resolution | Conditional extension | Event-order evidence from C02/C07; changed policy gets new labels and a new C12 trial |
 | C09-U04 | Margin, leverage, liquidation and actual account lifecycle | Conditional product/account extension | Compatible C01/C07/C13 models; leverage results require validated margin/liquidation semantics |
-| C09-U05 | Full strategy simulation, finite-capital admission and research outcomes | Required downstream wiring | C11/C13/C12; drive all C08 families and reconcile complete candidate/trade inventories, costs, exposures and holdouts; current C09 trades are independent scenarios |
+| C09-U05 | Full strategy simulation, finite-capital admission and research outcomes | C11 independent wiring implemented; C13/C12 integration remains | Both C08 families now replay to conserved candidate/trade inventories with cost attribution; funded capital/exposure constraints, holdouts and promotion remain C13/C12 |
 | C09-U06 | Durable external action journal and richer setup invalidation/correction policy | Forward-runtime extension | C14/C15; journal operator cancels and timer events, replay every action, define active-position response to thesis/source revisions and emergency exits without silently bypassing rule gates |
 | C09-U07 | Continuous path certification, historical funding/rule coverage and account reconciliation | Data/fidelity upgrade | C01/C02/C06/C07; current excursions are sampled, bar-range conflicts remain unresolved, close-trigger fills are coarse and modeled funding stays null |
 | C09-U08 | Large-history throughput, retained attempt/checkpoint size, migration/backup and physical recovery | Operational validation outstanding | C03/C11/C14; benchmark realistic histories/universe and compact durable evidence only after measured need |
@@ -175,12 +175,16 @@ Implemented now: exact C08 source-prefix activation, pending thesis/expiry check
 
 ## C11 Historical simulator
 
+Implemented evidence: [research decisions](C11_RESEARCH_PLAN.md), [implementation and boundaries](C11_IMPLEMENTATION.md), [verification](C11_VERIFICATION.md).
+
 | ID | Work | Type | Dependencies and completion gate |
 | --- | --- | --- | --- |
-| C11-U01 | Historical clock, independent candidate replay, fills, funding and reconciled trade ledgers | Required baseline | C01/C02/C03/C06/C07/C08/C09; first complete historical trading E2E and golden ledger totals |
+| C11-U01 | Historical clock, independent candidate replay, fills, funding and reconciled trade ledgers | Implemented independent baseline | C01/C02/C03/C06/C07/C08/C09; both-family E2E, exact timers/windows, full inventories, causal outcome revisions, golden quantities/gross/fees/net and atomic publication/retry |
 | C11-U02 | Frozen C10 inference and C13 finite-capital portfolio simulation | Required later integration | C10/C13, injected state and C12 orchestration; simultaneous positions/capital and attribution reconcile |
-| C11-U03 | Mark-to-market equity, regular risk metrics, tails and intraday/swing attribution | Required research reporting | Shared lifecycle and sufficiently complete mark/fill evidence; report unresolved outcomes and holdings |
+| C11-U03 | Mark-to-market equity, regular risk metrics, tails and intraday/swing attribution | Independent regular P&L/coverage, dollar drawdown, tails and horizon attribution implemented; funded equity/returns await C13 | Fresh mark or declared bar proxy; null missing marks/funding, unresolved counts and no portfolio Sharpe/ROI. Capital/margin model required before portfolio equity or percentage/annualized risk metrics |
 | C11-U04 | Higher execution fidelity and large-universe run performance | Conditional fidelity/scale upgrade | C02-U01/U02, C03-U01 and C07; reproducible stress/ambiguity results and measured resource limits |
+| C11-U05 | Mid-run simulation checkpoints, out-of-core artifact/position execution, migrations, backup/recovery and multi-year benchmarks | Operational/scale validation outstanding | Current completed runs publish atomically and restart both passes on interruption; explicit budgets fail without truncation. Preserve exact source/clock/revision parity when adding resumable bounded-memory execution |
+| C11-U06 | Uncertainty, sealed holdouts, cross-fold ownership, overlapping labels and complete experiment/trial registry | Required C10/C12 integration | Current cost/delay comparison is descriptive; C10 must read the last causally available revision, and C12 must control fitting, purging, selection and promotion |
 
 ## C12 Research validation and registry
 

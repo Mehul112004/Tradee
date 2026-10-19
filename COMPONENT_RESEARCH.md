@@ -431,6 +431,8 @@ Output estimated mean net R, uncertainty, sample/coverage information, adverse o
 
 ### C11 — Historical simulation and attribution
 
+Implementation status, 19 October 2026: the independent-candidate track is implemented, with exact deadline orchestration, full C08/feature evidence, C07/C06/C09 reconciled ledgers, causal outcome revisions, regular marked P&L and matched fee/delay sensitivity. See [C11 research decisions](C11_RESEARCH_PLAN.md), [implementation](C11_IMPLEMENTATION.md) and [verification](C11_VERIFICATION.md). Finite-capital equity and C10/C13 injection remain required later integration, not part of the current independent P&L statistics; [the upgrade register](COMPONENT_UPGRADES.md) retains those requirements.
+
 **Depends on / receives from:** D: [C01](#c01--instrument-and-universe-registry), [C02](#c02--point-in-time-market-data-and-deterministic-replay), [C03](#c03--feature-engine), [C06](#c06--derivatives-and-positioning-context), [C07](#c07--execution-costs-and-tradability), [C08](#c08--candidate-generation-and-hypothesis-registry), [C09](#c09--trade-policy-and-outcome-labelling); O: [C10](#c10--conditional-net-expectancy-and-uncertainty), [C13](#c13--portfolio-risk-and-alert-selection); R: [C12](#c12--walk-forward-selection-control-and-experiment-registry).
 
 **Used by / supplies to:** A: [C10](#c10--conditional-net-expectancy-and-uncertainty), [C12](#c12--walk-forward-selection-control-and-experiment-registry), [C15](#c15--forward-measurement-and-degradation-monitoring).
