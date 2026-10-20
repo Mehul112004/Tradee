@@ -4,7 +4,7 @@
 
 Updated 14 September 2026. For each component: **deep research and discussion → finalize its plan → user approval → implementation and verification**. The user authorized C01 implementation with Binance; its first version is now implemented. See [README.md](/Users/artemis/Mehul/Tradee/README.md) for operation and verification.
 
-Status updated 20 October 2026: C01, C02, C03, C06 funding, C07 execution/costs, C08 two-family candidate generation, C09 paper lifecycles, C11 independent simulation, C10 frozen expectancy, C12 research control, C13 shared-capital paper replay and C14's bounded shadow/paper-notification baseline are implemented. C14 follows the same robust-testing, raw-input E2E, documentation and phased-commit workflow. See [C14 research](C14_RESEARCH_PLAN.md), [operation](C14_IMPLEMENTATION.md) and [verification](C14_VERIFICATION.md). Next is C15 forward measurement and reconciliation. C14 preserves `live_approved: false`: full portfolio-policy inference, pre-entry actionable timing, actual margin/liquidation and representative operational acceptance remain explicit gates. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks implemented scope and future work for every component.
+Status updated 20 October 2026: C01, C02, C03, C06 funding, C07 execution/costs, C08 two-family candidate generation, C09 paper lifecycles, C11 independent simulation, C10 frozen expectancy, C12 research control, C13 shared-capital paper replay, C14's bounded shadow/paper-notification runtime and C15 forward measurement/monitoring are implemented. C15 follows the same robust-testing, raw-input E2E, documentation and phased-commit workflow. See [C15 research](C15_RESEARCH_PLAN.md), [operation](C15_IMPLEMENTATION.md) and [verification](C15_VERIFICATION.md). The agreed mandatory baseline sequence is complete; representative market research/forward validation and the required timing/account/operational gates come next. All runtime/monitoring evidence preserves `live_approved: false`. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks implemented scope and future work for every component.
 
 | Order | Component | Initial scope |
 | --- | --- | --- |
@@ -20,7 +20,7 @@ Status updated 20 October 2026: C01, C02, C03, C06 funding, C07 execution/costs,
 | 10 | C12 — Research validation | Walk-forward orchestration, trial accounting and promotion |
 | 11 | C13 — Portfolio and alert selection | Shared risk limits; extend C11 with portfolio-policy evaluation |
 | 12 | C14 — Live signals and Telegram | Implemented shadow/paper-notification baseline; actionable promotion remains gated |
-| 13 | C15 — Forward measurement | Reconcile research assumptions with live observations |
+| 13 | C15 — Forward measurement | Implemented prospective paper/shadow labels, cost/delivery telemetry, raw replay, fixed reviews and audited pauses |
 
 **Preparation before strategy experiments:** agree the basic C09 outcome definitions and C12 research/holdout rules before inspecting performance, even though their full implementations occur later.
 
@@ -28,7 +28,7 @@ Status updated 20 October 2026: C01, C02, C03, C06 funding, C07 execution/costs,
 
 The numbers C01–C15 identify components, not build sequence. Each component initially delivers its agreed minimum scope and can be extended through later reviewed increments. The broader phases below group this work; this table is the current component working order.
 
-Original planning draft — 6 September 2026; implementation status updated 19 October 2026. C01–C03, C06 funding, C07 execution, C08 setup detection, C09 paper outcomes, C11 independent historical simulation, C10 frozen cohort expectancy and C12 chronological selection/holdout control are implemented. Finite-capital validation awaits C13; representative real-data profitability and live operational validation remain outstanding.
+Original planning draft — 6 September 2026; implementation status updated 20 October 2026. The agreed mandatory component baselines through C15 are implemented, including finite-capital paper replay and forward measurement. Representative real-data profitability and actionable live operational validation remain outstanding.
 
 Expanded research: [Components for finding positive net expectancy setups](/Users/artemis/Mehul/Tradee/COMPONENT_RESEARCH.md), researched 9 September 2026, specifies fifteen modules, their evidence, dependencies and acceptance criteria.
 

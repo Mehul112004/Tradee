@@ -2,7 +2,7 @@
 
 Research and proposed specification — 9 September 2026.
 
-Status updated 13 October 2026: **C01, C02, C03 and C06's funding scope are implemented**. The matrix and contracts below guide subsequent component review; the current working order is at the top of PLATFORM_PLAN.md, and remaining functionality is tracked in [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md).
+Status updated 20 October 2026: **the agreed mandatory baselines C01–C03 and C06–C15 are implemented**, including shared paper capital, durable paper notifications and prospective forward measurement. C04/C05 and predictive C06 extensions remain optional. The matrix and contracts below preserve the broader research specification; the current working order is at the top of PLATFORM_PLAN.md, and remaining validation/functionality is tracked in [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md).
 
 Scope: Binance USDT-margined perpetual futures; intraday and swing; Telegram signals for manual execution. This extends [the platform plan](/Users/artemis/Mehul/Tradee/PLATFORM_PLAN.md). It does not report a completed empirical test of any Tradee strategy.
 
@@ -560,6 +560,8 @@ The message should explain the setup, usable entry conditions, invalidation, exp
 **Acceptance:** restart/reconnect/retry scenarios do not produce stale trade instructions; identical available data yields the replayed decision, and measured latency is included in validation.
 
 ### C15 — Forward measurement and degradation monitoring
+
+Implemented baseline, 20 October 2026: [research and formulas](C15_RESEARCH_PLAN.md), [implementation/operation](C15_IMPLEMENTATION.md), [verification](C15_VERIFICATION.md). The current interface is CLI/JSON/SQLite. Dashboard, actual-user execution reconciliation, multi-session inference and advanced drift/replacement work remain explicit entries in [the upgrade register](COMPONENT_UPGRADES.md).
 
 **Depends on / receives from:** D: [C02](#c02--point-in-time-market-data-and-deterministic-replay), [C07](#c07--execution-costs-and-tradability), [C09](#c09--trade-policy-and-outcome-labelling), [C10](#c10--conditional-net-expectancy-and-uncertainty), [C13](#c13--portfolio-risk-and-alert-selection), [C14](#c14--live-decision-and-telegram-lifecycle); A: [C11](#c11--historical-simulation-and-attribution), [C12](#c12--walk-forward-selection-control-and-experiment-registry).
 

@@ -9,7 +9,7 @@ Implemented 20 October 2026. Use the dedicated `tradee` Conda environment. Produ
 | `tradee/c14/contracts.py` | Strict RuntimeConfig, SessionSpec and redacted DeliveryResult | CLI, release loader, runtime/store/dispatcher |
 | `release.py` | Frozen C12 research + C13 recipe/source/model/runtime checks; prospective scope | C11/C12/C13 evidence; creates a paper deployment |
 | `pipeline.py` | Bounded C02 prefix replay through production C11/C13, feed health, signal phases and current send checks | C01–C13 shared implementations; publishes to C14 |
-| `store.py` | Own SQLite schema, deployment/cycle/signal/outbox state, CAS, atomic publication, corruption checks and audit | Runtime, dispatcher, CLI and future C15 |
+| `store.py` | Own SQLite schema, deployment/cycle/signal/outbox state, CAS, atomic publication, corruption checks and audit | Runtime, dispatcher, CLI and C15 |
 | `delivery.py` | Durable leases, rate limits, HTTP result transitions, recovery and explicit reconciliation | Injected preflight/transport; never guesses ambiguous acceptance |
 | `telegram.py` | Fixed-host TLS `sendMessage`, bounded response validation and redacted failure classification | Explicit token/destination; no account or strategy changes |
 | `message.py` | Plain bounded paper-fill notice, evidence IDs, planned levels, costs and absolute expiry | Frozen signal + fresh guard |
@@ -143,4 +143,4 @@ C14 SQLite schema v1 has an application ID, content-addressed artifacts, frozen 
 
 Audit records separate the logical/source operation time from actual recording time. Cycle analysis duration, send attempts, HTTP elapsed time, acceptance IDs and late receipts support later C15 reconciliation. Processing duration currently measures analysis before final C14 publication; use audit/source/attempt clocks for complete latency analysis. A server may accept a request after a timeout/deadline, so remote exactly-once delivery is not promised.
 
-Use SQLite backup APIs or stop writers before copying. Source evidence and live state must remain mutually consistent. No migration, distributed scheduling, automatic backup/restore service, authenticated user fills or production approval authority is installed. Full portfolio-policy inference, pre-entry actionable timing, C15 forward monitoring and representative deployment acceptance remain explicit [upgrade gates](COMPONENT_UPGRADES.md).
+Use SQLite backup APIs or stop writers before copying. Source evidence and live state must remain mutually consistent. No migration, distributed scheduling, automatic backup/restore service, authenticated user fills or production approval authority is installed. [C15 forward monitoring](C15_IMPLEMENTATION.md) is now implemented and must be registered before the first cycle. Full portfolio-policy inference, pre-entry actionable timing and representative forward/deployment acceptance remain explicit [upgrade gates](COMPONENT_UPGRADES.md).

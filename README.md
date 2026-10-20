@@ -1,6 +1,6 @@
 # Tradee
 
-Component-based crypto signal research. **C01, C02, C03, C06, C07, C08, C09, C10, C11, C12, C13 and C14’s paper baseline are available:** instrument metadata, market-data recording/replay, causal features, funding, execution/cost scenarios, two setup families, paper trade ledgers, independent historical simulation/attribution, frozen cohort expectancy with time-block uncertainty, chronological walk-forward/experiment control, and shared-capital paper allocation with funded equity replay. C14 adds bounded shadow/paper orchestration and durable Telegram test notifications; actionable live promotion remains gated.
+Component-based crypto signal research. **The agreed mandatory baselines C01–C03 and C06–C15 are available:** instrument metadata, recorded market data/replay, causal features, funding, execution/costs, two setup families, shared paper lifecycles, historical simulation, frozen expectancy, chronological research controls and shared-capital equity replay. C14 adds bounded paper orchestration/durable Telegram test notifications; C15 adds prospective paper/shadow outcomes, delivery/cost measurement, raw replay, fixed statistical reviews and audited pause requests. Actionable live promotion remains gated.
 
 ## Development environment
 
@@ -437,7 +437,7 @@ C13 supports a conservative fully collateralized `leverage: 1` paper proxy. Exch
 
 ## C14 shadow/paper runtime and Telegram
 
-**717 tests pass, including 81 dedicated C14 tests and its raw-input E2E.**
+At C14 completion, 717 tests passed, including 81 dedicated C14 tests and its raw-input E2E. Current C15 verification is linked below.
 
 [Research and dependencies](C14_RESEARCH_PLAN.md), [operation and manual Telegram test](C14_IMPLEMENTATION.md), [verification](C14_VERIFICATION.md). C14 consumes a frozen C12/C13 research release, replays the actual recorded production pipeline, and commits its paper book, signal lifecycle and outbox atomically. It rechecks current features/execution/expectancy/risk, retains timeout/crash ambiguity, persists throttles and supports pause/resume/recovery.
 
@@ -449,4 +449,20 @@ python -m scripts.verify_c14 --output data/c14_checks/demo1
 
 The demo requires a fresh directory and sends no external messages. It retains a real synthetic research release, separate prospective raw BTC/ETH receipts, all databases, paper outcomes, scripted wire messages and delivery audit. The default mode is `shadow`. To manually test real Telegram connectivity, follow the explicit token/test-chat procedure in [C14 operation](C14_IMPLEMENTATION.md#optional-real-telegram-connectivity-smoke); no token is stored in the repository or database.
 
-The optional `paper_test` mode reports **evaluated paper fills**, clearly labelled `NO TRADE INSTRUCTION`. It is not a pre-entry trading alert or a user-fill record. `live` mode remains unavailable. Full portfolio-policy validation, a validated actionable notification/manual-entry timing protocol, real-load operational acceptance and C15 monitoring remain required. Full-prefix rebuilding has explicit resource limits and is not an unlimited 24/7 feed-throughput claim. Deferred work is tracked in [the upgrade register](COMPONENT_UPGRADES.md). Next is C15.
+The optional `paper_test` mode reports **evaluated paper fills**, clearly labelled `NO TRADE INSTRUCTION`. It is not a pre-entry trading alert or a user-fill record. `live` mode remains unavailable. C15 monitoring is now implemented; representative forward evidence, full portfolio-policy validation, validated actionable/manual-entry timing and real-load operational acceptance remain required. Full-prefix rebuilding has explicit resource limits and is not an unlimited 24/7 feed-throughput claim. Deferred work is tracked in [the upgrade register](COMPONENT_UPGRADES.md).
+
+## C15 prospective forward measurement and monitoring
+
+**787 project tests pass, including 70 C15 tests and the complete raw-input E2E.**
+
+[Research and formulas](C15_RESEARCH_PLAN.md), [operation and manual checks](C15_IMPLEMENTATION.md), [verification](C15_VERIFICATION.md). Register frozen monitoring rules before the first C14 cycle. C15 retains admitted funded-paper outcomes and capital-rejected independent shadow outcomes separately, validates label revisions/maturity/money, records paper fees and delivery delays, and reconstructs pinned raw inputs through C11/C13. Scheduled calendar-block reviews assess mean net R and forecast deterioration with a declared family budget and explicit insufficient-evidence states.
+
+```sh
+conda activate tradee
+python -m tradee monitor explain
+python -m scripts.verify_c15 --output data/c15_checks/demo1
+```
+
+The fresh-directory demo exercises the complete synthetic C01→C15 workflow through mature outcomes and raw replay, with scripted Telegram acceptance and zero external messages. For real recording, create the C14 session, then `monitor create NAME --session SESSION --policy path/to/policy.json` **before** starting C14 ticks. `monitor watch NAME` retains evidence and requests; `--apply-pauses` explicitly applies local C14 pauses under the frozen rules. It never resumes, sends messages, retrains or places orders. Historical reports and matured exports remain versioned.
+
+The agreed mandatory component sequence is complete within the documented scope. Next is representative recorded-market strategy/forward validation and the remaining research, timing, account and operational gates. Actual fills, a dashboard, advanced drift/replacement and cross-session inference are explicit future work; the default inference settings and short synthetic fixture do not establish profitable setups.
