@@ -2,7 +2,17 @@
 
 Component-based crypto signal research. **The agreed mandatory baselines C01–C03 and C06–C15 are available:** instrument metadata, recorded market data/replay, causal features, funding, execution/costs, two setup families, shared paper lifecycles, historical simulation, frozen expectancy, chronological research controls and shared-capital equity replay. C14 adds bounded paper orchestration/durable Telegram test notifications; C15 adds prospective paper/shadow outcomes, delivery/cost measurement, raw replay, fixed statistical reviews and audited pause requests. Actionable live promotion remains gated.
 
-**Dashboard: planned, not implemented.** The 21 October 2026 proposal covers eight workflow areas, linked market/research charts, signal/portfolio evidence, forward monitoring and controlled operations. Start with [the product/UI plan](DASHBOARD_PLAN.md), then [chart specifications](DASHBOARD_CHARTS.md), [service/data contracts](DASHBOARD_SERVICE_PLAN.md) and [delivery/E2E phases](DASHBOARD_DELIVERY_PLAN.md). Planning adds documentation only; the platform still operates through the CLI.
+**Local dashboard available.** The React application lives in `frontend/`; the API, durable operator worker and bounded paper runners live in `backend/`, using the existing shared `tradee/` core. Overview, Markets, Signals, Portfolio, Research, Forward Review, Data Quality, Operations and Settings read real local evidence. Start with [the dashboard runbook](DASHBOARD_RUNBOOK.md) and [implementation/remaining-target status](DASHBOARD_IMPLEMENTATION.md). The original [product plan](DASHBOARD_PLAN.md), [charts](DASHBOARD_CHARTS.md), [service design](DASHBOARD_SERVICE_PLAN.md) and [delivery phases](DASHBOARD_DELIVERY_PLAN.md) remain the broader specification.
+
+```sh
+conda activate tradee
+python -m pip install -r backend/requirements.lock
+npm ci --prefix frontend
+npm run build --prefix frontend
+python -m backend.tradee_web
+```
+
+Open **http://127.0.0.1:8787**. Viewer mode needs no credentials. Select **Verification · synthetic** to inspect retained engineering artifacts when present; Local recording shows configured real stores. Operator jobs require a separately started worker and an explicitly configured token. No exchange order or Telegram-send endpoint is exposed by the dashboard.
 
 ## Development environment
 

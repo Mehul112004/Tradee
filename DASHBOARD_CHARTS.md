@@ -1,6 +1,6 @@
 # Dashboard chart and financial-display specification
 
-Planning date: **21 October 2026**. Proposed, not implemented. Companion to [the product plan](DASHBOARD_PLAN.md), [service contracts](DASHBOARD_SERVICE_PLAN.md) and [delivery plan](DASHBOARD_DELIVERY_PLAN.md).
+Implementation update, **21 October 2026**: see the [CH01–CH24 implementation matrix](DASHBOARD_IMPLEMENTATION.md) for shipped views, conditional source requirements and remaining interactions. The specifications below remain the target; they are not a claim that every interaction has shipped.
 
 ## 1. Shared chart contract
 

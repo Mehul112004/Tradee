@@ -1,6 +1,6 @@
 # Dashboard implementation order, verification and completion gates
 
-Planning date: **21 October 2026**. **Planning only; implementation has not started.** The user asked for no code changes. This document proposes the order to use after review/approval, following the same component-by-component delivery style as the core.
+Implementation update, **21 October 2026**: the user approved development. The working dashboard covers all eight areas and controlled local operation. [Phase-by-phase delivery and remaining targets](DASHBOARD_IMPLEMENTATION.md) distinguish the shipped baseline from the larger D0–D8 specification below.
 
 Read with [product/screens](DASHBOARD_PLAN.md), [charts](DASHBOARD_CHARTS.md) and [service/data contracts](DASHBOARD_SERVICE_PLAN.md).
 
@@ -42,7 +42,7 @@ Planned artifacts: finalized UI wireframes/design tokens, endpoint schemas/capab
 
 ### D1 — Useful read-only application
 
-Create the proposed optional `tradee_web/` adapter package and `frontend/` shell only after approval. Implement configured source profiles, strict existing-store checks, typed DTOs, source discovery, stable errors and API authorization. Show Overview, Signals, basic Operations state and C15 report selection using real artifacts.
+Create the proposed optional `backend/tradee_web/` adapter package and `frontend/` shell only after approval. Implement configured source profiles, strict existing-store checks, typed DTOs, source discovery, stable errors and API authorization. Show Overview, Signals, basic Operations state and C15 report selection using real artifacts.
 
 Do not start collectors, run the engine, initialize missing domain stores or make Telegram requests on application startup. Shared evidence navigation should already work. Show unavailable screens/routes with their phase/source requirements rather than decorative fake statistics.
 
@@ -174,4 +174,4 @@ Release acceptance requires: all contracted screens/states covered, core tests a
 | Browser push/audio and custom price alerts | Explicit opt-in/destination/lifecycle policy, no unsolicited permissions; not trading-engine evidence |
 | Full strategy visual builder | First expose immutable existing recipes and audited clone-to-draft; arbitrary execution creates an unreviewed engine |
 
-Recommended next step after reviewing these documents: approve D0 and the first **read-only D1→D2 vertical slice**. That would be a new implementation instruction; this planning task does not start it.
+Current implementation and next acceptance work are tracked in [DASHBOARD_IMPLEMENTATION.md](DASHBOARD_IMPLEMENTATION.md). Use that status alongside these original target phases; do not treat the historical approval gate as a request for renewed permission.

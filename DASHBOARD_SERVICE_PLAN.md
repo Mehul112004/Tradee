@@ -1,6 +1,6 @@
 # Dashboard API, data and runtime plan
 
-Planning date: **21 October 2026**. Proposed architecture only. No HTTP service, browser bundle, worker, dependency or migration is implemented by this planning task. See [product](DASHBOARD_PLAN.md), [charts](DASHBOARD_CHARTS.md) and [delivery](DASHBOARD_DELIVERY_PLAN.md).
+Implementation update, **21 October 2026**: the local API is in `backend/tradee_web/`, with `frontend/` as a sibling. Concrete routes, current limits and remaining service work are recorded in [implementation status](DASHBOARD_IMPLEMENTATION.md); operation and source profiles are in [the runbook](DASHBOARD_RUNBOOK.md).
 
 ## 1. Recommended architecture
 
@@ -180,7 +180,7 @@ frontend/
                             research, forward, data, operations, settings
   src/components/evidence/  shared explanation/timeline/artifact inspector
   tests/                    component, interaction and visual tests
-tradee_web/
+backend/tradee_web/
   app.py, config.py         optional API package; startup without auto runners
   dto/                     versioned boundary schemas and capabilities
   adapters/                C01–C15 read projections; no duplicate domain engine

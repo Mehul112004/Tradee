@@ -1,6 +1,6 @@
 # Tradee dashboard — product and interaction plan
 
-Planning date: **21 October 2026**. Status: **proposed for review; no frontend, API, dependency, configuration or trading-engine implementation is authorized by this document**. The user requested a detailed UI/dashboard plan with charts, informed by TBot, with no code changes yet.
+Status update, **21 October 2026**: the user approved implementation and requested sibling `backend/` and `frontend/` directories. A working local dashboard now exists. See [implemented scope and remaining targets](DASHBOARD_IMPLEMENTATION.md) and [startup/operations](DASHBOARD_RUNBOOK.md). The detailed design below remains the broader target.
 
 Read this document first. Continue with [chart specifications](DASHBOARD_CHARTS.md), [service/data contracts](DASHBOARD_SERVICE_PLAN.md), then [delivery phases and acceptance](DASHBOARD_DELIVERY_PLAN.md). Together these define one planned product, not four separate projects.
 
