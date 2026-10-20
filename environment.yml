@@ -3,4 +3,4 @@ dependencies:
   - python=3.13
   - pip
   - pip:
-      - -e .[live]
+      - -e .[live,dashboard]

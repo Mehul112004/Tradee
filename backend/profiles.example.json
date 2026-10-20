@@ -1,0 +1,13 @@
+{
+  "default_profile": "local",
+  "state_path": "data/web.sqlite3",
+  "profiles": [
+    {
+      "id": "local",
+      "label": "Local recording",
+      "root": "data",
+      "synthetic": false,
+      "files": {}
+    }
+  ]
+}

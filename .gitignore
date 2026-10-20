@@ -10,3 +10,8 @@ build/
 dist/
 *.egg-info/
 .DS_Store
+node_modules/
+frontend/test-results/
+frontend/playwright-report/
+frontend/*.tsbuildinfo
+backend/.operator-token
