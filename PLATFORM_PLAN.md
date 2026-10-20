@@ -4,7 +4,7 @@
 
 Updated 14 September 2026. For each component: **deep research and discussion → finalize its plan → user approval → implementation and verification**. The user authorized C01 implementation with Binance; its first version is now implemented. See [README.md](/Users/artemis/Mehul/Tradee/README.md) for operation and verification.
 
-Status updated 20 October 2026: C01, C02, C03, C06 funding, C07 execution/costs, C08 two-family candidate generation, C09 paper trade lifecycles/ledgers, C11 independent historical simulation/attribution, C10 causal cohort expectancy/uncertainty, C12 nested walk-forward/experiment accounting and C13 shared-capital paper allocation/replay are implemented. C13 follows the same robust-testing, raw-input E2E, documentation and phased-commit workflow. See [C13 research](C13_RESEARCH_PLAN.md), [operation](C13_IMPLEMENTATION.md) and [verification](C13_VERIFICATION.md). Next is C14 live orchestration and Telegram. C13 provides a fully collateralized paper proxy and a C12 compatibility receipt; full portfolio-policy inference, actual exchange margin/liquidation and live approval remain explicit gates. C12 research releases and C13 receipts do not grant live approval. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks implemented scope, required remaining functionality and future upgrades for every component; update it with every implementation increment.
+Status updated 20 October 2026: C01, C02, C03, C06 funding, C07 execution/costs, C08 two-family candidate generation, C09 paper lifecycles, C11 independent simulation, C10 frozen expectancy, C12 research control, C13 shared-capital paper replay and C14's bounded shadow/paper-notification baseline are implemented. C14 follows the same robust-testing, raw-input E2E, documentation and phased-commit workflow. See [C14 research](C14_RESEARCH_PLAN.md), [operation](C14_IMPLEMENTATION.md) and [verification](C14_VERIFICATION.md). Next is C15 forward measurement and reconciliation. C14 preserves `live_approved: false`: full portfolio-policy inference, pre-entry actionable timing, actual margin/liquidation and representative operational acceptance remain explicit gates. [COMPONENT_UPGRADES.md](COMPONENT_UPGRADES.md) tracks implemented scope and future work for every component.
 
 | Order | Component | Initial scope |
 | --- | --- | --- |
@@ -19,7 +19,7 @@ Status updated 20 October 2026: C01, C02, C03, C06 funding, C07 execution/costs,
 | 9 | C10 — Expectancy and uncertainty | Estimates from earlier matured outcome artifacts |
 | 10 | C12 — Research validation | Walk-forward orchestration, trial accounting and promotion |
 | 11 | C13 — Portfolio and alert selection | Shared risk limits; extend C11 with portfolio-policy evaluation |
-| 12 | C14 — Live signals and Telegram | Deliver the validated policy with persistent state |
+| 12 | C14 — Live signals and Telegram | Implemented shadow/paper-notification baseline; actionable promotion remains gated |
 | 13 | C15 — Forward measurement | Reconcile research assumptions with live observations |
 
 **Preparation before strategy experiments:** agree the basic C09 outcome definitions and C12 research/holdout rules before inspecting performance, even though their full implementations occur later.

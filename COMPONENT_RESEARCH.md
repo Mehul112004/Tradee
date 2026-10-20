@@ -529,6 +529,8 @@ Risk sizing can change drawdown and growth, but does not establish that the orig
 
 ### C14 — Live decision and Telegram lifecycle
 
+Implementation status, 20 October 2026: frozen prospective shadow/paper orchestration, atomic signal/book/outbox state, fresh send checks, TLS Telegram transport, throttling, timeout/crash reconciliation, pause and raw E2E are implemented. [Research](C14_RESEARCH_PLAN.md), [operation](C14_IMPLEMENTATION.md), [verification](C14_VERIFICATION.md). Evaluated paper-fill notices are informational; pre-entry actionable timing, full portfolio promotion and representative operational acceptance remain [upgrade gates](COMPONENT_UPGRADES.md).
+
 **Depends on / receives from:** D: [C01](#c01--instrument-and-universe-registry), [C02](#c02--point-in-time-market-data-and-deterministic-replay), [C03](#c03--feature-engine), [C07](#c07--execution-costs-and-tradability), [C08](#c08--candidate-generation-and-hypothesis-registry), [C09](#c09--trade-policy-and-outcome-labelling), [C10](#c10--conditional-net-expectancy-and-uncertainty), [C13](#c13--portfolio-risk-and-alert-selection); A: [C12](#c12--walk-forward-selection-control-and-experiment-registry); F: [C15](#c15--forward-measurement-and-degradation-monitoring).
 
 **Used by / supplies to:** D: [C15](#c15--forward-measurement-and-degradation-monitoring).

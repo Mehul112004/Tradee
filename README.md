@@ -1,6 +1,6 @@
 # Tradee
 
-Component-based crypto signal research. **C01, C02, C03, C06, C07, C08, C09, C10, C11, C12 and C13 are available:** instrument metadata, market-data recording/replay, causal features, funding, execution/cost scenarios, two setup families, paper trade ledgers, independent historical simulation/attribution, frozen cohort expectancy with time-block uncertainty, chronological walk-forward/experiment control, and shared-capital paper allocation with funded equity replay. Live orchestration and Telegram remain downstream.
+Component-based crypto signal research. **C01, C02, C03, C06, C07, C08, C09, C10, C11, C12, C13 and C14’s paper baseline are available:** instrument metadata, market-data recording/replay, causal features, funding, execution/cost scenarios, two setup families, paper trade ledgers, independent historical simulation/attribution, frozen cohort expectancy with time-block uncertainty, chronological walk-forward/experiment control, and shared-capital paper allocation with funded equity replay. C14 adds bounded shadow/paper orchestration and durable Telegram test notifications; actionable live promotion remains gated.
 
 ## Development environment
 
@@ -410,12 +410,12 @@ python -m scripts.verify_c12 --output data/c12_checks/negative1 --negative-holdo
 
 Use fresh demo directories. Both demos should pass engineering verification: the negative mode must produce a research rejection. The connected E2E ingests raw synthetic Binance-shaped inputs through production APIs, generates actual C11 outcomes, runs nested selection across two outer windows, verifies fee/parameter robustness, injects an atomic-write failure and retries, then explicitly opens the sealed final window. Raw receipts, configs, stores, experiment JSON and reports remain for manual inspection. The fixture uses six-outcome/six-span thresholds, four-minute bins, 200 bootstrap draws, zero manual delay, assumed fees and empty synthetic funding calendars; it makes no real-market profitability claim.
 
-The example [experiment JSON](configs/c12_experiment.example.json) deliberately contains unusable placeholder hashes and an unattested development-only holdout. Prepare separate pinned single-protocol C11 sources and honest research-history disclosures before registering a real experiment. Final access is an application-level research control and cannot prevent inspection of raw files outside C12. All frozen releases say `live_approved: false`; C13 shared portfolio risk and funded replay are now implemented. Next is **C14 live orchestration and Telegram**. Deferred scope is recorded in [the upgrade register](COMPONENT_UPGRADES.md).
+The example [experiment JSON](configs/c12_experiment.example.json) deliberately contains unusable placeholder hashes and an unattested development-only holdout. Prepare separate pinned single-protocol C11 sources and honest research-history disclosures before registering a real experiment. Final access is an application-level research control and cannot prevent inspection of raw files outside C12. All frozen releases say `live_approved: false`; C13 shared portfolio risk and funded replay are now implemented. C14’s shadow/paper baseline is now implemented; next is **C15 forward measurement**. Deferred scope is recorded in [the upgrade register](COMPONENT_UPGRADES.md).
 
 
 ## C13 shared portfolio risk and funded replay
 
-**636 tests pass, including 70 dedicated C13 tests and its raw-input E2E.**
+At the C13 checkpoint, **636 tests passed**, including 70 dedicated C13 tests and its raw-input E2E. See C14 verification for the current suite.
 
 [Research and formulas](C13_RESEARCH_PLAN.md), [files, API and commands](C13_IMPLEMENTATION.md), [verification and retained E2E](C13_VERIFICATION.md). C13 shares one wallet across assets and intraday/swing strategies, admits compatible tested sizes under risk/collateral/concentration/stress limits, rechecks C07 execution, and books only admitted C09 ledger revisions. It preserves complete reasons, regular equity, exact cash/fee/funding reconciliation, and atomic persistent local reservations.
 
@@ -432,4 +432,21 @@ python -m scripts.verify_c13 --output data/c13_checks/demo1
 
 The demo needs a fresh directory and retains raw Binance-shaped BTC/ETH receipts, configs, C01/C02/C10/C11/C12/C13 databases, reports and command logs. It exercises actual production components, simultaneous capital competition, the size ladder, horizon conflicts, later funding/fee accounting, atomic failure/retry and local account CAS. Its synthetic assumptions and reduced research gates establish engineering correctness only.
 
-C13 supports a conservative fully collateralized `leverage: 1` paper proxy. Exchange maintenance tiers/liquidation, live account synchronization and delivery remain upgrades. A counted predeclared capital recipe can receive a C12 `check-portfolio` **compatibility receipt** after logged holdout access; it does not grant portfolio promotion or statistical outperformance evidence. Full nested portfolio-policy inference remains a required gate. All artifacts retain `live_approved: false`. Next is C14; complete remaining research/forward gates before unattended trading signals.
+C13 supports a conservative fully collateralized `leverage: 1` paper proxy. Exchange maintenance tiers/liquidation, live account synchronization and delivery remain upgrades. A counted predeclared capital recipe can receive a C12 `check-portfolio` **compatibility receipt** after logged holdout access; it does not grant portfolio promotion or statistical outperformance evidence. Full nested portfolio-policy inference remains a required gate. All artifacts retain `live_approved: false`. C14’s paper baseline is now implemented. Complete the remaining research/timing/forward/operational gates before actionable trading signals.
+
+
+## C14 shadow/paper runtime and Telegram
+
+**717 tests pass, including 81 dedicated C14 tests and its raw-input E2E.**
+
+[Research and dependencies](C14_RESEARCH_PLAN.md), [operation and manual Telegram test](C14_IMPLEMENTATION.md), [verification](C14_VERIFICATION.md). C14 consumes a frozen C12/C13 research release, replays the actual recorded production pipeline, and commits its paper book, signal lifecycle and outbox atomically. It rechecks current features/execution/expectancy/risk, retains timeout/crash ambiguity, persists throttles and supports pause/resume/recovery.
+
+```sh
+conda activate tradee
+python -m tradee signals explain
+python -m scripts.verify_c14 --output data/c14_checks/demo1
+```
+
+The demo requires a fresh directory and sends no external messages. It retains a real synthetic research release, separate prospective raw BTC/ETH receipts, all databases, paper outcomes, scripted wire messages and delivery audit. The default mode is `shadow`. To manually test real Telegram connectivity, follow the explicit token/test-chat procedure in [C14 operation](C14_IMPLEMENTATION.md#optional-real-telegram-connectivity-smoke); no token is stored in the repository or database.
+
+The optional `paper_test` mode reports **evaluated paper fills**, clearly labelled `NO TRADE INSTRUCTION`. It is not a pre-entry trading alert or a user-fill record. `live` mode remains unavailable. Full portfolio-policy validation, a validated actionable notification/manual-entry timing protocol, real-load operational acceptance and C15 monitoring remain required. Full-prefix rebuilding has explicit resource limits and is not an unlimited 24/7 feed-throughput claim. Deferred work is tracked in [the upgrade register](COMPONENT_UPGRADES.md). Next is C15.
