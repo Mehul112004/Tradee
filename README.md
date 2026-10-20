@@ -1,6 +1,6 @@
 # Tradee
 
-Component-based crypto signal research. **C01, C02, C03, C06, C07, C08, C09, C10, C11 and C12 are available:** instrument metadata, market-data recording/replay, causal features, funding, execution/cost scenarios, two setup families, paper trade ledgers, independent historical simulation/attribution, frozen cohort expectancy with time-block uncertainty, and chronological walk-forward/experiment control. Shared-capital portfolios and Telegram remain downstream.
+Component-based crypto signal research. **C01, C02, C03, C06, C07, C08, C09, C10, C11, C12 and C13 are available:** instrument metadata, market-data recording/replay, causal features, funding, execution/cost scenarios, two setup families, paper trade ledgers, independent historical simulation/attribution, frozen cohort expectancy with time-block uncertainty, chronological walk-forward/experiment control, and shared-capital paper allocation with funded equity replay. Live orchestration and Telegram remain downstream.
 
 ## Development environment
 
@@ -391,7 +391,7 @@ The saved-public check, `python -m scripts.verify_c10_public_evidence --source d
 
 ## C12 walk-forward and experiment control
 
-**566 tests pass, including 64 dedicated C12 tests and the raw-input E2E.**
+At the C12 checkpoint, **566 tests passed**, including 64 dedicated C12 tests and its raw-input E2E. See the C13 verification below for the current suite.
 
 [Research and dependency map](C12_RESEARCH_PLAN.md), [implementation and commands](C12_IMPLEMENTATION.md), [verification](C12_VERIFICATION.md). C12 freezes all variants and trial budgets, selects only inside earlier chronological history, purges boundary labels, and evaluates later windows with the frozen C10 model. It checks neighboring parameters and adverse costs, retains failed/rejected trials, and logs final holdout access before reading it.
 
@@ -410,4 +410,26 @@ python -m scripts.verify_c12 --output data/c12_checks/negative1 --negative-holdo
 
 Use fresh demo directories. Both demos should pass engineering verification: the negative mode must produce a research rejection. The connected E2E ingests raw synthetic Binance-shaped inputs through production APIs, generates actual C11 outcomes, runs nested selection across two outer windows, verifies fee/parameter robustness, injects an atomic-write failure and retries, then explicitly opens the sealed final window. Raw receipts, configs, stores, experiment JSON and reports remain for manual inspection. The fixture uses six-outcome/six-span thresholds, four-minute bins, 200 bootstrap draws, zero manual delay, assumed fees and empty synthetic funding calendars; it makes no real-market profitability claim.
 
-The example [experiment JSON](configs/c12_experiment.example.json) deliberately contains unusable placeholder hashes and an unattested development-only holdout. Prepare separate pinned single-protocol C11 sources and honest research-history disclosures before registering a real experiment. Final access is an application-level research control and cannot prevent inspection of raw files outside C12. All frozen releases say `live_approved: false`; next is **C13 shared portfolio risk and alert selection**. Deferred scope is recorded in [the upgrade register](COMPONENT_UPGRADES.md).
+The example [experiment JSON](configs/c12_experiment.example.json) deliberately contains unusable placeholder hashes and an unattested development-only holdout. Prepare separate pinned single-protocol C11 sources and honest research-history disclosures before registering a real experiment. Final access is an application-level research control and cannot prevent inspection of raw files outside C12. All frozen releases say `live_approved: false`; C13 shared portfolio risk and funded replay are now implemented. Next is **C14 live orchestration and Telegram**. Deferred scope is recorded in [the upgrade register](COMPONENT_UPGRADES.md).
+
+
+## C13 shared portfolio risk and funded replay
+
+**636 tests pass, including 70 dedicated C13 tests and its raw-input E2E.**
+
+[Research and formulas](C13_RESEARCH_PLAN.md), [files, API and commands](C13_IMPLEMENTATION.md), [verification and retained E2E](C13_VERIFICATION.md). C13 shares one wallet across assets and intraday/swing strategies, admits compatible tested sizes under risk/collateral/concentration/stress limits, rechecks C07 execution, and books only admitted C09 ledger revisions. It preserves complete reasons, regular equity, exact cash/fee/funding reconciliation, and atomic persistent local reservations.
+
+```sh
+conda activate tradee
+python -m tradee portfolio explain
+python -m tradee portfolio replay --sources path/to/source_pins.json --models MODEL_HASH
+python -m tradee portfolio summary RUN_HASH
+python -m tradee portfolio report REPORT_HASH
+python -m scripts.verify_c13 --output data/c13_checks/demo1
+```
+
+`source_pins.json` maps C11 run hashes to report hashes. Each predeclared quantity requires its own compatible C10 estimate; outcomes are never rescaled. Models and sources must be frozen before the test window. The funded runner requires recorded quotes/marks and explicit funding evidence. Defaults are explicit research settings, not validated live account recommendations.
+
+The demo needs a fresh directory and retains raw Binance-shaped BTC/ETH receipts, configs, C01/C02/C10/C11/C12/C13 databases, reports and command logs. It exercises actual production components, simultaneous capital competition, the size ladder, horizon conflicts, later funding/fee accounting, atomic failure/retry and local account CAS. Its synthetic assumptions and reduced research gates establish engineering correctness only.
+
+C13 supports a conservative fully collateralized `leverage: 1` paper proxy. Exchange maintenance tiers/liquidation, live account synchronization and delivery remain upgrades. A counted predeclared capital recipe can receive a C12 `check-portfolio` **compatibility receipt** after logged holdout access; it does not grant portfolio promotion or statistical outperformance evidence. Full nested portfolio-policy inference remains a required gate. All artifacts retain `live_approved: false`. Next is C14; complete remaining research/forward gates before unattended trading signals.

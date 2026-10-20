@@ -88,3 +88,10 @@ python -m tradee --db data/c12_checks/demo1/c01.sqlite3 research \
 ```
 
 Replace `decision` with `jobs`, `events`, `manifest` or `release` for the corresponding saved evidence.
+
+
+## C13 integration added 20 October 2026
+
+An optional `portfolio_recipe_hashes` list freezes canonical hashes of `{policy, config}` before final inspection. Each recipe reserves one family trial alongside variants/history; the family-adjusted evidence denominator uses the declared total budget. `research check-portfolio EXPERIMENT_HASH --portfolio-db PATH --run RUN_HASH` requires logged holdout access, exact frozen model/source/report/window/runtime, a declared recipe, complete funded labels and positive net. It records a resumable immutable compatibility receipt, always `promotion_authorized: false`, `live_approved: false`.
+
+This bridge does not implement multi-release/model-bank composition, nested portfolio-policy selection or dependence-aware funded-return inference; C12-U06/C13-U04 remain required before portfolio promotion. See [C13 operation](C13_IMPLEMENTATION.md).

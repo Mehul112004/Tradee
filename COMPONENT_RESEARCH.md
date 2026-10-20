@@ -497,6 +497,8 @@ Use joint time blocks for cross-asset uncertainty, parameter-neighborhood checks
 
 ### C13 — Portfolio risk and alert selection
 
+Implementation status, 20 October 2026: shared-capital paper allocation/replay, exact-size expectancy/execution integration, conservative concentration/stress accounting and atomic reservations are implemented. [Research decisions](C13_RESEARCH_PLAN.md), [operation](C13_IMPLEMENTATION.md), [verification](C13_VERIFICATION.md). Full portfolio-policy inference, learned dependence estimates and exchange margin/liquidation remain in [the upgrade register](COMPONENT_UPGRADES.md). C12 compatibility receipts do not authorize promotion.
+
 **Depends on / receives from:** D: [C01](#c01--instrument-and-universe-registry), [C03](#c03--feature-engine), [C07](#c07--execution-costs-and-tradability), [C09](#c09--trade-policy-and-outcome-labelling), [C10](#c10--conditional-net-expectancy-and-uncertainty).
 
 **Used by / supplies to:** D: [C14](#c14--live-decision-and-telegram-lifecycle), [C15](#c15--forward-measurement-and-degradation-monitoring); O: [C11](#c11--historical-simulation-and-attribution).
