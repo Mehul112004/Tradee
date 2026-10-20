@@ -195,7 +195,7 @@ class AccountSnapshot:
             raise ValidationError('Duplicate/hedged positions, reservations or marks')
         if any(p.opened_ms>self.as_of_ms for p in self.positions) or any(r.created_ms>self.available_ms for r in self.reservations): raise ValidationError('Future account position/reservation')
         if any(m.available_ms>self.available_ms for m in self.marks): raise ValidationError('Mark not available in frozen account snapshot')
-        if not isinstance(self.seen_candidates,(list,tuple)) or len(self.seen_candidates)>100000 or len(set(self.seen_candidates))!=len(self.seen_candidates): raise ValidationError('Distinct bounded seen candidates required')
+        if not isinstance(self.seen_candidates,(list,tuple)) or len(self.seen_candidates)>100000 or any(not isinstance(v,str) for v in self.seen_candidates) or len(set(self.seen_candidates))!=len(self.seen_candidates): raise ValidationError('Distinct bounded seen candidates required')
         for value in self.seen_candidates: text(value)
         object.__setattr__(self,'seen_candidates',tuple(sorted(self.seen_candidates)))
 

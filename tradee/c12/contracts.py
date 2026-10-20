@@ -182,7 +182,7 @@ class Experiment:
         if any(v.stress_of is not None and v.stress_of not in bases or v.neighbor_of is not None and (v.neighbor_of not in bases or v.neighbor_of==v.name) for v in vs):
             raise ValidationError('Stress/neighborhood references must name a different base variant')
         recipes=self.portfolio_recipe_hashes
-        if not isinstance(recipes,(list,tuple)) or len(recipes)>32 or len(set(recipes))!=len(recipes) or any(not isinstance(h,str) or not re.fullmatch('[a-f0-9]{64}',h) for h in recipes):
+        if not isinstance(recipes,(list,tuple)) or len(recipes)>32 or any(not isinstance(h,str) or not re.fullmatch('[a-f0-9]{64}',h) for h in recipes) or len(set(recipes))!=len(recipes):
             raise ValidationError('Distinct bounded predeclared portfolio recipe hashes required')
         object.__setattr__(self,'portfolio_recipe_hashes',tuple(sorted(recipes)))
         if self.historical_trials+len(vs)+len(recipes)>self.family_trial_budget: raise ValidationError('Declared family trial budget exceeded')

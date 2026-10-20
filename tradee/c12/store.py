@@ -261,6 +261,7 @@ class ResearchStore:
             variant=next(v for v in e.variants if v.name==release['variant']['name'])
             pins=e.source_report_hashes.document()
             if (p['decision_window_ms']!=[e.holdout.split.test.start_ms,e.holdout.split.test.end_ms] or p['dataset']['as_of_ms']>e.holdout.split.test.cutoff_ms or
+                    {s['run_hash'] for s in p['sources']}!=set(variant.holdout_runs) or
                     any(s['run_hash'] not in variant.holdout_runs or s['report_hash']!=pins[s['run_hash']] for s in p['sources']) or
                     {m['model_hash'] for m in p['models']}!={release['model_hash']}):
                 raise ValidationError('Portfolio source/model/window differs from the frozen final research choice')
