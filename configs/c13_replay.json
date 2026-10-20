@@ -1,0 +1,8 @@
+{
+  "initial_cash_usdt": "10000",
+  "sample_interval_ms": 60000,
+  "decision_start_ms": null,
+  "decision_end_ms": null,
+  "max_events": 250000,
+  "max_candidates": 10000
+}

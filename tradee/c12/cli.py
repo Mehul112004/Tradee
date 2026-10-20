@@ -15,6 +15,7 @@ def register(sub):
     for name in ('manifest','jobs','events','decision','release','run','open-holdout'):
         a=actions.add_parser(name); a.add_argument('experiment_hash')
         if name=='open-holdout': a.add_argument('--reason',required=True)
+    a=actions.add_parser('check-portfolio'); a.add_argument('experiment_hash'); a.add_argument('--portfolio-db',required=True); a.add_argument('--run',required=True)
     actions.add_parser('artifact').add_argument('hash')
     actions.add_parser('ledger').add_argument('family')
 
@@ -33,6 +34,10 @@ def execute(args):
     if action=='register': return s.register(Experiment.from_dict(json.loads(Path(args.manifest).read_text())))
     if action=='run': return s.run(args.experiment_hash,SimulationStore(args.simulation_db))
     if action=='open-holdout': return s.open_holdout(args.experiment_hash,SimulationStore(args.simulation_db),args.reason)
+    if action=='check-portfolio':
+        from tradee.c13 import PortfolioStore
+        if Path(args.portfolio_db).resolve() in paths or not Path(args.portfolio_db).is_file(): raise ValidationError('Existing separate C13 database required')
+        return s.check_portfolio(args.experiment_hash,PortfolioStore(args.portfolio_db),args.run)
     if action=='artifact': return s.artifact(args.hash)
     if action=='ledger': return s.ledger(args.family)
     return getattr(s,action)(args.experiment_hash)

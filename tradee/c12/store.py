@@ -1,5 +1,6 @@
 """Durable trial accounting, immutable jobs, failure journals and one-way holdout access."""
 from contextlib import contextmanager
+from decimal import Decimal
 import json
 from pathlib import Path
 import platform
@@ -100,8 +101,9 @@ class ResearchStore:
             if family and (family['budget']!=experiment.family_trial_budget or family['historical']!=experiment.historical_trials):
                 raise ValidationError('Family budget and historical trial count cannot be reset')
             prior=db.execute('SELECT document FROM experiments WHERE family=?',(experiment.family,)).fetchall()
-            used=experiment.historical_trials+sum(len(json.loads(r[0])['experiment']['variants']) for r in prior)
-            if used+len(experiment.variants)>experiment.family_trial_budget: raise ValidationError('Cumulative family trial budget exhausted')
+            used=experiment.historical_trials+sum(len(json.loads(r[0])['experiment']['variants'])+len(json.loads(r[0])['experiment'].get('portfolio_recipe_hashes',[])) for r in prior)
+            reserved=len(experiment.variants)+len(experiment.portfolio_recipe_hashes)
+            if used+reserved>experiment.family_trial_budget: raise ValidationError('Cumulative family trial budget exhausted')
             # Global time reservation is deliberately conservative for this single crypto research scope.
             if db.execute('SELECT 1 FROM holdouts WHERE start_ms<? AND end_ms>?',(b,a)).fetchone():
                 raise ValidationError('Holdout period already reserved or consumed; a new experiment cannot reseal it')
@@ -118,7 +120,7 @@ class ResearchStore:
             db.execute('INSERT INTO experiments VALUES(?,?,?)',(h,experiment.family,record.serialized))
             db.execute('INSERT INTO holdouts VALUES(?,?,?)',(h,a,b))
             self._event(db,h,'registered',dict(variants=[v.name for v in experiment.variants],prior_research=experiment.prior_research,
-                trials_reserved=len(experiment.variants),historical_trials=experiment.historical_trials,family_used=used+len(experiment.variants),family_budget=experiment.family_trial_budget))
+                trials_reserved=reserved,portfolio_recipe_hashes=list(experiment.portfolio_recipe_hashes),historical_trials=experiment.historical_trials,family_used=used+reserved,family_budget=experiment.family_trial_budget))
         return self.manifest(h)
 
     def jobs(self,h):
@@ -247,6 +249,36 @@ class ResearchStore:
                     live_approved=False,scope='Independent-signal research only; C13/C14/C15 and audited representative real-market evidence required')
         return dict(decision_hash=fingerprint(result),**result)
 
+    def check_portfolio(self,h,portfolios,run):
+        """Attach a frozen-policy compatibility receipt; never grants portfolio promotion."""
+        with self._lock():
+            manifest=self.manifest(h); e=Experiment.from_dict(manifest['experiment'])
+            if manifest['code_hash']!=code_hash() or manifest['python']!=platform.python_version(): raise ValidationError('Experiment code/runtime changed')
+            if not any(x['kind']=='holdout_opened' for x in self.events(h)): raise ValidationError('Explicit holdout access required before reading portfolio evidence')
+            release=self.release(h); p=portfolios.manifest(run)
+            if p['code_hash']!=manifest['code_hash'] or p['python']!=manifest['python']: raise ValidationError('Portfolio producer/runtime differs from frozen research')
+            if p.get('recipe_hash') not in e.portfolio_recipe_hashes: raise ValidationError('Undeclared portfolio recipe; register a new counted experiment')
+            variant=next(v for v in e.variants if v.name==release['variant']['name'])
+            pins=e.source_report_hashes.document()
+            if (p['decision_window_ms']!=[e.holdout.split.test.start_ms,e.holdout.split.test.end_ms] or p['dataset']['as_of_ms']>e.holdout.split.test.cutoff_ms or
+                    any(s['run_hash'] not in variant.holdout_runs or s['report_hash']!=pins[s['run_hash']] for s in p['sources']) or
+                    {m['model_hash'] for m in p['models']}!={release['model_hash']}):
+                raise ValidationError('Portfolio source/model/window differs from the frozen final research choice')
+            # Revalidate funded content even when the immutable receipt is cached.
+            summary=portfolios.summary(run)
+            def check():
+                report=portfolios.report(summary['report_hash']); reasons=[]
+                if not release['ready']: reasons.append('independent_research_release_rejected')
+                if not report['ready']: reasons.append('portfolio_outcomes_or_equity_incomplete')
+                if any(t['outcome']['outcome_known_ms'] is None or t['outcome']['outcome_known_ms']>=e.holdout.split.test.cutoff_ms for t in report['trades']): reasons.append('portfolio_labels_not_known_before_cutoff')
+                if report['metrics']['net_pnl_usdt'] is None or Decimal(report['metrics']['net_pnl_usdt'])<=0: reasons.append('portfolio_net_not_positive')
+                return dict(component='C12',kind='portfolio_compatibility_receipt',experiment_hash=h,portfolio_run_hash=run,portfolio_report_hash=summary['report_hash'],
+                    recipe_hash=p['recipe_hash'],release_hash=release['release_hash'],ready=not reasons,reasons=reasons,metrics=report['metrics'],
+                    live_approved=False,promotion_authorized=False,
+                    scope='Frozen-source/model/recipe, chronology and funded-ledger engineering check; not nested portfolio-policy selection or statistical evidence of portfolio outperformance',
+                    remaining_gates=['Representative multi-fold portfolio validation with joint dependence-aware uncertainty','Predeclared multi-release/model-bank composition, cost sensitivity and capital-policy search','C14/C15 live and forward gates'])
+            return self._job(h,'portfolio-check/'+run,check)
+
     def ledger(self,family):
         with self.connection() as db:
             f=db.execute('SELECT * FROM families WHERE name=?',(family,)).fetchone()
@@ -254,6 +286,6 @@ class ResearchStore:
         if f is None: raise ValidationError('Unknown research family')
         experiments=[]
         for r in rows:
-            m=self.manifest(r[0]); experiments.append(dict(experiment_hash=r[0],variants=m['experiment']['variants'],decision=self.decision(r[0])))
-        used=f['historical']+sum(len(e['variants']) for e in experiments)
+            m=self.manifest(r[0]); experiments.append(dict(experiment_hash=r[0],variants=m['experiment']['variants'],portfolio_recipe_hashes=m['experiment'].get('portfolio_recipe_hashes',[]),decision=self.decision(r[0])))
+        used=f['historical']+sum(len(e['variants'])+len(e['portfolio_recipe_hashes']) for e in experiments)
         return dict(family=family,trial_budget=f['budget'],historical_trials=f['historical'],used_trials=used,remaining_trials=f['budget']-used,experiments=experiments)

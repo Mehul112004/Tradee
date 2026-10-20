@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "per_trade_risk_fraction": "0.005",
+  "total_risk_fraction": "0.02",
+  "group_risk_fraction": "0.015",
+  "horizon_risk_fraction": "0.015",
+  "gross_notional_fraction": "0.5",
+  "group_notional_fraction": "0.5",
+  "absolute_beta_notional_fraction": "0.5",
+  "collateral_fraction": "0.6",
+  "max_stress_loss_fraction": "0.1",
+  "max_drawdown_fraction": "0.1",
+  "stop_gap_bps": "30",
+  "stress_shock_fraction": "0.2",
+  "max_positions": 4,
+  "max_snapshot_age_ms": 5000,
+  "max_mark_age_ms": 5000,
+  "max_offers": 1000,
+  "max_positions_in_state": 1000,
+  "max_samples": 100000,
+  "max_artifacts": 100000,
+  "asset_risks": {
+    "BTCUSDT": {
+      "beta": "1",
+      "group": "crypto"
+    },
+    "ETHUSDT": {
+      "beta": "1",
+      "group": "crypto"
+    }
+  },
+  "risk_map_available_ms": 0,
+  "risk_map_evidence": "assumption: BTC/ETH share one fully correlated crypto bucket; beta magnitude 1",
+  "leverage": 1
+}

@@ -165,6 +165,7 @@ class Experiment:
     holdout: dict
     holdout_attestation: str
     source_report_hashes: dict | None = None
+    portfolio_recipe_hashes: tuple = ()
     holdout_status: str = 'development_only'
     policy: dict | None = None
     version: int = 1
@@ -180,7 +181,11 @@ class Experiment:
         if len(names)!=len(vs) or not bases: raise ValidationError('Distinct variants and at least one base required')
         if any(v.stress_of is not None and v.stress_of not in bases or v.neighbor_of is not None and (v.neighbor_of not in bases or v.neighbor_of==v.name) for v in vs):
             raise ValidationError('Stress/neighborhood references must name a different base variant')
-        if self.historical_trials+len(vs)>self.family_trial_budget: raise ValidationError('Declared family trial budget exceeded')
+        recipes=self.portfolio_recipe_hashes
+        if not isinstance(recipes,(list,tuple)) or len(recipes)>32 or len(set(recipes))!=len(recipes) or any(not isinstance(h,str) or not re.fullmatch('[a-f0-9]{64}',h) for h in recipes):
+            raise ValidationError('Distinct bounded predeclared portfolio recipe hashes required')
+        object.__setattr__(self,'portfolio_recipe_hashes',tuple(sorted(recipes)))
+        if self.historical_trials+len(vs)+len(recipes)>self.family_trial_budget: raise ValidationError('Declared family trial budget exceeded')
         if not isinstance(self.folds,(list,tuple)) or not 1<=len(self.folds)<=20: raise ValidationError('One to 20 chronological outer folds required')
         fs=tuple(Fold.from_dict(f) for f in self.folds); h=Fold.from_dict(self.holdout)
         if len({f.split.name for f in (*fs,h)})!=len(fs)+1: raise ValidationError('Distinct outer/holdout names required')
@@ -208,7 +213,7 @@ class Experiment:
         return dict(version=self.version,name=self.name,family=self.family,thesis=self.thesis,prior_research=self.prior_research,
                     historical_trials=self.historical_trials,family_trial_budget=self.family_trial_budget,source_report_hashes=self.source_report_hashes.document(),variants=[v.document() for v in self.variants],
                     folds=[f.document() for f in self.folds],holdout=self.holdout.document(),holdout_status=self.holdout_status,
-                    holdout_attestation=self.holdout_attestation,policy=self.policy.document())
+                    holdout_attestation=self.holdout_attestation,portfolio_recipe_hashes=list(self.portfolio_recipe_hashes),policy=self.policy.document())
 
     @classmethod
     def from_dict(cls,d): fields(d,cls); return cls(**d)
