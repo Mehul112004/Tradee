@@ -2157,7 +2157,8 @@ export function Operations() {
               <p>
                 Choose the configured database paths, publish an explicit
                 dataset, then queue features or research jobs. See
-                DASHBOARD_RUNBOOK.md for complete commands and configuration.
+                docs/dashboard/DASHBOARD_RUNBOOK.md for complete commands and
+                configuration.
               </p>
             </li>
           </ol>
