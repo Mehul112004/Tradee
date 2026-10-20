@@ -32,7 +32,9 @@ def outcome_row(signal,outcome,track,cycle_hash,cycle_ms,first,cutoff,lag,availa
     known=None if t is None else t['outcome_known_ms']
     available=max(known or cycle_ms,cycle_ms) if available_ms is None else available_ms
     mature=bool(t and t['ready'] and known is not None and available+lag<cutoff)
-    status='mature' if mature else 'unfilled' if t and t['status']=='unfilled' else 'unresolved' if t and t['status']=='unresolved' else 'pending'
+    unfilled=bool(t and (t['label_status']=='unfilled' or t['status'] in ('expired','cancelled','unfilled')))
+    unresolved=bool(t and (t['status']=='unresolved' or (t['status']=='closed' and not t['ready']) or set(t['ambiguity_flags'])-{'unresolved_data_tail'}))
+    status='mature' if mature else 'unfilled' if unfilled else 'unresolved' if unresolved else 'pending'
     d=s['decision']; frozen=first.get('admission')
     prediction=(None if d is None else d.get('prediction')) if frozen is None else frozen['decision'].get('prediction')
     predicted=None if prediction is None else prediction.get('statistics',{}).get('mean_net_r')
