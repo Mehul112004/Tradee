@@ -57,6 +57,37 @@ def thesis_ok(detector,c,when):
     return all(v['status']=='valid' and v['stable'] for v in (fast,slow)) and sign*(fast['value']-slow['value'])>0 and sign*(float(row['close'])-fast['value'])>0
 
 
+def position_prefix_requires_tick(events,cycle,when):
+    """Allow benign trigger observations; defer anything changing/obscuring cash or size.
+
+    C03 does not change on trades/marks. Fresh C07 and mark-risk checks still
+    run below. C09 remains authoritative for triggers, reductions and timers.
+    """
+    if any(e['kind'] in ('candle','funding') for e in events): return True
+    exposed={p['instrument_id'] for p in cycle['paper_account']['positions']}
+    marks={m['instrument_id']:m['price'] for m in cycle['paper_account']['marks']}
+    # Changed marks can alter the book's intraprefix peak/drawdown even if
+    # the final price returns unchanged; let C13 replay that complete path.
+    if any(e['kind']=='mark' and e['instrument_id'] in exposed and e['data']['mark_price']!=marks.get(e['instrument_id']) for e in events): return True
+    for signal in cycle['signals']:
+        if signal['phase']!='paper_open': continue
+        state=signal['paper_outcome']['state']; policy=TradePolicy.from_dict(signal['trade_intent']['policy'])
+        if state['status']!='open' or state['exit_pending'] is not None or when>=state['entry_ms']+policy.max_holding_ms: return True
+        if set(state['ambiguity_flags'])-{'unresolved_data_tail'}: return True
+        wanted={'contract_trade':'trade','mark':'mark','bar_close':'candle','bar_range':'candle'}[policy.trigger_source]
+        last=state['last_trigger_ms']; last_key=state['last_trigger_key']; sign=1 if state['side']=='long' else -1
+        for e in events:
+            if e['instrument_id']!=state['instrument_id'] or e['kind']!=wanted or not e['final'] or e['event_ms']<state['entry_ms']: continue
+            stamp=e['event_ms']; key=int(e['key']) if wanted=='trade' else None
+            if (last is not None and (stamp<last or stamp==last and (wanted!='trade' or key<=last_key))
+                    or when-stamp>=policy.max_trigger_age_ms or stamp-(last if last is not None else state['entry_ms'])>policy.max_path_gap_ms): return True
+            price=Decimal(e['data']['price' if wanted=='trade' else 'mark_price']); levels=state['levels']
+            if sign*(price-Decimal(levels['stop']))<=0 or sign*(price-Decimal(levels['target']))>=0: return True
+            if levels['partial'] is not None and not state['partial_done'] and sign*(price-Decimal(levels['partial']))>=0: return True
+            last,last_key=stamp,key
+    return False
+
+
 class SignalRuntime:
     def __init__(self,store,market,simulations,portfolios):
         self.store,self.market,self.simulations,self.portfolios=store,market,simulations,portfolios
@@ -101,7 +132,10 @@ class SignalRuntime:
                 candidate_id=c['candidate_id'],phase=phase,candidate=c,trade_intent=info['intent'].document(),decision=decision,request=q,
                 detected_ms=c['detected_ms'],entry_ms=entry,expires_ms=expiry,paper_outcome=None if paper is None else paper['outcome'],
                 independent_status=baseline['status'],thesis_valid=thesis_ok(detector,c,when)))
-        health=feed_health(events,when,m); health['reasons']+=report['terminal_risk']['reasons']; health['reasons']=sorted(set(health['reasons'])); health['ready']=not health['reasons']
+        health=feed_health(events,when,m); health['reasons']+=report['terminal_risk']['reasons']
+        if any(Decimal(t['outcome']['remaining_quantity'])>0 and (t['outcome']['status']=='unresolved' or set(t['outcome']['ambiguity_flags'])-{'unresolved_data_tail'}) for t in report['trades']):
+            health['reasons'].append('paper_position_path_unresolved')
+        health['reasons']=sorted(set(health['reasons'])); health['ready']=not health['reasons']
         cycle=FrozenRecord.create(dict(schema_version=1,component='C14',kind='paper_cycle',deployment_hash=head['deployment_hash'],as_of_ms=when,
             dataset=ds,source_count=len(events),source_cursor=report['input_cursor'],source_prefix_hash=report['input_prefix_hash'],simulation=summary,portfolio=funded,
             paper_account=report['terminal_account'],paper_risk=report['terminal_risk'],signals=signals,health=health,live_approved=False))
@@ -126,9 +160,7 @@ class SignalRuntime:
         if len(events)<count or source_prefix(events[:count])!=cycle['source_prefix_hash']: reasons.append('source_prefix_changed')
         fresh=events[count:]
         if any(e['available_ms']<=cycle['as_of_ms'] for e in fresh): reasons.append('source_watermark_changed')
-        if any(e['kind'] in ('trade','candle','funding') for e in fresh): reasons.append('position_or_thesis_prefix_requires_tick'); deferred=True
-        if any(when>=s['entry_ms']+TradePolicy.from_dict(s['trade_intent']['policy']).max_holding_ms
-               for s in cycle['signals'] if s['phase']=='paper_open'): reasons.append('paper_timer_requires_tick'); deferred=True
+        if position_prefix_requires_tick(fresh,cycle,when): reasons.append('position_or_thesis_prefix_requires_tick'); deferred=True
         reasons.extend(feed_health(events,when,m)['reasons'])
         if reasons: return dict(ready=False,reasons=sorted(set(reasons)),deferred=deferred and all(r.endswith('requires_tick') for r in reasons),checked_ms=when,execution=None)
         q=deepcopy(signal['request']); q['evaluation_ms']=when; offer=Offer(q,m['model']); prediction=estimate(m['model'],offer.request).document()
