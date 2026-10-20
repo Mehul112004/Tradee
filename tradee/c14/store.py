@@ -167,7 +167,7 @@ class SignalStore:
         """One consistent, verified operational snapshot for forward monitoring."""
         with self.connection() as db:
             db.execute('BEGIN'); head=self._session(db,name); events=self._events(db,name)
-            cycles=[dict(cycle_hash=e['payload']['cycle_hash'],processing_ms=e['payload']['processing_ms'],
+            cycles=[dict(cycle_hash=e['payload']['cycle_hash'],processing_ms=e['payload']['processing_ms'],recorded_ms=e['recorded_ms'],
                          cycle=self.read(db,e['payload']['cycle_hash'])) for e in events if e['kind']=='cycle_published']
             indexed=db.execute('SELECT id,document_hash FROM signals WHERE session=? ORDER BY id',(name,)).fetchall()
             expected={} if head['cycle'] is None else {s['signal_id']:fingerprint(s) for s in head['cycle']['signals']}

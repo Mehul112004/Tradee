@@ -18,6 +18,7 @@ from tests.c14_support import deployment,cycle,START,STAMP
 
 class EngineTests(unittest.TestCase):
     def setUp(self):
+        recorded=patch('time.time',return_value=START/1000); recorded.start(); self.addCleanup(recorded.stop)
         self.tmp=tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup); root=Path(self.tmp.name)
         self.signals=SignalStore(root/'s'); self.signals.create(deployment())
         self.store=MonitorStore(root/'m'); self.monitor=ForwardMonitor(self.store,self.signals,SimulationStore(root/'sim'),PortfolioStore(root/'p'))
@@ -33,6 +34,16 @@ class EngineTests(unittest.TestCase):
         self.publish()
         with self.assertRaisesRegex(ValidationError,'Freeze'): self.monitor.register('late','paper',self.p,STAMP)
         with self.assertRaises(ValidationError): self.monitor.register('bad','paper',MonitorPolicy([START]),START)
+
+    def test_registration_before_future_start_waits_without_an_operational_pause(self):
+        d=deployment().document(); d['spec']['name']='early_paper'; self.signals.create(FrozenRecord.create(d))
+        with patch('time.time',return_value=(START-1000)/1000):
+            # Recreate the new deployment with its true pre-start recording time.
+            other=SignalStore(Path(self.tmp.name)/'early'); other.create(FrozenRecord.create(d))
+        m=ForwardMonitor(MonitorStore(Path(self.tmp.name)/'early_monitor'),other,self.monitor.simulations,self.monitor.portfolios)
+        m.register('early','early_paper',self.p,START-1000)
+        r=m.observe('early',START-500)
+        self.assertTrue(r['health']['awaiting_session_start']); self.assertFalse(r['pause_requested']); self.assertFalse(r['ready'])
 
     def test_observation_is_idempotent_and_does_not_rewrite_history(self):
         self.publish(); r=self.monitor.observe('forward',STAMP+1)

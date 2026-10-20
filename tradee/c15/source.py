@@ -38,7 +38,8 @@ def outcome_row(signal,outcome,track,cycle_hash,cycle_ms,first,cutoff,lag,availa
     d=s['decision']; frozen=first.get('admission')
     prediction=(None if d is None else d.get('prediction')) if frozen is None else frozen['decision'].get('prediction')
     predicted=None if prediction is None else prediction.get('statistics',{}).get('mean_net_r')
-    prospective=bool(frozen and t and frozen['as_of_ms']<=t['entry_ms'] and known is not None and frozen['as_of_ms']<known)
+    prospective=bool(frozen and t and frozen['as_of_ms']<=t['entry_ms'] and known is not None and
+                     frozen['as_of_ms']<known and frozen.get('recorded_ms',10**14)<known)
     economics={}
     if track=='portfolio' and d is not None and d.get('execution'):
         e=d['execution']; economics=dict(entry_costs=e.get('costs'),entry_funding_estimate=e.get('funding'),
@@ -57,6 +58,7 @@ def outcome_row(signal,outcome,track,cycle_hash,cycle_ms,first,cutoff,lag,availa
         family=s['candidate']['hypothesis_family'],track=track,detected_ms=s['detected_ms'],phase=s['phase'],
         decision=None if d is None else d['status'],prediction=prediction,predicted_mean_net_r=predicted,
         first_detected_cycle_hash=first['detection']['cycle_hash'],first_admission_cycle_hash=None if frozen is None else frozen['cycle_hash'],
+        decision_recorded_ms=None if frozen is None else frozen.get('recorded_ms'),
         detection_to_first_cycle_ms=first['detection']['as_of_ms']-s['detected_ms'],
         decision_recorded_before_outcome=prospective,source_cycle_hash=cycle_hash,outcome_revision_hash=None if t is None else t['outcome_revision_hash'],
         outcome_available_ms=None if t is None else available,outcome_known_ms=known,

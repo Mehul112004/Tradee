@@ -24,7 +24,8 @@ class ForwardMonitor:
         p=policy if isinstance(policy,MonitorPolicy) else MonitorPolicy.from_dict(policy)
         source=self.signals.evidence(session); h=source['head']; m=h['manifest']; spec=SessionSpec.from_dict(m['spec'])
         if source['cycles'] or not when<=spec.start_ms or any(t<=spec.start_ms for t in p.review_times_ms): raise ValidationError('Freeze C15 rules before the first C14 cycle and prospective review deadlines')
-        if when<max(e['at_ms'] for e in source['events']): raise ValidationError('Cannot backdate C15 registration behind recorded C14 controls')
+        if when<max([e['at_ms'] for e in source['events'] if e['kind']!='deployment_created']+[0]): raise ValidationError('Cannot backdate C15 registration behind recorded C14 controls')
+        if when<max(e['recorded_ms'] for e in source['events']): raise ValidationError('Cannot backdate C15 registration behind actual C14 recording')
         if m['code_hash']!=code_hash() or m['python']!=platform.python_version(): raise ValidationError('Current-source C14 deployment required for prospective C15 monitoring')
         return self.store.register(dict(schema_version=1,component='C15',kind='forward_monitor',name=name,session=session,
             deployment_hash=h['deployment_hash'],policy=p.document(),registered_ms=when,registration_event_hash=source['events'][-1]['event_hash'],
@@ -38,7 +39,7 @@ class ForwardMonitor:
         source=self.signals.evidence(m['session'])
         if source['head']['deployment_hash']!=m['deployment_hash']: raise ValidationError('C15 deployment changed')
         if m['registration_event_hash'] not in {e['event_hash'] for e in source['events']}: raise ValidationError('C14 registration audit anchor changed')
-        if when<max(e['at_ms'] for e in source['events']): raise ValidationError('C15 cannot observe future C14 decisions or controls')
+        if when<max([e['at_ms'] for e in source['events'] if e['kind']!='deployment_created']+[e['recorded_ms'] for e in source['events']]): raise ValidationError('C15 cannot observe future C14 decisions or controls')
         p=MonitorPolicy.from_dict(m['policy'])
         if len(source['cycles'])>p.max_cycles: raise ValidationError('C15 source cycle budget exceeded')
         return head,source,p
@@ -49,14 +50,15 @@ class ForwardMonitor:
         for item,baseline in zip(cycles,baselines):
             c=item['cycle']
             if c['as_of_ms']>=cutoff: break
+            if item['recorded_ms']>=cutoff: continue
             chosen=(item,baseline)
             for s in c['signals']:
-                f=first.setdefault(s['signal_id'],dict(detection=dict(cycle_hash=item['cycle_hash'],as_of_ms=c['as_of_ms']),admission=None))
+                f=first.setdefault(s['signal_id'],dict(detection=dict(cycle_hash=item['cycle_hash'],as_of_ms=c['as_of_ms'],recorded_ms=item['recorded_ms']),admission=None))
                 if s['entry_ms'] is not None and f['admission'] is None:
-                    f['admission']=dict(cycle_hash=item['cycle_hash'],as_of_ms=c['as_of_ms'],decision=s['decision'])
+                    f['admission']=dict(cycle_hash=item['cycle_hash'],as_of_ms=c['as_of_ms'],recorded_ms=item['recorded_ms'],decision=s['decision'])
                 for track,t in (('independent',baseline.get(s['candidate_id'])),('portfolio',s['paper_outcome'])):
                     key=(s['signal_id'],track); rev=None if t is None else t['outcome_revision_hash']
-                    if key not in revisions or revisions[key][0]!=rev: revisions[key]=(rev,c['as_of_ms'])
+                    if key not in revisions or revisions[key][0]!=rev: revisions[key]=(rev,max(c['as_of_ms'],item['recorded_ms']))
         if chosen is None: return []
         item,baseline=chosen; c=item['cycle']; rows=[]
         for s in c['signals']:
@@ -88,8 +90,9 @@ class ForwardMonitor:
             eligible=[] if integrity else self._rows(cycles,baselines,deadline,p)
             reviews.append(review(eligible,p,spec.start_ms,deadline))
         operational=[]; c=h['cycle']; completed=bool(c and when>=spec.end_ms and not c['paper_account']['positions'])
-        if c is None: operational.append('no_paper_cycle')
-        else:
+        awaiting=when<spec.start_ms
+        if c is None and not awaiting: operational.append('no_paper_cycle')
+        elif c is not None:
             if not completed and when-c['as_of_ms']>=min(p.max_cycle_age_ms,spec.runtime.max_cycle_age_ms): operational.append('stale_paper_cycle')
             if not c['health']['ready']: operational.append('paper_data_or_risk_unready')
             if cycles[-1]['processing_ms']>=spec.runtime.max_cycle_age_ms: operational.append('analysis_latency_exceeded')
@@ -124,8 +127,8 @@ class ForwardMonitor:
         source_doc=dict(deployment_hash=h['deployment_hash'],revision=h['revision'],cycle_hash=h['cycle_hash'],event_hashes=[e['event_hash'] for e in events])
         report=dict(schema_version=1,component='C15',kind='forward_report',manifest_hash=head['manifest_hash'],observed_ms=when,source=source_doc,
             rows=rows,summary=summarize(rows),label_changes=changes,reviews=reviews,
-            health=dict(operational=sorted(set(operational)),statistical=statistical,integrity=integrity,already_paused=bool(h['paused']),paper_session_complete=completed),
-            pause_requested=requested,ready=not (operational or statistical or integrity or h['paused']),
+            health=dict(operational=sorted(set(operational)),statistical=statistical,integrity=integrity,already_paused=bool(h['paused']),paper_session_complete=completed,awaiting_session_start=awaiting),
+            pause_requested=requested,ready=not (operational or statistical or integrity or h['paused'] or awaiting),
             telemetry=dict(delivery_states=dict(states),delivery_receipts=receipts,
                 processing_ms=[dict(cycle_hash=i['cycle_hash'],as_of_ms=i['cycle']['as_of_ms'],elapsed_ms=i['processing_ms']) for i in cycles],
                 paper_account=None if c is None else c['paper_account'],

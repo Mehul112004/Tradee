@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from unittest.mock import patch
 from scripts.verify_c14 import prepare,runtime,ROOT,LIVE,BIN,ScriptedTelegram
 from scripts.verify_c13 import write
 from tradee.c14 import Dispatcher,DeliveryResult
@@ -18,7 +19,12 @@ def run_e2e(root):
         options=['--market-db',str(root/'research/c02.sqlite3'),'--simulation-db',str(root/'research/c11.sqlite3'),
             '--portfolio-db',str(root/'research/c13.sqlite3'),'--signal-db',str(root/'c14.sqlite3')]
         options+=['--research-db',str(root/'research/c12.sqlite3')] if component=='signals' else ['--monitor-db',str(root/'c15.sqlite3')]
-        p=subprocess.run([sys.executable,'-m','tradee','--db',str(root/'research/c01.sqlite3'),component,*options,*map(str,args)],
+        # The fixture's public events use a historical synthetic clock. Freeze
+        # actual publication time in this test process too, without an app flag
+        # or production clock bypass. Execute the real CLI main in each child.
+        shim="import sys; from unittest.mock import patch; from tradee.cli import main; "
+        shim+="\nwith patch('time.time', return_value="+repr(feed.clock[0]/1000)+"): raise SystemExit(main(sys.argv[1:]))"
+        p=subprocess.run([sys.executable,'-c',shim,'--db',str(root/'research/c01.sqlite3'),component,*options,*map(str,args)],
             env=env,cwd=ROOT,capture_output=True,text=True,timeout=180)
         commands.append(dict(component=component,args=list(map(str,args)),exit_code=p.returncode)); write(root,'c15_commands.json',commands)
         if p.returncode!=expected: raise AssertionError(f'C15 E2E exit {p.returncode}, expected {expected}: {(p.stderr or p.stdout)[:1800]}')
@@ -40,7 +46,9 @@ def run_e2e(root):
             first_report=entry
             if any(x['status']=='mature' for x in entry['rows']): raise AssertionError('Entry exposed a future label')
             wire=ScriptedTelegram([DeliveryResult('sent','telegram_accepted',message_id=555)])
-            if Dispatcher(s,clock=lambda:feed.clock[0]/1000).send_one('paper_demo',r.preflight,wire)['status']!='sent': raise AssertionError('Scripted acceptance failed')
+            with patch('time.time',return_value=feed.clock[0]/1000):
+                sent=Dispatcher(s,clock=lambda:feed.clock[0]/1000).send_one('paper_demo',r.preflight,wire)
+            if sent['status']!='sent': raise AssertionError('Scripted acceptance failed')
             delivery=invoke('monitor','observe','forward','--at-ms',feed.clock[0]+2)
             if delivery['telemetry']['delivery_states']!={'sent':1}: raise AssertionError('Delivery telemetry missing')
             paused_report=invoke('monitor','observe','forward','--at-ms',feed.clock[0]+30001,'--apply-pauses',expected=2)

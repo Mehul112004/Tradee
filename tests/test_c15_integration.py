@@ -130,3 +130,16 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(outcome_row(s,t,'independent','b'*64,c['as_of_ms'],first,NOW,0)['status'],'pending')
         t['ambiguity_flags'].append('unresolved_source_gap')
         self.assertEqual(outcome_row(s,t,'independent','b'*64,c['as_of_ms'],first,NOW,0)['status'],'unresolved')
+
+    def test_actual_publication_at_or_after_outcome_cannot_claim_prospective_evidence(self):
+        c=self.m.signals.session('paper_demo')['cycle']; s=next(x for x in c['signals'] if x['paper_outcome']); t=s['paper_outcome']
+        first=dict(detection=dict(cycle_hash='a'*64,as_of_ms=s['detected_ms']),
+            admission=dict(cycle_hash='b'*64,as_of_ms=s['entry_ms'],recorded_ms=t['outcome_known_ms']-1,decision=s['decision']))
+        self.assertTrue(outcome_row(s,t,'portfolio','c'*64,c['as_of_ms'],first,NOW,0)['decision_recorded_before_outcome'])
+        first['admission']['recorded_ms']=t['outcome_known_ms']
+        self.assertFalse(outcome_row(s,t,'portfolio','c'*64,c['as_of_ms'],first,NOW,0)['decision_recorded_before_outcome'])
+
+    def test_fixed_review_excludes_a_backdated_cutoff_published_after_its_deadline(self):
+        source=self.m.signals.evidence('paper_demo'); item=deepcopy(source['cycles'][-1]); item['recorded_ms']=NOW+100
+        report=self.m.simulations.report(item['cycle']['simulation']['report_hash']); b={t['candidate_id']:t for t in report['trades']}
+        self.assertEqual(ForwardMonitor._rows([item],[b],NOW,MonitorPolicy([NOW+1000])),[])
