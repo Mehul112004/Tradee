@@ -19,6 +19,7 @@ from .c10 import cli as expectancy_cli
 from .c12 import cli as research_cli
 from .c13 import cli as portfolio_cli
 from .c14 import cli as signal_cli
+from .c15 import cli as monitor_cli
 
 
 def timestamp(text):
@@ -61,8 +62,13 @@ def main(argv=None):
     research_cli.register(sub)
     portfolio_cli.register(sub)
     signal_cli.register(sub)
+    monitor_cli.register(sub)
     args = parser.parse_args(argv)
     try:
+        if args.command == "monitor":
+            result = monitor_cli.execute(args)
+            print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
+            return 2 if args.monitor_command in ('observe','reconcile') and not result['ready'] else 0
         if args.command == "signals":
             result = signal_cli.execute(args)
             print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))

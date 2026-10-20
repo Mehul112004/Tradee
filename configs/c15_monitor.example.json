@@ -1,0 +1,12 @@
+{
+  "review_times_ms": [1788311280000, 1788397680000, 1788484080000],
+  "maturity_lag_ms": 60000,
+  "min_mature": 30,
+  "min_occupied_spans": 4,
+  "bin_ms": 3600000,
+  "block_bins": 24,
+  "bootstrap_replicates": 2000,
+  "alpha": "0.05",
+  "residual_tolerance_r": "0.5",
+  "net_mean_floor_r": "0"
+}

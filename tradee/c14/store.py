@@ -163,12 +163,34 @@ class SignalStore:
             db.execute('UPDATE sessions SET cycle_hash=?,revision=?,fault=? WHERE name=?',(record.digest,revision,fault,name))
             self._event(db,name,'cycle_published',dict(cycle_hash=record.digest,revision=revision,processing_ms=processing_ms,healthy=healthy,fault=fault,signals=len(incoming)),c['as_of_ms'])
         return self.session(name)
-    def pause(self,name,paused,reason,when):
+    def evidence(self,name):
+        """One consistent, verified operational snapshot for forward monitoring."""
+        with self.connection() as db:
+            db.execute('BEGIN'); head=self._session(db,name); events=self._events(db,name)
+            cycles=[dict(cycle_hash=e['payload']['cycle_hash'],processing_ms=e['payload']['processing_ms'],
+                         cycle=self.read(db,e['payload']['cycle_hash'])) for e in events if e['kind']=='cycle_published']
+            indexed=db.execute('SELECT id,document_hash FROM signals WHERE session=? ORDER BY id',(name,)).fetchall()
+            expected={} if head['cycle'] is None else {s['signal_id']:fingerprint(s) for s in head['cycle']['signals']}
+            if {r['id']:r['document_hash'] for r in indexed}!=expected: raise ValidationError('C14 signal inventory differs from current cycle')
+            deliveries=[]
+            for r in indexed:
+                out=self.outbox_row(db,name,r['id'])
+                if out is not None: deliveries.append(dict(out))
+            audited={}
+            for e in events:
+                d=e['payload'].get('delivery')
+                if d is not None: audited[d['signal_id']]=d
+            if {d['signal_id']:d for d in deliveries}!=audited: raise ValidationError('C14 delivery inventory differs from audit')
+            return dict(head=head,events=events,cycles=cycles,deliveries=deliveries)
+
+    def pause(self,name,paused,reason,when,expected_revision=None,expected_event_hash=None):
         if type(paused) is not bool: raise ValidationError('Explicit pause state required')
         from tradee.c13.contracts import text
         text(reason); integer(when,'pause clock')
         with self.connection() as db:
             db.execute('BEGIN IMMEDIATE'); h=self._session(db,name)
+            if expected_revision is not None and h['revision']!=expected_revision: raise ValidationError('C14 control compare-and-swap conflict; observe again')
+            if expected_event_hash is not None and self._events(db,name)[-1]['event_hash']!=expected_event_hash: raise ValidationError('C14 control audit compare-and-swap conflict; observe again')
             if when<h['control_ms'] or (h['cycle'] and when<h['cycle']['as_of_ms']): raise ValidationError('Control clock moved backward')
             revision=h['revision']+1
             db.execute('UPDATE sessions SET paused=?,revision=?,control_ms=? WHERE name=?',(int(paused),revision,when,name))
