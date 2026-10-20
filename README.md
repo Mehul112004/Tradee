@@ -2,6 +2,8 @@
 
 Component-based crypto signal research. **The agreed mandatory baselines C01–C03 and C06–C15 are available:** instrument metadata, recorded market data/replay, causal features, funding, execution/costs, two setup families, shared paper lifecycles, historical simulation, frozen expectancy, chronological research controls and shared-capital equity replay. C14 adds bounded paper orchestration/durable Telegram test notifications; C15 adds prospective paper/shadow outcomes, delivery/cost measurement, raw replay, fixed statistical reviews and audited pause requests. Actionable live promotion remains gated.
 
+**Dashboard: planned, not implemented.** The 21 October 2026 proposal covers eight workflow areas, linked market/research charts, signal/portfolio evidence, forward monitoring and controlled operations. Start with [the product/UI plan](DASHBOARD_PLAN.md), then [chart specifications](DASHBOARD_CHARTS.md), [service/data contracts](DASHBOARD_SERVICE_PLAN.md) and [delivery/E2E phases](DASHBOARD_DELIVERY_PLAN.md). Planning adds documentation only; the platform still operates through the CLI.
+
 ## Development environment
 
 Use the dedicated Conda environment for this project:
