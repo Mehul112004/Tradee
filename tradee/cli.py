@@ -18,6 +18,7 @@ from .c11 import cli as simulation_cli
 from .c10 import cli as expectancy_cli
 from .c12 import cli as research_cli
 from .c13 import cli as portfolio_cli
+from .c14 import cli as signal_cli
 
 
 def timestamp(text):
@@ -59,8 +60,13 @@ def main(argv=None):
     expectancy_cli.register(sub)
     research_cli.register(sub)
     portfolio_cli.register(sub)
+    signal_cli.register(sub)
     args = parser.parse_args(argv)
     try:
+        if args.command == "signals":
+            result = signal_cli.execute(args)
+            print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
+            return 2 if args.signal_command in ("status", "telegram-test") and not result["ready"] else 0
         if args.command == "portfolio":
             result = portfolio_cli.execute(args)
             print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))

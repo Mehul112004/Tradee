@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "mode": "shadow",
+  "bot_id": null,
+  "chat_id": null,
+  "source_settle_ms": 250,
+  "max_notice_age_ms": 10000,
+  "max_cycle_age_ms": 5000,
+  "http_timeout_ms": 3000,
+  "lease_ms": 15000,
+  "chat_interval_ms": 3500,
+  "bot_interval_ms": 100,
+  "max_attempts": 3,
+  "retry_base_ms": 1000,
+  "max_events": 50000,
+  "max_candidates": 1000,
+  "max_artifacts": 100000,
+  "max_cycles": 10000,
+  "max_cycle_bytes": 50000000,
+  "max_session_ms": 86400000
+}
