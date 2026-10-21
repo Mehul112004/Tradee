@@ -1,6 +1,5 @@
 """Explicit foreground paper runner and opt-in test Telegram dispatcher."""
 import json
-import os
 import re
 from pathlib import Path
 import time
@@ -9,6 +8,7 @@ from tradee.c02 import MarketStore
 from tradee.c11 import SimulationStore
 from tradee.c12 import ResearchStore
 from tradee.c13 import PortfolioStore
+from tradee.environment import load_environment
 from .contracts import SessionSpec,RuntimeConfig
 from .message import utc
 from .release import load_release
@@ -36,7 +36,7 @@ def register(sub):
     a=actions.add_parser('send'); a.add_argument('name'); a.add_argument('--send-paper',action='store_true',required=True)
     a=actions.add_parser('watch'); a.add_argument('name'); a.add_argument('--interval-seconds',type=float,default=1); a.add_argument('--max-cycles',type=int); a.add_argument('--send-paper',action='store_true')
     a=actions.add_parser('reconcile'); a.add_argument('hash'); a.add_argument('--decision',choices=('sent','not_sent'),required=True); a.add_argument('--evidence',required=True); a.add_argument('--message-id',type=int); a.add_argument('--at-ms',type=int)
-    a=actions.add_parser('telegram-test'); a.add_argument('--bot-id',type=int,required=True); a.add_argument('--chat-id',type=int,required=True); a.add_argument('--test-id',required=True); a.add_argument('--send-paper',action='store_true',required=True)
+    a=actions.add_parser('telegram-test'); a.add_argument('--bot-id',type=int,help='Defaults to configured token prefix'); a.add_argument('--chat-id',type=int,help='Defaults to TELEGRAM_CHAT_ID'); a.add_argument('--test-id',required=True); a.add_argument('--send-paper',action='store_true',required=True)
 
 
 def execute(args):
@@ -44,11 +44,17 @@ def execute(args):
     if action=='explain': return dict(component='C14',runtime=RuntimeConfig().document(),live_approved=False,
         operation='Bounded full-prefix C02 replay through production C03/C08/C07/C06/C09/C10/C13; atomic paper state + signal + outbox',
         modes='shadow or clearly labelled PAPER TEST evaluated-fill notifications; actionable live promotion remains blocked',
-        telegram='Explicit frozen numeric bot/chat, token from TRADEE_TELEGRAM_BOT_TOKEN only, --send-paper opt-in; never automatically retry unknown HTTP outcomes')
+        telegram='Explicit frozen numeric bot/chat for sessions; token from TRADEE_TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN in environment/root .env; --send-paper opt-in; never automatically retry unknown HTTP outcomes')
     if action=='telegram-test':
-        cfg=RuntimeConfig(mode='paper_test',bot_id=args.bot_id,chat_id=args.chat_id)
+        env=load_environment()
+        try:
+            bot_id=args.bot_id if args.bot_id is not None else int(env.telegram_token.partition(':')[0])
+            chat_id=args.chat_id if args.chat_id is not None else int(env.telegram_chat_id)
+        except ValueError:
+            raise ValidationError('Configured Telegram credential and numeric test destination required') from None
+        cfg=RuntimeConfig(mode='paper_test',bot_id=bot_id,chat_id=chat_id)
         if not re.fullmatch('[A-Za-z0-9_-]{1,64}',args.test_id): raise ValidationError('Short public Telegram connectivity test identifier required')
-        transport=TelegramTransport(os.environ.get('TRADEE_TELEGRAM_BOT_TOKEN'),cfg.bot_id)
+        transport=TelegramTransport(env.telegram_token,cfg.bot_id)
         text='Tradee PAPER TEST connectivity check\nNO TRADE INSTRUCTION\nTest: '+args.test_id+'\nSent at: '+utc(int(time.time()*1000))
         result=transport.send(cfg.chat_id,text,cfg.http_timeout_ms)
         return dict(ready=result.status=='sent',test_id=args.test_id,bot_id=cfg.bot_id,chat_id=cfg.chat_id,result=result.document(),live_approved=False,
@@ -74,7 +80,7 @@ def execute(args):
     head=s.session(args.name); cfg=SessionSpec.from_dict(head['manifest']['spec']).runtime; transport=None
     if args.send_paper:
         if cfg.mode!='paper_test': raise ValidationError('Explicit paper_test deployment required for Telegram')
-        transport=TelegramTransport(os.environ.get('TRADEE_TELEGRAM_BOT_TOKEN'),cfg.bot_id)
+        transport=TelegramTransport(load_environment().telegram_token,cfg.bot_id)
     dispatcher=Dispatcher(s)
     if action=='send':
         runtime.tick(args.name,now()-cfg.source_settle_ms)

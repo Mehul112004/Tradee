@@ -2282,9 +2282,9 @@ export function Settings() {
           </div>
         </div>
         <p className="muted">
-          Set TRADEE_WEB_OPERATOR_TOKEN in the API process environment. The
-          backend never returns it; the browser sends it only in an
-          Authorization header.
+          Set TRADEE_WEB_OPERATOR_TOKEN in the root .env or API process
+          environment, then restart the API. The backend never returns it; the
+          browser sends it only in an Authorization header.
         </p>
       </Panel>
       <Panel title="About this evidence" sub="Scope and interpretation">

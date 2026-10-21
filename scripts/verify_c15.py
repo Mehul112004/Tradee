@@ -15,7 +15,7 @@ from tradee.c15 import MonitorStore,ForwardMonitor
 def run_e2e(root):
     root=Path(root).resolve(); prior,feed,spec,cals=prepare(root); commands=[]
     def invoke(component,*args,expected=0):
-        env=dict(os.environ); env.pop('TRADEE_TELEGRAM_BOT_TOKEN',None)
+        env=dict(os.environ); env.pop('TRADEE_TELEGRAM_BOT_TOKEN',None); env.pop('TELEGRAM_BOT_TOKEN',None); env['PYTHON_DOTENV_DISABLED']='1'
         options=['--market-db',str(root/'research/c02.sqlite3'),'--simulation-db',str(root/'research/c11.sqlite3'),
             '--portfolio-db',str(root/'research/c13.sqlite3'),'--signal-db',str(root/'c14.sqlite3')]
         options+=['--research-db',str(root/'research/c12.sqlite3')] if component=='signals' else ['--monitor-db',str(root/'c15.sqlite3')]

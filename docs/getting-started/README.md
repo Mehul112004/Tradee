@@ -18,6 +18,8 @@ Open **http://127.0.0.1:8787**. Viewer mode needs no credentials. Select **Verif
 
 ## Development environment
 
+The Python CLI and backend automatically read the repository-root `.env` when they need supported settings. See [environment setup](../operations/ENVIRONMENT.md) for the blank example, exported-value precedence and credentials reused from TBot. The frontend receives no secret configuration.
+
 Use the dedicated Conda environment for this project:
 
 ```sh
@@ -32,7 +34,7 @@ Without activating your shell, use `conda run -n tradee python -m unittest disco
 
 ## Run C01
 
-Python 3.11+ is required. C01 uses the Python standard library; no runtime packages or exchange keys are needed. Run from the repository root:
+Python 3.11+ is required. C01's metadata implementation uses the Python standard library and needs no exchange keys. Install the project (`python -m pip install -e .`) for its shared dotenv configuration dependency. Run from the repository root:
 
 ```sh
 python3 -m tradee refresh
@@ -461,7 +463,7 @@ python -m tradee signals explain
 python -m scripts.verify_c14 --output data/c14_checks/demo1
 ```
 
-The demo requires a fresh directory and sends no external messages. It retains a real synthetic research release, separate prospective raw BTC/ETH receipts, all databases, paper outcomes, scripted wire messages and delivery audit. The default mode is `shadow`. To manually test real Telegram connectivity, follow the explicit token/test-chat procedure in [C14 operation](../components/c14/C14_IMPLEMENTATION.md#optional-real-telegram-connectivity-smoke); no token is stored in the repository or database.
+The demo requires a fresh directory and sends no external messages. It retains a real synthetic research release, separate prospective raw BTC/ETH receipts, all databases, paper outcomes, scripted wire messages and delivery audit. The default mode is `shadow`. To manually test real Telegram connectivity, follow [the delivery test guide](../operations/TELEGRAM.md). Tokens stay in the ignored local `.env` or process environment, never in tracked source or component databases.
 
 The optional `paper_test` mode reports **evaluated paper fills**, clearly labelled `NO TRADE INSTRUCTION`. It is not a pre-entry trading alert or a user-fill record. `live` mode remains unavailable. C15 monitoring is now implemented; representative forward evidence, full portfolio-policy validation, validated actionable/manual-entry timing and real-load operational acceptance remain required. Full-prefix rebuilding has explicit resource limits and is not an unlimited 24/7 feed-throughput claim. Deferred work is tracked in [the upgrade register](../platform/COMPONENT_UPGRADES.md).
 

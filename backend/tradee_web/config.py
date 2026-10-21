@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import hashlib
 import json
-import os
 from tradee.c01 import ValidationError
+from tradee.environment import load_environment
 
 ROOT = Path(__file__).resolve().parents[2]
 KINDS = (
@@ -110,7 +110,7 @@ def load_settings(config=None, operator_token=None):
     settings.operator_token = (
         operator_token
         if operator_token is not None
-        else os.environ.get("TRADEE_WEB_OPERATOR_TOKEN", "")
+        else load_environment().operator_token
     )
     return settings
 

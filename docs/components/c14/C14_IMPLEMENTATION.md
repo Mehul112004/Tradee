@@ -95,9 +95,9 @@ python -m tradee signals artifact ARTIFACT_HASH
 
 ## Optional real Telegram connectivity smoke
 
-See [Telegram credentials and delivery testing](../../operations/TELEGRAM.md) for the credential variable names, TBot configuration location and a complete secure terminal example.
+See [Telegram credentials and delivery testing](../../operations/TELEGRAM.md) for root `.env` loading, the unchanged TBot credential names and a one-command test. The explicit interactive procedure below remains supported.
 
-This is separate from the automated E2E and strategy deployment. Use a dedicated test bot/chat. Supply the token through the environment; it is never stored in a config or database. On macOS zsh, secure input can be entered without including the token in the command history:
+This is separate from the automated E2E and strategy deployment. Use a dedicated test bot/chat. Supply the token through the ignored root `.env` or exported environment; it is never stored in session JSON or component databases. On macOS zsh, secure input can be entered without including the token in the command history:
 
 ```sh
 read -s 'TRADEE_TELEGRAM_BOT_TOKEN?Telegram test bot token: '
@@ -113,7 +113,7 @@ The automated tests do not run this real-network command. They validate it with 
 
 ## Paper-fill notifications
 
-To test the durable strategy notification path, prepare a new session with `runtime.mode: paper_test` and explicit numeric `bot_id`/`chat_id`, preserving the validated research policy. Then, with the matching token in the environment:
+To test the durable strategy notification path, prepare a new session with `runtime.mode: paper_test` and explicit numeric `bot_id`/`chat_id`, preserving the validated research policy. Then, with the matching token in the root `.env` or exported environment:
 
 ```sh
 python -m tradee signals watch SESSION_NAME --interval-seconds 1 --send-paper

@@ -54,7 +54,7 @@ Use **the same configuration** in the API and worker. Paths are server-controlle
 
 ## Viewer and operator modes
 
-Viewer mode is the default. To enable explicit operator requests, set `TRADEE_WEB_OPERATOR_TOKEN` in the API process environment before starting it, using a long random value from your password manager. Paste that same value into **Settings → Operator token**. It stays in browser memory and clears on reload; it is never returned by the API, placed in a URL or saved in browser storage. Do not commit it to a source/profile file.
+Viewer mode is the default. To enable explicit operator requests, set `TRADEE_WEB_OPERATOR_TOKEN` in the repository-root `.env` or exported API process environment before starting it, using a long random value from your password manager. Exported values take precedence. Paste that same value into **Settings → Operator token**. It stays in browser memory and clears on reload; it is never returned by the API, placed in a URL or saved in browser storage. Do not commit it to a source/profile file. See [environment setup](../operations/ENVIRONMENT.md) for shared CLI/API/worker loading rules.
 
 Start the separate durable worker to execute queued operations:
 

@@ -27,7 +27,7 @@ python -m unittest discover -s tests -q
 python -m scripts.verify_c14 --output data/c14_checks/demo1
 ```
 
-Use a fresh demo directory. The automated E2E scripts their external HTTP seam and explicitly removes `TRADEE_TELEGRAM_BOT_TOKEN` from CLI subprocesses, even if the developer has configured one. The production Telegram transport is separately exercised with scripted HTTPS responses, not replaced in its parsing/classification tests.
+Use a fresh demo directory. The automated E2E scripts their external HTTP seam and explicitly removes both `TRADEE_TELEGRAM_BOT_TOKEN` and `TELEGRAM_BOT_TOKEN` from CLI subprocesses and sets `PYTHON_DOTENV_DISABLED=1`, even if the developer has configured a local root `.env`. The production Telegram transport is separately exercised with scripted HTTPS responses, not replaced in its parsing/classification tests.
 
 The C14 E2E runs **23 real C14 CLI processes**, after **32 real C13/C12 prerequisite CLI processes**. It generates actual earlier features/candidates/executions/funding/outcomes, fits a frozen estimator, obtains a counted C12 recipe compatibility release, then records a separate later raw BTC/ETH stream. No strategy labels are hand-assigned by the integration fixture.
 

@@ -5,6 +5,7 @@ All project Markdown lives in this directory, grouped by purpose. Run command ex
 - [Getting started and core CLI](getting-started/README.md)
 - [Dashboard installation and operation](dashboard/DASHBOARD_RUNBOOK.md)
 - [Telegram credentials and delivery smoke test](operations/TELEGRAM.md)
+- [Environment setup and credential reuse](operations/ENVIRONMENT.md)
 
 ## Platform planning
 

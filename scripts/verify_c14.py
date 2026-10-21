@@ -83,7 +83,7 @@ def runtime(root,feed):
 def run_e2e(root):
     root=Path(root).resolve(); prior,feed,spec,cals=prepare(root); commands=[]
     def invoke(*args,expected=0):
-        env=dict(os.environ); env.pop('TRADEE_TELEGRAM_BOT_TOKEN',None)
+        env=dict(os.environ); env.pop('TRADEE_TELEGRAM_BOT_TOKEN',None); env.pop('TELEGRAM_BOT_TOKEN',None); env['PYTHON_DOTENV_DISABLED']='1'
         p=subprocess.run([sys.executable,'-m','tradee','--db',str(root/'research/c01.sqlite3'),'signals','--market-db',str(root/'research/c02.sqlite3'),'--simulation-db',str(root/'research/c11.sqlite3'),
             '--research-db',str(root/'research/c12.sqlite3'),'--portfolio-db',str(root/'research/c13.sqlite3'),'--signal-db',str(root/'c14.sqlite3'),*map(str,args)],env=env,cwd=ROOT,capture_output=True,text=True,timeout=180)
         commands.append(dict(args=list(map(str,args)),exit_code=p.returncode)); write(root,'e2e_commands.json',commands)

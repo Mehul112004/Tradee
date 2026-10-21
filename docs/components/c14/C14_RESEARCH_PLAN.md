@@ -72,7 +72,7 @@ Telegram's documented [`retry_after`](https://core.telegram.org/bots/api#respons
 
 An expired pending notice never starts HTTP. Request timeout is bounded by remaining notice life. A remote server may still accept after a deadline; the result is recorded honestly rather than hidden or retried. A manual `not_sent` assertion can only return to retry while still valid, unpaused and within its attempt budget. Uncertain absence should remain ambiguous.
 
-Credentials come only from `TRADEE_TELEGRAM_BOT_TOKEN` at an explicit send invocation. The numeric bot/chat destination is frozen in a paper-test deployment; a mismatched token bot ID is refused. Tokens, request URLs and provider exception strings are not persisted in messages, operational artifacts or returned errors. Structured reason codes replace transport exceptions. No token is copied from TBot and no external message is sent by automated verification.
+Credentials are read at an explicit send invocation from the root `.env` or exported environment, using `TELEGRAM_BOT_TOKEN` or the existing `TRADEE_TELEGRAM_BOT_TOKEN` name. The numeric bot/chat destination is frozen in a paper-test deployment; a mismatched token bot ID is refused. Tokens, request URLs and provider exception strings are not persisted in messages, operational artifacts or returned errors. Structured reason codes replace transport exceptions. On 21 October 2026, the user authorized reusing TBot's Telegram values in this checkout's ignored root `.env`; unrelated credentials were not copied. No external message is sent by automated verification. See [environment setup](../../operations/ENVIRONMENT.md) for precedence and isolation.
 
 ## Operational acceptance and remaining gates
 

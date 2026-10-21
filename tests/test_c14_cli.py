@@ -12,6 +12,8 @@ from tests.c14_support import deployment,cycle,STAMP
 
 class SignalCliTests(unittest.TestCase):
     def setUp(self):
+        isolated=patch.dict('os.environ',{'PYTHON_DOTENV_DISABLED':'1','TRADEE_TELEGRAM_BOT_TOKEN':'','TELEGRAM_BOT_TOKEN':''})
+        isolated.start(); self.addCleanup(isolated.stop)
         self.tmp=tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup); self.root=Path(self.tmp.name)
         self.args=['--db',str(self.root/'c01.db'),'signals','--market-db',str(self.root/'c02.db'),'--simulation-db',str(self.root/'c11.db'),
             '--research-db',str(self.root/'c12.db'),'--portfolio-db',str(self.root/'c13.db'),'--signal-db',str(self.root/'c14.db')]
@@ -58,6 +60,6 @@ class SignalCliTests(unittest.TestCase):
         self.assertFalse((self.root/'c14.db').exists())
     def test_missing_credentials_cannot_trigger_external_smoke(self):
         from tests.c14_support import BOT,CHAT
-        with patch.dict('os.environ',{},clear=True):
+        with patch.dict('os.environ',{'PYTHON_DOTENV_DISABLED':'1'},clear=True):
             code,d=self.call('telegram-test','--bot-id',BOT,'--chat-id',CHAT,'--test-id','manual_smoke','--send-paper')
         self.assertEqual(code,1); self.assertIn('credential',d['error']); self.assertFalse((self.root/'c14.db').exists())
