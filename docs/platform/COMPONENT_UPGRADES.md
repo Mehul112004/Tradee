@@ -265,6 +265,7 @@ The UI is a cross-component interface, not a new C16 trading engine. D0–D8 ref
 | UI-U06 | Implemented real-service Chromium E2E, responsive desktop/mobile, source/CSV/JSON export and local runbook; remaining D8 acceptance is explicit | Crosshair sync, per-chart image exports, saved layout presets, screen-reader/multi-browser and real-feed/backup/disk/load validation remain |
 | UI-U07 | Conditional analytical/interface extensions remain | C04/C05/depth/new timeframes/actual fills/cross-session inference, external imports, cloud/multi-user and native packaging require their own source/security evidence |
 | UI-U08 | Source scale and continuous operational validation | Benchmark beyond the retained synthetic corpus; optimize verified inventories rather than bypassing hashes, enforce OS resource supervision, test network/disk/backup restoration and representative prospective operation |
+| UI-U09 | Explicit historical-cursor session CSV/JSON exports | Current session exports return latest state and do not accept a cursor; add validated cutoff-aware exports with cycle/report identities and regression checks that exclude later outcomes. Current behavior is documented in the [export guide](../user-guide/features/EXPORTS.md) |
 
 
 ## Cross component completion gates

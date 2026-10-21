@@ -2,6 +2,14 @@
 
 All project Markdown lives in this directory, grouped by purpose. Run command examples from the **repository root**, unless stated otherwise.
 
+## Start here: user documentation
+
+- **[Running the system](user-guide/START_HERE.md):** concise startup report with commands, development/built frontend, viewer/operator access, processes and first tasks.
+- **[Feature-by-feature manual](user-guide/FEATURES.md):** a separate guide for each dashboard feature and core workflow, including a populated synthetic walkthrough.
+- **[Configuration reference](user-guide/CONFIGURATION_REFERENCE.md):** environment variables, JSON presets, database paths, units and immutable artifact identities.
+
+## Detailed setup and operations
+
 - [Getting started and core CLI](getting-started/README.md)
 - [Dashboard installation and operation](dashboard/DASHBOARD_RUNBOOK.md)
 - [Telegram credentials and delivery smoke test](operations/TELEGRAM.md)

@@ -2,6 +2,8 @@
 
 See the [documentation index](../index.md) for categorized plans, component specifications, verification reports and operations guides. Commands below assume the repository root as the working directory.
 
+New users: start with the concise [system startup report](../user-guide/START_HERE.md) and [one-file-per-feature manual](../user-guide/FEATURES.md). This page is the longer core CLI reference.
+
 Component-based crypto signal research. **The agreed mandatory baselines C01–C03 and C06–C15 are available:** instrument metadata, recorded market data/replay, causal features, funding, execution/costs, two setup families, shared paper lifecycles, historical simulation, frozen expectancy, chronological research controls and shared-capital equity replay. C14 adds bounded paper orchestration/durable Telegram test notifications; C15 adds prospective paper/shadow outcomes, delivery/cost measurement, raw replay, fixed statistical reviews and audited pause requests. Actionable live promotion remains gated.
 
 **Local dashboard available.** The React application lives in `frontend/`; the API, durable operator worker and bounded paper runners live in `backend/`, using the existing shared `tradee/` core. Overview, Markets, Signals, Portfolio, Research, Forward Review, Data Quality, Operations and Settings read real local evidence. Start with [the dashboard runbook](../dashboard/DASHBOARD_RUNBOOK.md) and [implementation/remaining-target status](../dashboard/DASHBOARD_IMPLEMENTATION.md). The original [product plan](../dashboard/DASHBOARD_PLAN.md), [charts](../dashboard/DASHBOARD_CHARTS.md), [service design](../dashboard/DASHBOARD_SERVICE_PLAN.md) and [delivery phases](../dashboard/DASHBOARD_DELIVERY_PLAN.md) remain the broader specification.

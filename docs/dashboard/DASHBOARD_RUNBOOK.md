@@ -1,5 +1,7 @@
 # Tradee dashboard: local operation
 
+For the shorter user-facing version, start with [running the system](../user-guide/START_HERE.md), then choose a [feature guide](../user-guide/FEATURES.md). This runbook retains detailed service/ownership contracts.
+
 Implemented 21 October 2026. Run everything from the repository root unless a command says otherwise. The dashboard is an interface to the existing C01–C15 core; its availability does not certify a strategy's profitability.
 
 ## Repository layout
