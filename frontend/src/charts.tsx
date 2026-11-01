@@ -187,7 +187,8 @@ export function CandleChart({
   const host = useRef<HTMLDivElement>(null);
   const viewport = useRef<IRange<Time> | null>(null);
   const [hover, setHover] = useState<Doc | null>(null);
-  const bars = data.candles || [];
+  const closedBars = data.candles || [];
+  const bars = data.forming ? [...closedBars, data.forming] : closedBars;
   useEffect(() => {
     if (!host.current || !bars.length) return;
     const chart = createChart(host.current, {
@@ -295,14 +296,41 @@ export function CandleChart({
     }
     const low = records[0].time,
       high = records[records.length - 1].time;
+    for (const level of data.levels || []) {
+      if (number(level.price) !== null)
+        candles.createPriceLine({
+          price: Number(level.price),
+          title: level.label,
+          color: level.label.includes("low") ? "#43caaa" : "#e9b675",
+          lineWidth: 1,
+          lineStyle: 2,
+          axisLabelVisible: true,
+        });
+    }
     const markers = signals
       .filter((s) => s.candidate?.symbol === data.symbol)
       .map((s) => ({
         time: Math.floor(s.candidate.target_open_ms / 1000) as UTCTimestamp,
-        position: "belowBar" as const,
-        shape: "arrowUp" as const,
-        color: s.decision?.status === "admitted" ? "#b2a2ff" : "#c68b69",
-        text: s.decision?.status === "admitted" ? "Paper admit" : "Rejected",
+        position:
+          s.observation && s.candidate.side === "short"
+            ? ("aboveBar" as const)
+            : ("belowBar" as const),
+        shape:
+          s.observation && s.candidate.side === "short"
+            ? ("arrowDown" as const)
+            : ("arrowUp" as const),
+        color: s.observation
+          ? s.candidate.side === "long"
+            ? "#43caaa"
+            : "#df7185"
+          : s.decision?.status === "admitted"
+            ? "#b2a2ff"
+            : "#c68b69",
+        text: s.observation
+          ? `${s.strategy_name} ${s.candidate.side}`
+          : s.decision?.status === "admitted"
+            ? "Paper admit"
+            : "Rejected",
       }))
       .filter((m) => m.time >= low && m.time <= high)
       .sort((a, b) => a.time - b.time);
@@ -380,7 +408,7 @@ export function CandleChart({
           ref={host}
           className="candle-host"
           role="img"
-          aria-label={`${data.symbol} actual closed OHLCV candles`}
+          aria-label={`${data.symbol} ${data.forming ? "live" : "actual closed"} OHLCV candles`}
         />
       ) : (
         <Empty title="No complete candles in this range">
@@ -390,7 +418,8 @@ export function CandleChart({
       )}
       <div className="chart-footer">
         <span>
-          UTC · base-asset volume · {bars.length} closed bars ·{" "}
+          UTC · base-asset volume · {closedBars.length} closed bars
+          {data.forming ? " + forming candle (display only)" : ""} ·{" "}
           {data.gaps?.length || 0} recorded gaps · no resampling
         </span>
         <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">

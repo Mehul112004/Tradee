@@ -6,6 +6,7 @@ Start with [running the system](START_HERE.md). Each file below covers one user-
 
 | Feature | What you will learn |
 | --- | --- |
+| [Analysis sessions](features/ANALYSIS_SESSIONS.md) | Start live strategy monitoring or historical setup scans, inspect reference levels and opt into Telegram observations |
 | [Synthetic demo](features/SYNTHETIC_DEMO.md) | Generate current-source example evidence and open it in an isolated workspace |
 | [Overview](features/OVERVIEW.md) | Read wallet summaries, evidence availability, deployments and attention items |
 | [Markets and charts](features/MARKETS_AND_CHARTS.md) | Select datasets/symbols/timeframes, inspect overlays, quotes and funding |

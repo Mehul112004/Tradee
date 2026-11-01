@@ -1,6 +1,6 @@
 # Telegram connectivity and paper notifications
 
-There are **two separate tasks**: prove that a bot can deliver a simple message, or dispatch eligible notifications from a validated paper deployment. Neither is started automatically by opening the dashboard, starting a worker or adding `.env` credentials.
+There are **three separate tasks**: send exploratory setup observations from [Analysis sessions](ANALYSIS_SESSIONS.md), prove bot connectivity, or dispatch eligible paper-fill notifications from a validated paper deployment. None starts merely by opening the dashboard or adding `.env` credentials. To receive setup observations, explicitly create a live analysis session with Telegram enabled; that path needs no C14 paper deployment.
 
 ## One-message connectivity test
 
@@ -28,7 +28,7 @@ python -m tradee signals watch SESSION_NAME --interval-seconds 1 \
 
 It processes eligible paper state/outbox with the frozen destination, freshness, expiry and admission checks. Keep the independent C15 monitor running as described in [Forward review](FORWARD_REVIEW.md). Do not run this as a second tick owner beside a dashboard-owned runner. Its notices describe evaluated paper fills, not pre-entry actionable instructions or actual user fills.
 
-The dashboard and its owned runner expose **no Telegram-send operation**. A paper-test session without an explicit sender can still record paper outcomes/outbox evidence. `TELEGRAM_CHAT_ID` never changes an existing frozen session destination.
+The advanced C14 dashboard/owned runner exposes **no paper-fill Telegram-send operation**. Simple analysis sessions have their own opt-in setup-observation sender. A C14 paper-test session without an explicit sender can still record paper outcomes/outbox evidence. `TELEGRAM_CHAT_ID` never changes an existing frozen session destination.
 
 ## Delivery failures and tests
 

@@ -4,6 +4,10 @@ For the shorter user-facing version, start with [running the system](../user-gui
 
 Implemented 21 October 2026. Run everything from the repository root unless a command says otherwise. The dashboard is an interface to the existing C01–C15 core; its availability does not certify a strategy's profitability.
 
+**1 November 2026:** [Analysis sessions](../user-guide/features/ANALYSIS_SESSIONS.md) adds the everyday workflow at `/analysis` and the plain Local recording home. The API owns automatic native-candle acquisition, history scans, live setup detection, reference levels and explicitly opted-in Telegram setup observations. It requires operator authorization but no advanced worker/collector/research release. These observations are separate from validated paper fills and promotion. `/overview` retains the original paper dashboard; existing synthetic/session-linked home URLs continue to work. Analysis evidence uses `<state_path>.analysis.sqlite3`, and backend restarts pause active analysis sessions.
+
+Analysis **Watch live** now uses the existing C02 WebSocket Collector/MarketStore, supervised automatically per active analysis subscription. REST supplies initial native history and the collector's one-minute gap/reconnect repair; it is not a live polling fallback. The chart can show forming candles and actual stream health, but strategies consume only complete finalized timeframe aggregates. Pause/stop closes the subscription; other subscriptions/manual collectors may continue recording. Historical scans and the advanced paper runners retain their own workflows.
+
 ## Repository layout
 
 ```text
@@ -80,7 +84,7 @@ Retries with the same idempotency key/body return the original request, includin
 7. **Portfolio** shows C13 shared paper equity/cash/risk, funded trades, drawdown and mature-R distribution. C11 independent PnL is never turned into wallet equity or annualized returns.
 8. **Forward Review** selects immutable C15 report vintages, separate independent/funded maturity, fixed review evidence and paper telemetry. Missing/degenerate bounds remain unavailable.
 
-Public streaming acquisition remains an independently owned **core collector**, not a browser WebSocket connection:
+For advanced standalone research/paper recording, public streaming acquisition uses an independently owned **core collector**, not a browser WebSocket connection (simple analysis sessions automatically supervise this same collector):
 
 ```sh
 python -m tradee refresh

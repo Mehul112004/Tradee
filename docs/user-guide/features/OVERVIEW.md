@@ -1,6 +1,6 @@
 # Overview dashboard
 
-**Location:** Overview, `/`. **Access:** viewer. **Prerequisites:** API and selected workspace; a recorded session/cycle is needed for paper wallet metrics. Opening this page starts no strategy, collector or simulation.
+**Location:** Research & paper tools → Overview, `/overview`. The synthetic/session-linked home also retains this view; a plain Local recording home now opens [Analysis sessions](ANALYSIS_SESSIONS.md). **Access:** viewer. **Prerequisites:** API and selected workspace; a recorded C14 paper session/cycle is needed for paper wallet metrics. Opening this page starts no strategy, collector or simulation. Simple analysis sessions are selected on their own page and do not populate this paper wallet view.
 
 ## Use it
 

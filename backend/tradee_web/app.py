@@ -6,6 +6,7 @@ import hmac
 import io
 import json
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, Request, Query, Header
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse, Response
@@ -220,15 +221,29 @@ def validate_command(kind, d):
 def create_app(settings=None):
     settings = settings or load_settings()
     state = WebState(settings.state_path)
+    from .analysis import AnalysisService, STRATEGIES
+
+    analysis = AnalysisService(settings)
+
+    @asynccontextmanager
+    async def lifespan(app):
+        analysis.start()
+        try:
+            yield
+        finally:
+            analysis.close()
+
     app = FastAPI(
         title="Tradee local dashboard",
         version="1.0",
         docs_url=None,
         openapi_url="/api/openapi.json",
         redoc_url=None,
+        lifespan=lifespan,
     )
     app.state.settings = settings
     app.state.web = state
+    app.state.analysis = analysis
     app.add_middleware(
         TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"]
     )
@@ -333,6 +348,92 @@ def create_app(settings=None):
             return getattr(r, method)()
         except MissingSource:
             return []
+
+    def analysis_profile(workspace, write=False):
+        profile = settings.profile(workspace)
+        if write and profile.synthetic:
+            raise ValidationError(
+                "Choose Local recording to create an analysis session. Synthetic evidence stays separate."
+            )
+        return profile
+
+    def analysis_view(workspace, uid):
+        from .readers import AccessPolicy
+
+        profile = analysis_profile(workspace)
+        d = analysis.store.get(workspace, uid)
+        policy = AccessPolicy(profile)
+        for symbol in d["spec"]["symbols"]:
+            bars = d["detail"].get(symbol, {}).get("candles", [])
+            if bars:
+                policy.range(
+                    bars[0]["data"]["open_ms"], bars[-1]["data"]["close_ms"] + 1
+                )
+            forming = d["detail"].get(symbol, {}).get("forming")
+            if forming:
+                policy.range(
+                    forming["data"]["open_ms"],
+                    min(forming["data"]["close_ms"] + 1, d["updated_ms"] + 1),
+                )
+        return d
+
+    @app.get("/api/{workspace}/analysis")
+    def analysis_catalog(workspace: str):
+        analysis_profile(workspace)
+        sessions = analysis.store.catalog(workspace)
+        # Counts can reveal reserved periods too, even when a chart is closed.
+        for item in sessions:
+            analysis_view(workspace, item["id"])
+        from .analysis import telegram_config
+
+        try:
+            telegram_config()
+            telegram_ready = True
+        except ValidationError:
+            telegram_ready = False
+        return result(
+            dict(
+                sessions=sessions,
+                strategies=STRATEGIES,
+                synthetic=settings.profile(workspace).synthetic,
+                telegram_configured=telegram_ready,
+                operator_enabled=bool(settings.operator_token),
+            ),
+            workspace,
+        )
+
+    @app.post("/api/{workspace}/analysis")
+    def create_analysis(
+        workspace: str,
+        request: Request,
+        doc: dict,
+        idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
+    ):
+        operator(request)
+        analysis_profile(workspace, write=True)
+        return result(
+            analysis.store.create(
+                workspace, doc, idempotency_key, int(time.time() * 1000)
+            ),
+            workspace,
+        )
+
+    @app.get("/api/{workspace}/analysis/{uid}")
+    def get_analysis(workspace: str, uid: str):
+        return result(analysis_view(workspace, uid), workspace)
+
+    @app.post("/api/{workspace}/analysis/{uid}/control")
+    def control_analysis(workspace: str, uid: str, request: Request, doc: dict):
+        operator(request)
+        analysis_profile(workspace, write=True)
+        if set(doc) != {"action"}:
+            raise ValidationError("One session action is required")
+        return result(
+            analysis.store.control(
+                workspace, uid, doc["action"], int(time.time() * 1000)
+            ),
+            workspace,
+        )
 
     @app.get("/api/health")
     def health():

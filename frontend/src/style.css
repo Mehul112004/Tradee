@@ -634,15 +634,15 @@ main {
 .table-scroll {
   overflow-x: auto;
 }
-table {
+.table-scroll table {
   border-collapse: collapse;
   width: 100%;
   font-size: 11px;
 }
-thead {
+.table-scroll thead {
   background: #151d2a;
 }
-th {
+.table-scroll th {
   text-align: left;
   font-size: 9px;
   font-weight: 500;
@@ -652,25 +652,25 @@ th {
   border-bottom: 1px solid #252d3c;
   white-space: nowrap;
 }
-td {
+.table-scroll td {
   padding: 15px 20px;
   border-bottom: 1px solid #202938;
   vertical-align: middle;
   color: #b7c2d3;
   max-width: 420px;
 }
-tr:last-child td {
+.table-scroll tr:last-child td {
   border-bottom: 0;
 }
-tbody tr:hover {
+.table-scroll tbody tr:hover {
   background: #171e2c;
 }
-td small.block {
+.table-scroll td small.block {
   display: block;
   margin-top: 6px;
   font-size: 9px;
 }
-td time {
+.table-scroll td time {
   font-size: 10px;
   color: #7e90ab;
 }
@@ -1665,5 +1665,215 @@ td time {
     background: none;
     border: 0;
     color: #ad9cdb;
+  }
+}
+
+/* Everyday analysis stays within Tradee's existing chart palette and type scale. */
+.research-navigation {
+  margin-top: 16px;
+}
+.research-navigation summary {
+  padding: 10px 12px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+}
+.research-navigation a {
+  display: flex;
+}
+.analysis-page {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.analysis-page .panel {
+  margin-bottom: 20px;
+}
+.analysis-explainer {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  border-left: 3px solid var(--accent);
+  padding: 4px 16px;
+  margin: 0 0 24px;
+  color: #aebbd0;
+  max-width: 85ch;
+}
+.analysis-explainer svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.analysis-explainer p {
+  line-height: 1.7;
+}
+.analysis-form {
+  padding: 24px;
+}
+.analysis-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+.analysis-form .field small,
+.analysis-notify small {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.analysis-strategies {
+  margin: 24px 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+}
+.analysis-strategies legend {
+  padding: 0 8px;
+  font-weight: 600;
+}
+.analysis-strategy,
+.analysis-notify {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+.analysis-strategy input,
+.analysis-notify input {
+  margin-top: 4px;
+  accent-color: var(--accent);
+}
+.analysis-strategy b,
+.analysis-strategy small,
+.analysis-notify b,
+.analysis-notify small {
+  display: block;
+}
+.analysis-strategy b,
+.analysis-notify b {
+  margin-bottom: 8px;
+}
+.analysis-strategy small {
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 50ch;
+}
+.analysis-form > .field {
+  max-width: 460px;
+}
+.analysis-form > .muted {
+  max-width: 90ch;
+  line-height: 1.7;
+  margin-top: 20px;
+}
+.analysis-access,
+.analysis-help {
+  border: 1px solid var(--border);
+  padding: 18px;
+  border-radius: 6px;
+  margin: 16px 0 24px;
+  line-height: 1.7;
+}
+.analysis-access summary,
+.analysis-help summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.analysis-access .field {
+  min-width: 230px;
+}
+.analysis-page a:not(.button) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.analysis-session-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 24px 0 12px;
+}
+.analysis-session-toolbar > .field {
+  min-width: 250px;
+  max-width: 100%;
+}
+.analysis-session-summary {
+  color: var(--muted);
+  margin-bottom: 20px;
+  line-height: 1.7;
+}
+.analysis-session-summary b {
+  color: #e3e8f2;
+}
+.analysis-preparing {
+  padding: 48px 24px;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+.analysis-preparing p {
+  color: var(--muted);
+  max-width: 60ch;
+  margin: 12px auto;
+  line-height: 1.7;
+}
+.analysis-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 20px;
+  border-top: 1px solid var(--border);
+}
+.analysis-levels span,
+.analysis-levels b,
+.analysis-levels small {
+  display: block;
+}
+.analysis-levels span,
+.analysis-levels small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.analysis-levels b {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  margin: 6px 0;
+}
+.analysis-page .padded {
+  line-height: 1.7;
+}
+.analysis-page .padded .badge {
+  margin-right: 8px;
+  margin-bottom: 6px;
+}
+@media (max-width: 700px) {
+  .analysis-form-grid,
+  .analysis-strategies {
+    grid-template-columns: 1fr;
+  }
+  .analysis-form {
+    padding: 16px;
+  }
+  .analysis-session-toolbar > .field {
+    width: 100%;
+    min-width: 0;
+  }
+  .analysis-session-toolbar .toolbar {
+    flex-wrap: wrap;
+  }
+  .analysis-access .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .analysis-access .field {
+    min-width: 0;
+  }
+  .analysis-page .panel-head {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .analysis-page .page-heading {
+    align-items: flex-start;
   }
 }

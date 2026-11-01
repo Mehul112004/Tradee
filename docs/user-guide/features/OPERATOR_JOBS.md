@@ -35,7 +35,7 @@ For example, **refresh registry** takes `{}`. It makes a real public Binance req
 | forward observe / replay / apply pause | Monitor/report identity and current control context | [Forward review](FORWARD_REVIEW.md) |
 | reconcile delivery | Signal, evidence-backed sent/not-sent decision, proof and required receipt fields | [Telegram](TELEGRAM.md) |
 
-Pause/resume and delivery-claim recovery are also available in Session controls. The standalone C08 detector and standalone C10 fitting commands are CLI workflows, not separate dashboard job kinds. There is no browser send-Telegram, exchange-order or arbitrary shell-command job.
+Pause/resume and delivery-claim recovery are also available in Session controls. The standalone C08 detector and standalone C10 fitting commands are CLI workflows, not separate dashboard job kinds. There is no arbitrary send-Telegram, exchange-order or shell-command job. Simple [Analysis sessions](ANALYSIS_SESSIONS.md) have their own opt-in setup-observation workflow managed by the API rather than this advanced job queue.
 
 ## Lifecycle and recovery
 

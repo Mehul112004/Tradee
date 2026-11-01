@@ -4,6 +4,8 @@ SQLite is a file database, but copying only a live `.sqlite3` file can omit comm
 
 ## Planned shutdown
 
+Pause or stop simple **Analysis sessions** on their page before stopping the API. Closing the browser leaves them running; a backend restart pauses them until explicitly resumed. They are separate from the paper runners below.
+
 1. In Operations, request **stop runner** for owned paper runners and confirm the stopped state. An owned runner may outlive API/worker; closing a browser is not a stop request.
 2. Finish/inspect running jobs and cancel queued work you do not want. Running core publications should reach their atomic boundary; do not kill a write merely because the page is slow.
 3. Stop a separately CLI-owned C14/C15 watch loop in its terminal with Ctrl+C. Keep one tick owner per session.
@@ -15,6 +17,8 @@ Do not delete lock files to take over a live process. Investigate stale ownershi
 ## What to back up
 
 Include every configured component store, the separate web-state store, profile JSON, frozen scenario/policy/calendar files and any required raw inputs/manifests needed for reproduction. The root `.env` is a separate private credential backup concern: it is ignored by Git and is not included in source commits. Protect it separately and never publish it with a report bundle.
+
+Also include the analysis store beside web state: `<state_path>.analysis.sqlite3` (default `data/web.sqlite3.analysis.sqlite3`). It retains simple session settings, native candles, setup evidence and delivery claims.
 
 For running stores use SQLite's supported backup API. For straightforward filesystem copying, first stop **all writers** to those stores. Preserve the original set; do not independently merge advanced copies or restore over an active recording. Existing hashes detect some corruption/substitution but do not authenticate data against a hostile editor.
 

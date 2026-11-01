@@ -4,6 +4,7 @@ All project Markdown lives in this directory, grouped by purpose. Run command ex
 
 ## Start here: user documentation
 
+- **[Simple analysis sessions](user-guide/features/ANALYSIS_SESSIONS.md):** choose instruments, timeframe and strategies; prepare candles, inspect levels and receive Telegram setup observations.
 - **[Running the system](user-guide/START_HERE.md):** concise startup report with commands, development/built frontend, viewer/operator access, processes and first tasks.
 - **[Feature-by-feature manual](user-guide/FEATURES.md):** a separate guide for each dashboard feature and core workflow, including a populated synthetic walkthrough.
 - **[Configuration reference](user-guide/CONFIGURATION_REFERENCE.md):** environment variables, JSON presets, database paths, units and immutable artifact identities.

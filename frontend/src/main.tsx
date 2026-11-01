@@ -34,6 +34,9 @@ import { Workspace } from "./context";
 import { Badge, ErrorBox, Loading } from "./components";
 import "./style.css";
 const pages = () => import("./pages");
+const Analysis = React.lazy(() =>
+  import("./analysis").then((x) => ({ default: x.Analysis })),
+);
 const Overview = React.lazy(() =>
   pages().then((x) => ({ default: x.Overview })),
 );
@@ -57,7 +60,7 @@ const client = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
 });
 const navigation = [
-  ["/", "Overview", LayoutDashboard],
+  ["/overview", "Overview", LayoutDashboard],
   ["/markets", "Markets", ChartCandlestick],
   ["/signals", "Signals", Radio],
   ["/portfolio", "Portfolio", Wallet],
@@ -121,6 +124,7 @@ function App() {
         q.delete("dataset");
         q.delete("symbol");
         q.delete("tf");
+        q.delete("analysis");
       }
       return q;
     });
@@ -172,6 +176,9 @@ function App() {
       </div>
     );
   const label = boot.data?.workspaces.find((p: Doc) => p.id === workspace);
+  const analysisPage =
+    location.pathname === "/analysis" ||
+    (location.pathname === "/" && !label?.synthetic && !params.has("session"));
   const sessionInfo = overview.data?.sessions?.find(
     (s: Doc) => s.name === session,
   );
@@ -201,7 +208,7 @@ function App() {
           >
             ×
           </button>
-          <NavLink className="brand" to={"/" + location.search}>
+          <NavLink className="brand" to={"/analysis" + location.search}>
             <span className="brand-mark">
               <span />
               <span />
@@ -212,19 +219,22 @@ function App() {
             </b>
             <Badge>LAB</Badge>
           </NavLink>
-          <div className="workspace-label">RESEARCH WORKSPACE</div>
+          <div className="workspace-label">Your workspace</div>
           <nav aria-label="Main navigation">
-            {navigation.map(([path, name, Icon]) => (
-              <NavLink
-                key={path}
-                end={path === "/"}
-                to={path + location.search}
-              >
-                <Icon size={18} />
-                <span>{name}</span>
-                {path === "/signals" && sessionInfo && <small>↗</small>}
-              </NavLink>
-            ))}
+            <NavLink to={"/analysis" + location.search}>
+              <ChartCandlestick size={18} />
+              <span>Analysis sessions</span>
+            </NavLink>
+            <details className="research-navigation" open={!analysisPage}>
+              <summary>Research & paper tools</summary>
+              {navigation.map(([path, name, Icon]) => (
+                <NavLink key={path} end to={path + location.search}>
+                  <Icon size={18} />
+                  <span>{name}</span>
+                  {path === "/signals" && sessionInfo && <small>↗</small>}
+                </NavLink>
+              ))}
+            </details>
           </nav>
           <div className="sidebar-bottom">
             <div className="environment">
@@ -259,8 +269,12 @@ function App() {
               Workspace
               <ChevronRight size={13} />
               <b>
-                {navigation.find((x) => x[0] === location.pathname)?.[1] ||
-                  "Settings"}
+                {analysisPage
+                  ? "Analysis sessions"
+                  : location.pathname === "/"
+                    ? "Overview"
+                    : navigation.find((x) => x[0] === location.pathname)?.[1] ||
+                      "Settings"}
               </b>
             </div>
             <div className="top-controls">
@@ -302,43 +316,45 @@ function App() {
               <span className="avatar">T</span>
             </div>
           </header>
-          <div className="contextbar">
-            <div>
-              <Badge tone={label?.synthetic ? "warn" : "purple"}>
-                {label?.synthetic
-                  ? "SYNTHETIC VERIFICATION"
-                  : "RECORDED WORKSPACE"}
-              </Badge>
-              <span className="context-divider" />
-              <label>
-                Session{" "}
-                <select
-                  aria-label="Session"
-                  value={session}
-                  onChange={(e) => setParam("session", e.target.value)}
+          {!analysisPage && (
+            <div className="contextbar">
+              <div>
+                <Badge tone={label?.synthetic ? "warn" : "purple"}>
+                  {label?.synthetic
+                    ? "SYNTHETIC VERIFICATION"
+                    : "RECORDED WORKSPACE"}
+                </Badge>
+                <span className="context-divider" />
+                <label>
+                  Session{" "}
+                  <select
+                    aria-label="Session"
+                    value={session}
+                    onChange={(e) => setParam("session", e.target.value)}
+                  >
+                    {!session && <option value="">No session</option>}
+                    {overview.data?.sessions?.map((s: Doc) => (
+                      <option key={s.name}>{s.name}</option>
+                    ))}
+                  </select>
+                </label>
+                {sessionInfo && <Badge>{sessionInfo.mode}</Badge>}
+              </div>
+              <div>
+                <button
+                  className={
+                    at !== null ? "view-button historical" : "view-button"
+                  }
+                  onClick={() => setCursorOpen(!cursorOpen)}
                 >
-                  {!session && <option value="">No session</option>}
-                  {overview.data?.sessions?.map((s: Doc) => (
-                    <option key={s.name}>{s.name}</option>
-                  ))}
-                </select>
-              </label>
-              {sessionInfo && <Badge>{sessionInfo.mode}</Badge>}
+                  <SlidersHorizontal size={13} />
+                  {at === null ? "Latest recorded" : "Decision as of " + at}
+                </button>
+                <span className="timezone">{zone}</span>
+              </div>
             </div>
-            <div>
-              <button
-                className={
-                  at !== null ? "view-button historical" : "view-button"
-                }
-                onClick={() => setCursorOpen(!cursorOpen)}
-              >
-                <SlidersHorizontal size={13} />
-                {at === null ? "Latest recorded" : "Decision as of " + at}
-              </button>
-              <span className="timezone">{zone}</span>
-            </div>
-          </div>
-          {cursorOpen && (
+          )}
+          {!analysisPage && cursorOpen && (
             <div className="cursor-bar">
               <label>
                 Knowledge cursor · epoch milliseconds
@@ -372,7 +388,7 @@ function App() {
               results. This workspace does not demonstrate market profitability.
             </div>
           )}
-          {at !== null && (
+          {!analysisPage && at !== null && (
             <div className="notice historical">
               <p>
                 Decision-as-of view · only source cycles and audit events
@@ -386,7 +402,12 @@ function App() {
             <Boundary key={workspace + location.pathname}>
               <Suspense fallback={<Loading />}>
                 <Routes>
-                  <Route path="/" element={<Overview />} />
+                  <Route
+                    path="/"
+                    element={analysisPage ? <Analysis /> : <Overview />}
+                  />
+                  <Route path="/analysis" element={<Analysis />} />
+                  <Route path="/overview" element={<Overview />} />
                   <Route path="/markets" element={<Markets />} />
                   <Route path="/signals" element={<Signals />} />
                   <Route path="/portfolio" element={<Portfolio />} />

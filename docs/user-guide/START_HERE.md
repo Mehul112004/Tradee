@@ -2,6 +2,8 @@
 
 This is the short operating guide. Read it first, then use the [feature-by-feature manual](FEATURES.md) when you need a particular task. All commands run from the **Tradee repository root**. This guide describes the implemented local research/paper platform; it has no exchange-order execution or AI/LLM confirmation layer.
 
+For the simplest workflow, start with **[Analysis sessions](features/ANALYSIS_SESSIONS.md)**: choose instruments, timeframe and strategies, then watch live or scan history. The API prepares history and supervises the existing C02 WebSocket collector for live sessions; no manually started worker/collector or research release is required. Setups are evaluated only on fully closed candles. Existing research/paper tools remain available separately.
+
 ## 1. Install once
 
 Prerequisites: the `tradee` Conda environment, Python 3.13 and Node 20.19+ with npm. No Docker, PostgreSQL, Redis or separate database server is required. SQLite stores component data in local `data/*.sqlite3` files.
@@ -60,7 +62,7 @@ conda activate tradee
 python -m backend.tradee_web.worker
 ```
 
-The API reads evidence and queues requests; the worker executes queued work. You can browse without a worker. Check Operations for worker heartbeat, request state and results. See [operator jobs](features/OPERATOR_JOBS.md).
+Advanced research/paper jobs use this worker. Simple **Analysis sessions** run under the API and do not need it. You can browse without a worker. Check Operations for worker heartbeat, request state and results. See [operator jobs](features/OPERATOR_JOBS.md).
 
 ## 4. Understand the other independent choices
 
@@ -76,6 +78,7 @@ None of these choices enables live exchange trading. A ready result can still be
 
 ## 5. Choose your first task
 
+- **Start a TBot-style analysis:** select Local recording → Analysis sessions → New analysis session, enable local controls, choose instruments/timeframe/strategies and start watching. Opt into Telegram setup observations if wanted. See [the walkthrough](features/ANALYSIS_SESSIONS.md).
 - **Learn the interface with populated data:** follow the [synthetic demo](features/SYNTHETIC_DEMO.md). An empty Local recording workspace is normal on a new checkout.
 - **Record actual Binance public data:** follow [live collection](features/LIVE_COLLECTION.md), then create a [dataset snapshot](features/MARKET_DATA.md). Collection does not automatically build research models or produce signals.
 - **Test Telegram delivery only:** with `.env` populated, run the explicit command below. It sends one real, silent, clearly labelled test message and requires no strategy or database:
@@ -95,10 +98,11 @@ The full research sequence is **registry/data → features and candidate definit
 | --- | --- | --- |
 | API, `python -m backend.tradee_web` | Every dashboard view | You start it |
 | Vite, `npm run dev --prefix frontend` | Development frontend only | No |
+| Analysis-session supervisor and managed C02 collectors | Historical preparation, WebSocket live/forming candles, closed-candle setups and opted-in observations | Starts subscriptions only for sessions you explicitly create/resume |
 | Worker, `python -m backend.tradee_web.worker` | Queued dashboard jobs | No |
-| Binance collector | New live market observations | No |
+| Separately CLI-owned Binance collector | Advanced standalone recording/research/paper inputs | No; simple analysis sessions manage their own C02 subscriptions |
 | Owned paper runner or explicit C14 CLI watch | Repeated paper ticks | No; creating a session does not start it |
-| Explicit CLI Telegram dispatch | Real paper-test notifications | No; the dashboard and owned runner do not send them |
+| Explicit CLI Telegram dispatch | Advanced C14 paper-fill notifications | No; C14 dashboard runners do not send these; simple analysis observations are a separate opt-in path |
 
 For a custom workspace configuration, pass the **same** `--config data/dashboard-profiles.json` to both API and worker. Collector/CLI database paths must also match that workspace; see [settings and workspaces](features/SETTINGS_AND_WORKSPACES.md).
 

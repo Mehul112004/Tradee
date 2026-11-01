@@ -8,7 +8,7 @@ Tradee's Telegram CLI reads **`TELEGRAM_BOT_TOKEN`** and **`TELEGRAM_CHAT_ID`** 
 
 The sibling TBot configuration is at `../TBot/backend/.env`, using those same two names. They were copied unchanged to this checkout's local `.env`; Tradee does **not** read the sibling file at runtime or synchronize future rotations. A new checkout must populate its own `.env` using [the example](../../.env.example). Do not commit the values, paste the token into a command argument, or publish the dotenv file. See [environment setup](ENVIRONMENT.md) for other TBot settings and precedence rules.
 
-The shipped C14 examples default to `shadow`, with no bot/chat configured. For a persistent paper deployment, freeze the numeric bot/chat in its `paper_test` session specification; the runner reads the token from the root `.env` or its exported environment. A `.env` destination never overrides a frozen session. The standalone test below needs no session or database. The dashboard has no Telegram-send endpoint.
+The shipped C14 examples default to `shadow`, with no bot/chat configured. For a persistent paper deployment, freeze the numeric bot/chat in its `paper_test` session specification; the runner reads the token from the root `.env` or its exported environment. A `.env` destination never overrides a frozen session. The standalone test below needs no session or database. Advanced C14 dashboard runners do not dispatch paper-fill messages. Simple [Analysis sessions](../user-guide/features/ANALYSIS_SESSIONS.md) provide a separate, explicitly opted-in setup-observation sender without changing C14 promotion or paper-fill contracts.
 
 ## Send one real connectivity message
 
