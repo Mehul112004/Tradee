@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "symbols": ["BTCUSDT", "ETHUSDT"],
+  "warmup_start": "2022-10-01",
+  "development_start": "2023-01-01",
+  "development_end": "2025-07-01",
+  "reserved_start": "2025-07-01",
+  "reserved_end": "2026-01-01",
+  "reserved_status": "unattested_do_not_acquire_or_read",
+  "outer_start": "2024-01-01",
+  "train_months": 12,
+  "test_months": 3,
+  "purge_hours": 24,
+  "geometry_scales": ["0.8", "1", "1.2"],
+  "family_trial_budget": 64,
+  "planned_design_trials": 54,
+  "additional_selection_recipes": 4,
+  "historical_trials": "unknown: prior TBot/Tradee history is not attested",
+  "selection": "earlier training only; minimum 30 resolved modeled entries; maximize mean net R minus 0.10 times maximum cumulative-R drawdown; lexical scale tie break; require positive mean; otherwise abstain",
+  "modeled_execution": {
+    "entry_delay_seconds": 30,
+    "fee_each_side": "0.0005",
+    "slippage_bps_each_side": "2",
+    "entry_spread_bps": "1",
+    "exit_spread_bps": "5",
+    "entry_clock": "first completed 1m candle at/after reaction delay, strictly before 180s expiry; close proxy, not a recorded quote",
+    "ambiguous_path": "strict outcome unresolved; separate adverse sensitivity stop first",
+    "funding_schedule": "causal projection from previous two observed settlements; model only; actual held settlements reconciled once",
+    "calendar": "official reconstructed final schedules when available; not a historical knowledge-time attestation",
+    "metadata": "declared research tick/step assumptions; not historical rule attestation"
+  },
+  "promotion": "disabled: modeled execution and unknown historical trial count cannot satisfy strict release gates"
+}
