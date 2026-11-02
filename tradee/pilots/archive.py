@@ -60,14 +60,14 @@ def acquire(directory, symbol, interval, month):
     return saved
 
 
-def rows(path):
+def rows(path, min_columns=8):
     with zipfile.ZipFile(path) as z:
         infos=z.infolist()
         if len(infos)!=1 or infos[0].file_size>512*1024*1024: raise ValidationError('Unsafe archive')
         with z.open(infos[0]) as f:
             for row in csv.reader(io.TextIOWrapper(f)):
                 if not row or not row[0].isdigit(): continue
-                if len(row)<8: raise ValidationError('Malformed archive row')
+                if len(row)<min_columns: raise ValidationError('Malformed archive row')
                 yield row
 
 
