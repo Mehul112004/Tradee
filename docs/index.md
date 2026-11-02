@@ -18,7 +18,8 @@ All project Markdown lives in this directory, grouped by purpose. Run command ex
 
 ## Platform planning
 
-- [Pilot strategy design: shared gates, exact family rules and edge-case validation](strategies/PILOT_STRATEGY_DESIGN.md) — proposed specification only; no pilot code or performance claim
+- [Pilot strategy implementation and evaluation](strategies/IMPLEMENTATION_REPORT.md) — experimental Analysis detectors, versioned backtests/walk-forward and explicit evidence limits
+- [Frozen pilot rules and edge cases](strategies/PILOT_STRATEGY_DESIGN.md) — original v1 specification and research-only context addendum
 - [Platform overview and implementation order](platform/PLATFORM_PLAN.md)
 - [Component responsibilities and dependencies](platform/COMPONENT_RESEARCH.md)
 - [Deferred features and future upgrades](platform/COMPONENT_UPGRADES.md)

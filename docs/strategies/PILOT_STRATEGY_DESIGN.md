@@ -1,5 +1,7 @@
 # Pilot strategy design v1: shared rules and market-state policy
 
+**Later implementation status:** the Analysis detectors and dedicated experimental research runner are now implemented; see [implementation/evaluation](IMPLEMENTATION_REPORT.md) and the separately preregistered [context alternative](CONTEXT_PROFILE_V2_EXPERIMENT.md). The proposal below is the frozen v1 design, not a claim that its thresholds passed validation. Its original implementation-gap descriptions record the starting point; the report tracks what was built and what still needs evidence.
+
 **Status: proposed design, 2 November 2026. Documentation only.** No detector, configuration, runtime or trading change is made by this specification. The numerical thresholds below are declared starting hypotheses, chosen without examining new performance. They are not optimized settings or demonstrated protection against loss. Implementation needs a separate instruction; profitability and deployment require later evidence.
 
 The objective is to avoid applying trend-continuation rules indiscriminately to ranges and quiet markets. The design permits abstention, restricts reversal attempts, charges costs, limits repeated exposure and specifies how to reject inadequate evidence. Market-state estimates lag; gaps, reversals and slippage can still produce losses exceeding a planned stop. No finite rule list covers every possible market event.

@@ -2,7 +2,7 @@
 
 **Location:** Analysis sessions, `/analysis`. The default Local recording home opens this screen. **Access:** read existing sessions as a viewer; creating, pausing, resuming and stopping require the local operator token. No research models, dataset hashes, advanced worker or manually started collector are required. The API manages this flow and its C02 subscriptions.
 
-Use this flow to quickly watch for setup observations. The separate research/paper workflow measures outcomes and capital policies. Several supported strategies can be watched in the same analysis session without a research release. The new liquidity-sweep, EMA200-rejection and key-level-retest pilots are not selectable yet; their prerequisites exist and their [proposed rules](../../strategies/PILOT_STRATEGY_DESIGN.md) are documented, while detector implementation/integration remains future work. For the current flow and integration contract, see [Quick analysis flow](../../dashboard/ANALYSIS_FLOW.md).
+Use this flow to watch several setup rules together without a research release. **Liquidity sweep, 200 EMA rejection and key-level retest** are now selectable experimental pilots for BTCUSDT/ETHUSDT. Selecting them fixes execution to 15m and automatically prepares 1h context. They have no validated accuracy or release claim. See [rules](../../strategies/PILOT_STRATEGY_DESIGN.md), [implementation/evaluation](../../strategies/IMPLEMENTATION_REPORT.md) and [Quick analysis flow](../../dashboard/ANALYSIS_FLOW.md).
 
 ## Start watching
 
@@ -10,11 +10,13 @@ Use this flow to quickly watch for setup observations. The separate research/pap
 2. Click **New analysis session**. Enable session controls with the operator token from your local `.env` if requested. Configure `TRADEE_WEB_OPERATOR_TOKEN` and restart the backend if it is not set. Authorization clears on browser reload.
 3. Enter a name and up to five Binance USDT perpetual instruments, for example `BTCUSDT, ETHUSDT, SOLUSDT`.
 4. Choose the strategy timeframe: **1m, 15m, 1h, 4h or 1d**. This controls detection, not just the chart view. The original engineering presets use 15m; configuring another timeframe does not establish its performance.
-5. Select **Range breakout**, **EMA pullback**, or both. Choose **Watch live**.
+5. Select any supported families. Structural pilots require BTCUSDT/ETHUSDT and automatically select 15m; the two legacy families retain their broader timeframe/universe settings. Choose **Watch live**.
 6. Optionally check **Send setup observations to Telegram**. The server needs `TELEGRAM_BOT_TOKEN` and numeric `TELEGRAM_CHAT_ID` in the root `.env`; the bot must have access to that chat.
-7. Click **Start watching**. The backend verifies current instrument rules and downloads up to 500 closed native-timeframe candles for preparation, then starts the existing **C02 WebSocket collector** automatically. Live market updates are streamed; there is no REST candle-polling fallback. REST supplies initial history/current-bucket context and C02's gap/reconnect repairs. Opening the browser alone starts no session.
+7. Click **Start watching**. The backend verifies rules and prepares 500 native bars for legacy detectors, or 6800 native 15m bars when pilots are selected, then starts the existing **C02 WebSocket collector**. Pilot hourly context is assembled automatically. REST supplies initial history and C02 repair; live market data is streamed without a REST candle-polling fallback. Opening the browser alone starts no session.
 
 This uses public market data, with no Binance account keys. Instrument eligibility is checked through C01; failed/quarantined/stale rules interrupt the session rather than being ignored. A newly listed instrument may not yet have enough candles for the selected strategy. The EMA strategy requires 397 consecutive closed candles for stable current/prior values; the range strategy requires 21. Missing candles restart the affected warm-up.
+
+Pilots require stable EMA200 measurements on both execution and hourly data, so preparation is longer. Readiness is separate from market eligibility: dull, transition, shock, wrong-direction and insufficient-room conditions can correctly keep them quiet. A newly learned level also needs its complete post-knowledge approach. Strict alerts require fresh quotes/marks/metadata, an uninterrupted recorded trade path, a verified clock and official event coverage; unavailable calendar/clock preparation is shown and blocks alerts.
 
 ## Read the chart
 
@@ -22,13 +24,13 @@ This uses public market data, with no Binance account keys. Instrument eligibili
 - **EMA pullback:** a close recovering across EMA20 in the direction of the EMA20/EMA50 trend. Indicators use the existing C03 formulas and the C08 strategy predicate.
 - **Range levels:** high and low of the preceding 20 completed candles, excluding the current candle.
 - **Previous UTC day levels:** high and low of the fully covered preceding UTC day. Incomplete days are omitted.
-- **Confirmed swing levels:** latest strict pivot high/low with two completed candles on each side. A pivot is confirmed only after its two right-hand candles close, and becomes known when the required source data arrives. Analysis now shares C05's level-construction helper; it shows a smaller subset than the full C05 measurement output. Previous-week levels, EMA200 overlays and C04 multi-timeframe context are not automatically enabled by their core implementation.
+- **Confirmed swing levels:** latest strict pivot high/low with two completed candles on each side. Confirmation and actual source knowledge remain distinct. Analysis shares C05 definitions and displays a subset of its measurements. Pilot charts additionally expose EMA200 and automatic hourly context; previous-week overlays are outside their scope.
 
 The chart displays up to 500 closed candles, a separately labelled forming candle when a contiguous live prefix exists, setup markers, stable EMA20/50 overlays and reference lines. Forming-candle prices/volume update from the stream; they never enter strategy/indicator evaluation. C02 records one-minute candles and only aggregates a finalized strategy candle when every constituent minute is final and present: a 15m setup waits for all 15 closes. Duplicate finals, late provisional updates and corrections cannot create a second setup for an already evaluated candle. Saved level JSON distinguishes market-time `confirmed_ms` from source-availability `known_ms`; receipt can be later than confirmation. The level list displays confirmation time.
 
 **Binance WebSocket** reports the actual market-stream state and last message/price separately from the header's browser/API **Service connected** indicator. Connecting, repairing, reconnecting or stale streams suppress new notifications. The browser refreshes its backend view approximately once a second; this is not polling Binance. Values below the chart explain the levels and confirmation times. **Detected setups** retains observations, timestamps, trigger levels, explanations and delivery states. Select an observation to inspect the chart/levels known at that setup. Return to the latest chart afterward.
 
-No trades, entry fills, stops, targets, wallet balances or approval claims are invented. Setup observations do not measure profitability. Use [Backtesting](BACKTESTING.md) and [Research](WALK_FORWARD_RESEARCH.md) for costed outcome evaluation.
+No entry fills, wallet balances or approval claims are invented. Pilot stops/targets are frozen **conditional plans**, with qualification/expiry evidence, not executed orders. Setup observations do not measure profitability. Use the [pilot evaluation workflow](../../strategies/IMPLEMENTATION_REPORT.md#reproduce-the-experiments) or the separate [Backtesting](BACKTESTING.md) / [Research](WALK_FORWARD_RESEARCH.md) workflows for the appropriate outcome track.
 
 ## Scan historical setups
 
@@ -51,7 +53,7 @@ These observational alerts are separate from C14's research-gated paper-fill not
 - **Stop:** close its collector and end the session permanently. Create a new session for another run/settings.
 - **Backend restart:** previously running sessions become paused. Resume deliberately. An in-flight send at a crash remains uncertain.
 - **Browser closed:** the backend continues explicitly started sessions; stop or pause them first if desired.
-- **Limits:** five running sessions, five instruments each, 2000 saved candles per instrument, and up to 24 hours per live session. The UI displays the latest 200 setups; the total includes all retained observations. Data errors pause the affected session with a visible message. These are bounded local sessions, not an unattended deployment supervisor.
+- **Limits:** five running sessions, up to five instruments each (pilots allow BTC/ETH), 10000 saved candles per instrument, and up to 24 hours live. Charts show the latest 500 candles and detail the latest 200 setups. Data errors pause the session visibly. These are bounded local sessions, not an unattended deployment supervisor.
 
 Analysis data lives beside the configured web-state database: default `data/web.sqlite3.analysis.sqlite3`. Back it up along with C01, C02 and the other stores. A single API owner processes these sessions and supervises their C02 collectors; the advanced worker remains independent. Subscriptions are bounded per analysis session and their symbols/timeframes; C02 deduplicates identical market events if subscriptions overlap. The raw C02 recording can grow faster than the bounded chart history. Changes to the backend/core build require a new analysis session so older evidence stays tied to its original implementation.
 

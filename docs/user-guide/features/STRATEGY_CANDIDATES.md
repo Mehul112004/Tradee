@@ -6,7 +6,7 @@ For quick interactive watching/scanning of the supported definitions, use [Analy
 
 ## Implemented families
 
-The three additional pilots have [design specifications](../../strategies/PILOT_STRATEGY_DESIGN.md), including range/dull-market vetoes and execution policies, but are not part of the implemented catalog below. The design introduces four separately measured modes because liquidity sweep has trend-pullback and range-edge cases. Quick historical setup scans will remain distinct from costed backtests.
+The three structural pilots are implemented in Analysis through a shared native C08 observation contract, with four separately measured modes because sweep has trend/range cases. Their [rules and evaluation status](../../strategies/IMPLEMENTATION_REPORT.md) remain experimental. Their dedicated modeled backtest/walk-forward runner does not create legacy C09 intents or C12 releases. The table below describes the existing advanced C02-backed candidate catalog; quick scans remain distinct from costed outcomes.
 
 | Family | Meaning | Preset |
 | --- | --- | --- |
