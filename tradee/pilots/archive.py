@@ -84,6 +84,20 @@ def candles(directory, symbol, interval, start, end):
             yield dict(open_ms=t,open=row[1],high=row[2],low=row[3],close=row[4],quote_volume=row[7],available_ms=t+size)
 
 
+def audit(directory,protocol):
+    """Pin every permitted raw archive, without touching reserved files."""
+    records=[]
+    for symbol in protocol['symbols']:
+        for interval in ('15m','1m','fundingRate'):
+            for month in months(protocol['warmup_start'],protocol['development_end']):
+                name=f'{symbol}-{interval}-{month}.zip'; path=Path(directory)/name
+                meta=json.loads(path.with_name(name+'.json').read_text())
+                actual=hashlib.sha256(path.read_bytes()).hexdigest()
+                if actual!=meta['sha256']: raise ValidationError('Historical source changed: '+name)
+                records.append(dict(name=name,sha256=actual,received_ms=meta['received_ms'],bytes=path.stat().st_size))
+    return records
+
+
 def main():
     p=argparse.ArgumentParser(); p.add_argument('--protocol',default='configs/pilot_research_v1.json')
     p.add_argument('--directory',default='data/pilot-research/archives'); p.add_argument('--minutes',action='store_true')

@@ -18,6 +18,9 @@ import { CandleChart } from "./charts";
 const names: Record<string, string> = {
   prior_range_breakout: "Range breakout",
   ema_pullback_continuation: "EMA pullback",
+  liquidity_sweep_v1: "Liquidity sweep",
+  ema200_rejection_v1: "200 EMA rejection",
+  key_level_retest_v1: "Key-level retest",
 };
 const phaseNames: Record<string, string> = {
   preparing: "Preparing candles",
@@ -39,6 +42,7 @@ const deliveryNames: Record<string, string> = {
   failed: "Delivery failed",
   expired: "Too old to send",
   suppressed: "Suppressed while paused",
+  unqualified: "Execution checks blocked",
 };
 
 export function Analysis() {
@@ -58,6 +62,13 @@ export function Analysis() {
     telegram: false,
   });
   const [strategies, setStrategies] = useState(["prior_range_breakout"]);
+  const hasPilot = strategies.some((s) =>
+    [
+      "liquidity_sweep_v1",
+      "ema200_rejection_v1",
+      "key_level_retest_v1",
+    ].includes(s),
+  );
   const [instrument, setInstrument] = useState("");
   const [focused, setFocused] = useState<Doc | null>(null);
   const catalog = useQuery<Doc>({
@@ -282,6 +293,7 @@ export function Analysis() {
                 Strategy timeframe
                 <select
                   value={form.timeframe}
+                  disabled={hasPilot}
                   onChange={(e) => change("timeframe", e.target.value)}
                 >
                   {["1m", "15m", "1h", "4h", "1d"].map((tf) => (
@@ -315,20 +327,35 @@ export function Analysis() {
                   <input
                     type="checkbox"
                     checked={strategies.includes(id)}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      if (
+                        e.target.checked &&
+                        [
+                          "liquidity_sweep_v1",
+                          "ema200_rejection_v1",
+                          "key_level_retest_v1",
+                        ].includes(id)
+                      )
+                        change("timeframe", "15m");
                       setStrategies((v) =>
                         e.target.checked
                           ? [...v, id]
                           : v.filter((x) => x !== id),
-                      )
-                    }
+                      );
+                    }}
                   />
                   <span>
                     <b>{name}</b>
                     <small>
                       {id === "prior_range_breakout"
                         ? "A candle closes outside the preceding 20-candle range."
-                        : "Price recovers across EMA20 in the EMA20/50 trend direction."}
+                        : id === "ema_pullback_continuation"
+                          ? "Price recovers across EMA20 in the EMA20/50 trend direction."
+                          : id === "liquidity_sweep_v1"
+                            ? "Sweep and reclaim of a known day/swing level; trend pullbacks or proven range edges. BTC/ETH · 15m with automatic 1h context."
+                            : id === "ema200_rejection_v1"
+                              ? "First controlled return to EMA200 after separation in an established trend. BTC/ETH · 15m / 1h."
+                              : "Accepted breakout followed by a distinct first retest in an established trend. BTC/ETH · 15m / 1h."}
                     </small>
                   </span>
                 </label>
@@ -562,6 +589,29 @@ export function Analysis() {
                               : "warming up"}
                         </Badge>
                       ))}
+                      {market.pilot && (
+                        <p className="padded muted">
+                          Hourly context: {market.pilot.state}.{" "}
+                          {market.pilot.dull
+                            ? "Dull activity: new setups blocked. "
+                            : ""}
+                          {market.pilot.shock
+                            ? "Volatility cooldown active. "
+                            : ""}
+                          {market.pilot.hourly_bars} complete hourly candles
+                          prepared. Pilot patterns require fresh execution and
+                          calendar checks before alerts. Historical scans
+                          measure patterns only.
+                          {market.pilot.execution_readiness && (
+                            <>
+                              {" "}
+                              Calendar:{" "}
+                              {market.pilot.execution_readiness.calendar}.
+                              Clock: {market.pilot.execution_readiness.clock}.
+                            </>
+                          )}
+                        </p>
+                      )}
                       <p className="muted">
                         {market.contiguous_bars} consecutive candles available.
                         EMA pullback requires 397. Last candle closed{" "}

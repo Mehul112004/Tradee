@@ -29,12 +29,16 @@ from tradee.c08 import StrategySpec
 from tradee.c08.strategy import prior_range, trend_recovery
 from tradee.c14.telegram import TelegramTransport
 from tradee.environment import load_environment
+from tradee.pilots.contracts import FAMILIES as PILOTS, WARMUP_BARS
 
 STRATEGIES = {
     "prior_range_breakout": "Range breakout",
     "ema_pullback_continuation": "EMA pullback",
+    "liquidity_sweep_v1": "Liquidity sweep",
+    "ema200_rejection_v1": "200 EMA rejection",
+    "key_level_retest_v1": "Key-level retest",
 }
-MAX_BARS = 2000
+MAX_BARS = 10000
 CHECK_SECONDS = 1  # Local supervision/notification timers, never Binance REST polling.
 
 
@@ -87,6 +91,10 @@ def validate_spec(doc):
     if doc["mode"] == "history" and doc["telegram"]:
         raise ValidationError("Historical scans never send Telegram alerts")
     for family in doc["strategies"]:
+        if family in PILOTS:
+            if doc['timeframe']!='15m' or set(symbols)-{'BTCUSDT','ETHUSDT'}:
+                raise ValidationError('Structural pilots v1 require 15m execution and BTCUSDT/ETHUSDT; 1h context is prepared automatically')
+            continue
         StrategySpec(
             family=family,
             timeframe=doc["timeframe"],
@@ -146,6 +154,16 @@ class AnalysisStore:
                 CREATE INDEX IF NOT EXISTS analysis_setup_session ON analysis_setups(session_id,end_ms);
                 CREATE TABLE IF NOT EXISTS analysis_delivery_clock (
                     id INTEGER PRIMARY KEY CHECK(id=1), next_ms INTEGER NOT NULL);
+                CREATE TABLE IF NOT EXISTS pilot_attempts (
+                    workspace TEXT NOT NULL,symbol TEXT NOT NULL,level_id TEXT NOT NULL,side TEXT NOT NULL,
+                    day INTEGER NOT NULL,seed_ms INTEGER NOT NULL,family TEXT NOT NULL,session_id TEXT NOT NULL,
+                    PRIMARY KEY(workspace,symbol,level_id,side,day));
+                CREATE TABLE IF NOT EXISTS pilot_bundles (
+                    workspace TEXT NOT NULL,symbol TEXT NOT NULL,end_ms INTEGER NOT NULL,side TEXT NOT NULL,setup_id TEXT NOT NULL,
+                    PRIMARY KEY(workspace,symbol,end_ms));
+                CREATE TABLE IF NOT EXISTS pilot_bundle_tags (
+                    workspace TEXT NOT NULL,symbol TEXT NOT NULL,family TEXT NOT NULL,day INTEGER NOT NULL,end_ms INTEGER NOT NULL,setup_id TEXT NOT NULL,
+                    PRIMARY KEY(workspace,symbol,family,end_ms));
             """)
 
     @contextmanager
@@ -563,7 +581,7 @@ def evaluate(rows, spec, scan_start):
         features=features,
         levels=levels(segment, interval),
         contiguous_bars=len(segment),
-        readiness={s: ready[s] for s in spec["strategies"]},
+        readiness={s: ready[s] for s in spec["strategies"] if s in ready},
     )
 
 
@@ -574,6 +592,12 @@ def alert_text(session, signal):
     expiry = datetime.fromtimestamp(signal["expires_ms"] / 1000, timezone.utc).strftime(
         "%H:%M:%S UTC"
     )
+    if signal.get('strategy') in PILOTS:
+        return (f"TRADEE · SETUP OBSERVATION / UNVALIDATED PLAN\n{signal['symbol']} · {signal['side'].upper()} · 15m / 1h\n"
+                f"{signal['strategy_name']} · {signal['mode']}\nReference: {signal['price']} · stop {signal['stop']} · target {signal['target']}\n"
+                f"Entry drift <= min(0.10 ATR,0.15 reference risk); recheck before entry. Expires: {expiry}\n"
+                f"Modeled taker fees at least 0.05% each side; slippage/spread assumed.\nReference: {signal['id'][:16]}\n"
+                'Not a validated trade recommendation. No fill or account risk control is implied.')
     return (
         f"TRADEE · SETUP OBSERVATION\n{signal['symbol']} · {signal['side'].upper()} · {session['spec']['timeframe']}\n"
         f"{signal['strategy_name']}\n{signal['explanation']}\nClosed at: {signal['price']} USDT\n"
@@ -597,6 +621,9 @@ class AnalysisService:
 
         self.feed_factory = feed_factory or C02LiveFeed
         self.feeds = {}
+        self.pilot_engines = {}
+        from .pilot_sources import PilotSources
+        self.pilot_sources=PilotSources(target.with_suffix('.calendar.json'),clock)
         self.wake = threading.Event()
         self.stop = threading.Event()
         self.thread = None
@@ -730,6 +757,15 @@ class AnalysisService:
                 if d["state"] != "eligible"
             )
             raise ValidationError("Instrument not ready: " + reasons)
+        result={}
+        if any(f in PILOTS for f in session['spec']['strategies']):
+            for item in selected:
+                v=registry.version(item['version_hash'])['spec']; c=v['constraints']
+                result[item['symbol']]=dict(symbol=item['symbol'],instrument_id=v['instrument_id'],status=v['status'],
+                    observed_ms=item['last_observed_ms'],version_hash=item['version_hash'],tick_size=c['PRICE_FILTER.tickSize'],
+                    step_size=c['MARKET_LOT_SIZE.stepSize'],min_quantity=c['MARKET_LOT_SIZE.minQty'],min_notional=c['MIN_NOTIONAL.notional'],
+                    halt_ms=v.get('deliveryDate'))
+        return result
 
     def tick(self, workspace, uid):
         now = int(self.clock() * 1000)
@@ -756,7 +792,9 @@ class AnalysisService:
                     (uid,),
                 )
             return
-        self.metadata(workspace, session, now)
+        metadata=self.metadata(workspace, session, now) or {}
+        has_pilots=any(f in PILOTS for f in spec['strategies'])
+        if has_pilots and spec['mode']=='live': self.pilot_sources.prepare(now)
         feed = None
         if spec["mode"] == "live" and all(s in watermark for s in spec["symbols"]):
             feed = self.ensure_feed(workspace, session)
@@ -767,7 +805,7 @@ class AnalysisService:
         scan_end = session["detail"].get("scan_end_ms", end)
         if spec["mode"] == "history":
             end = scan_end
-        count = spec["history_bars"] + 420 if spec["mode"] == "history" else 500
+        count = (WARMUP_BARS+(spec['history_bars'] if spec['mode']=='history' else 0)) if has_pilots else spec["history_bars"] + 420 if spec["mode"] == "history" else 500
         detail = dict(session["detail"], scan_end_ms=scan_end)
         for symbol in spec["symbols"]:
             if not self.store.is_running(uid) or self.stop.is_set():
@@ -796,6 +834,8 @@ class AnalysisService:
             if not self.store.is_running(uid) or self.stop.is_set():
                 return
             observed = int(self.clock() * 1000)
+            if has_pilots and spec['mode']=='live':
+                fetched=[dict(r,available_ms=r.get('available_ms',observed)) for r in fetched]
             self.store.save_bars(uid, symbol, fetched, observed)
             rows = self.store.bars(uid, symbol)
             if not rows:
@@ -818,14 +858,31 @@ class AnalysisService:
             )
             closed_hash = fingerprint(rows)
             old = session["detail"].get(symbol, {})
+            changed=closed_hash != old.get("closed_hash") or has_pilots and (uid,symbol) not in self.pilot_engines
             analysis = (
                 evaluate(rows, spec, start_scan)
-                if closed_hash != old.get("closed_hash")
+                if changed
                 else {
                     k: old[k]
                     for k in ("features", "levels", "contiguous_bars", "readiness")
                 }
             )
+            if has_pilots:
+                from .pilot_analysis import evaluate_pilots,save_attempts
+                if changed:
+                    instrument=metadata.get(symbol,{})
+                    pilot=evaluate_pilots(rows,spec,start_scan,symbol=symbol,tick_size=instrument.get('tick_size','.1' if symbol=='BTCUSDT' else '.01'),
+                        live_start_ms=session['created_ms'] if spec['mode']=='live' else 0,now_ms=observed,clock=lambda:int(self.clock()*1000),
+                        evidence=(lambda p:self.pilot_sources.evidence(feed,p,instrument,int(self.clock()*1000))) if spec['mode']=='live' else None)
+                    engine=pilot.pop('_engine'); self.pilot_engines[(uid,symbol)]=engine
+                    with self.store.connection() as db:
+                        if spec['mode']=='live': save_attempts(db,workspace,uid,symbol,engine.attempt_log)
+                    analysis.setdefault('setups',[]).extend(pilot.pop('setups'))
+                    analysis['features']=pilot.pop('features'); analysis['readiness'].update(pilot.pop('readiness')); analysis.update(pilot)
+                else:
+                    analysis['pilot']=old.get('pilot',{})
+                    analysis['readiness'].update({f:old['readiness'][f] for f in spec['strategies'] if f in PILOTS})
+                if spec['mode']=='live': analysis['pilot']['execution_readiness']=self.pilot_sources.status(int(self.clock()*1000))
             stream = live["status"] if live else dict(state="connecting")
             stale = rows[-1]["open_ms"] + interval < end or (
                 spec["mode"] == "live" and stream["state"] != "connected"
@@ -861,7 +918,9 @@ class AnalysisService:
                         else "pending" if spec["telegram"] else "disabled"
                     )
                 )
+                if signal['strategy'] in PILOTS and signal.get('qualification')!='qualified' and spec['mode']=='live': delivery='unqualified'
                 with self.store.connection() as db:
+                    db.execute('BEGIN IMMEDIATE')
                     if (
                         db.execute(
                             "SELECT state FROM analysis_sessions WHERE id=?", (uid,)
@@ -869,6 +928,12 @@ class AnalysisService:
                         != "running"
                     ):
                         return
+                    if signal['strategy'] in PILOTS and spec['mode']=='live' and signal.get('qualification')=='qualified':
+                        from .pilot_analysis import claim_bundle
+                        exists=db.execute('SELECT 1 FROM analysis_setups WHERE id=?',(signal['id'],)).fetchone()
+                        blocked=None if exists else claim_bundle(db,workspace,uid,signal)
+                        if blocked:
+                            signal.update(qualification='blocked',reasons=[blocked]); delivery='unqualified'
                     db.execute(
                         "INSERT OR IGNORE INTO analysis_setups(id,session_id,symbol,end_ms,document,delivery) VALUES(?,?,?,?,?,?)",
                         (
@@ -883,7 +948,7 @@ class AnalysisService:
             watermark[symbol] = rows[-1]["open_ms"]
             detail[symbol] = dict(
                 analysis,
-                candles=[dict(data=r) for r in rows],
+                candles=[dict(data=r) for r in (rows[-500:] if has_pilots else rows)],
                 symbol=symbol,
                 bars=len(rows),
                 stale=stale,
@@ -949,6 +1014,7 @@ class AnalysisService:
         if session["state"] != "running" or not session["spec"]["telegram"]:
             return
         now = int(self.clock() * 1000)
+        pilot_metadata=(self.metadata(workspace,session,now) or {}) if any(f in PILOTS for f in session['spec']['strategies']) else {}
         with self.store.connection() as db:
             db.execute("BEGIN IMMEDIATE")
             r = db.execute(
@@ -959,6 +1025,18 @@ class AnalysisService:
                 return
             signal = json.loads(r["document"])
             feed = self.feeds.get(uid)
+            if signal.get('strategy') in PILOTS:
+                from tradee.pilots.execution import qualify
+                engine=self.pilot_engines.get((uid,signal['symbol']))
+                assessment=qualify(signal,self.pilot_sources.evidence(feed,signal,pilot_metadata.get(signal['symbol']),now),now,
+                    context=engine.context if engine else None,purpose='notification')
+                if not engine or engine.context.prefix!=signal['input_prefix_hash']:
+                    assessment['qualified']=False; assessment['reasons'].append('correction')
+                if signal.get('metadata_version_hash')!=(pilot_metadata.get(signal['symbol']) or {}).get('version_hash'):
+                    assessment['qualified']=False; assessment['reasons'].append('instrument_rules')
+                if not assessment['qualified']:
+                    db.execute("UPDATE analysis_setups SET delivery='unqualified' WHERE id=?",(r['id'],))
+                    return
             if feed:
                 live_status = feed.view(signal["symbol"])["status"]
                 if live_status["state"] != "connected" or signal[

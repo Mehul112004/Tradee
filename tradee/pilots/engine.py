@@ -4,16 +4,21 @@ from copy import deepcopy
 
 from tradee.c01 import ValidationError
 from tradee.c01.domain import fingerprint
-from .contracts import BAR, HOUR, DAY, FAMILIES, PRIORITY, PilotConfig, candle, dec, jsonable, rounded
+from .contracts import BAR, HOUR, DAY, FAMILIES, MODES, PRIORITY, PilotConfig, candle, dec, jsonable, rounded
 from .context import Context
 
 
 class PilotEngine:
-    def __init__(self, symbol, tick_size, config=None, *, start_seed_ms=0, families=FAMILIES):
+    def __init__(self, symbol, tick_size, config=None, *, start_seed_ms=0, families=FAMILIES, mode_scope=None):
         if symbol not in ('BTCUSDT','ETHUSDT'): raise ValidationError('Pilot v1 supports BTCUSDT/ETHUSDT only')
         self.config=config or PilotConfig(); self.symbol=symbol; self.tick=dec(tick_size)
         if self.tick<=0 or any(f not in FAMILIES for f in families): raise ValidationError('Invalid pilot tick/family')
         self.families=tuple(families); self.context=Context(symbol,self.tick,self.config)
+        if mode_scope is not None and mode_scope not in MODES: raise ValidationError('Unknown pilot mode scope')
+        self.mode_scope=mode_scope
+        if mode_scope:
+            family={'sweep_trend':FAMILIES[0],'sweep_range':FAMILIES[0],'ema_trend':FAMILIES[1],'retest_trend':FAMILIES[2]}[mode_scope]
+            self.families=tuple(f for f in self.families if f==family)
         self.start_seed_ms=start_seed_ms; self.pending=[]; self.attempts=set(); self.attempt_log=[]
         self.ema_after={'long':0,'short':0}; self.reasons=Counter(); self.snapshots=[]
         self.last_open=None; self.last_source=None; self.last_generation=0
@@ -36,6 +41,7 @@ class PilotEngine:
         return None
 
     def trend_execution(self, side, values, b, price):
+        if not self.config.regime_filter: return True
         d=1 if side=='long' else -1
         return values['crosses']<=2 and d*(price-values['ema200'])>=b
 
@@ -79,12 +85,13 @@ class PilotEngine:
                 span=row['high']-row['low']
                 wick=min(row['open'],row['close'])-row['low'] if side=='long' else row['high']-max(row['open'],row['close'])
                 if not (d*(row['open']-x)>=b and b<=depth<=self.g('.75',atr) and span>0 and wick/span>=dec('.30') and v['tr']<=self.g('2.5',atr)): continue
-                mode='sweep_range' if self.context.state=='HEALTHY_RANGE' else 'sweep_trend'
+                mode='sweep_range' if self.context.state=='HEALTHY_RANGE' or not self.config.regime_filter and self.mode_scope=='sweep_range' else 'sweep_trend'
+                if not self.config.regime_filter and self.mode_scope in ('sweep_range','sweep_trend'): mode=self.mode_scope
                 if not self.allowed(side,mode): continue
                 if mode=='sweep_range':
                     box=self.context.box; ah=box['atr']; edge=box['low' if side=='long' else 'high']
                     if abs(x-edge)>self.g('.25',ah) or d*(x-(box['low']+dec('.20')*(box['high']-box['low']) if side=='long' else box['high']-dec('.20')*(box['high']-box['low'])))>0: continue
-                elif v['crosses']>2: continue
+                elif self.config.regime_filter and v['crosses']>2: continue
                 found[side].append((l,mode))
         if found['long'] and found['short']:
             self.reasons['dual_sweep']+=1
@@ -104,7 +111,7 @@ class PilotEngine:
         result=[]; atr=prior['atr']; e=prior['ema200']; band=max(self.g('.15',atr),2*self.tick)
         for side in ('long','short'):
             d=1 if side=='long' else -1
-            if not self.allowed(side,'ema_trend') or v['crosses']>2 or v['slope'] is None or d*v['slope']<dec('.01'): continue
+            if not self.allowed(side,'ema_trend') or self.config.regime_filter and (v['crosses']>2 or v['slope'] is None or d*v['slope']<dec('.01')): continue
             separated=True; far=False
             for i in range(len(history)-9,len(history)-1):
                 r,a,p=history[i],values[i],values[i-1]
@@ -113,6 +120,8 @@ class PilotEngine:
                 extreme=r['low'] if side=='long' else r['high']
                 if d*(extreme-a['ema200'])<=width or d*(r['close']-a['ema200'])<self.g('.10',a['atr']): separated=False; break
                 far |= d*(r['close']-a['ema200'])>=self.g('.75',a['atr'])
+            if not self.config.exhaustion_filter:
+                separated=d*(history[-2]['close']-prior['ema200'])>=self.g('.10',atr); far=separated
             if not separated or not far or row['low']>e+band or row['high']<e-band: continue
             # Every first intersection consumes the episode, even a weak/deep candle.
             self.ema_after[side]=row['open_ms']+BAR
@@ -127,7 +136,7 @@ class PilotEngine:
     def retest_seeds(self, row, v, prior):
         atr=prior['atr']; b=self.buffer(atr); before=list(self.context.rows)[-4:-1]; result=[]
         for side in ('long','short'):
-            if not self.allowed(side,'retest_trend') or v['crosses']>2: continue
+            if not self.allowed(side,'retest_trend') or self.config.regime_filter and v['crosses']>2: continue
             d=1 if side=='long' else -1; found=[]
             for l in self.context.levels:
                 if l['side']!=('high' if side=='long' else 'low') or not self.eligible(l,side,FAMILIES[2],row,atr): continue
@@ -146,8 +155,8 @@ class PilotEngine:
         if p['generation']!=self.context.generation: return 'missing_context'
         if not self.allowed(p['side'],p['mode']): return 'transition'
         if p['level'] and row['open_ms']+BAR>=p['level']['expires_ms']: return 'level_rollover'
-        if p['mode']=='sweep_range' and not self.context.box_valid(p['box']): return 'range_moved'
-        if p['mode']!='sweep_range' and v['crosses']>2: return 'crossing_chop'
+        if p['mode']=='sweep_range' and not self.context.box_valid(p['box'],require_state=self.config.regime_filter): return 'range_moved'
+        if p['mode']!='sweep_range' and self.config.regime_filter and v['crosses']>2: return 'crossing_chop'
         return self.health(row,v)
 
     def progress(self, p, row, v):
@@ -187,7 +196,7 @@ class PilotEngine:
         else:
             depth=x-p['low'] if d==1 else p['high']-x
             if depth>self.g('.35',atr) or d*(row['close']-x)<=-b or abs(v['ema200']-x)>self.g('.15',atr): return 'reject','ema_failed'
-            if v['slope'] is None or d*v['slope']<dec('.01'): return 'reject','ema_slope_failed'
+            if self.config.regime_filter and (v['slope'] is None or d*v['slope']<dec('.01')): return 'reject','ema_slope_failed'
             strength=d*(row['close']-x)>=p['band'] and d*(row['close']-v['ema200'])>=b
         extra=age==0 or d*(row['close']-(p['seed_high'] if d==1 else p['seed_low']))>b
         aligned=p['mode']=='sweep_range' or self.trend_execution(p['side'],v,b,row['close'])
@@ -210,12 +219,13 @@ class PilotEngine:
         target=rounded(price+d*distance,self.tick,up=d==-1)
         if d*(target-price)<=0: return None,'no_room'
         end=row['open_ms']+BAR
-        output=dict(schema_version=1,symbol=self.symbol,strategy=p['family'],strategy_hash=self.config.digest,geometry_scale=self.config.geometry_scale,
+        output=dict(schema_version=1,symbol=self.symbol,strategy=p['family'],strategy_hash=self.config.digest,geometry_scale=self.config.geometry_scale,filters=self.config.document(),
             mode=p['mode'],side=p['side'],open_ms=row['open_ms'],end_ms=end,seed_ms=p['seed_ms'],detected_ms=row['available_ms'],
             price=price,stop=stop,target=target,reference_risk=risk,atr=a,b=p['b'],tick_size=self.tick,
             entry_level_buffer=max(self.g('.20',a),p['b']) if p['family']==FAMILIES[2] else p['band'] if p['family']==FAMILIES[1] else p['b'],
             trigger_level=p['level']['price'] if p['level'] else p['ema'],level_id=p['level']['id'] if p['level'] else None,
             level_known_ms=p['level']['known_ms'] if p['level'] else None,level_expires_ms=p['level']['expires_ms'] if p['level'] else None,
+            level_confirmed_ms=p['level']['confirmed_ms'] if p['level'] else p['seed_ms'],
             box=p['box'] if p['mode']=='sweep_range' else None,barriers=barriers,regime=self.context.state,
             expires_ms=end+180000,max_hold_ms=2*HOUR if p['mode']=='sweep_range' else 3*HOUR,
             input_prefix_hash=self.context.prefix,live_approved=False,qualification='execution_unchecked',
@@ -252,7 +262,8 @@ class PilotEngine:
             elif action=='reject': self.reasons[reason]+=1
             else:
                 result,reason=self.plan(p,row)
-                if result: plans.append(result)
+                if result:
+                    if self.mode_scope is None or result['mode']==self.mode_scope: plans.append(result)
                 else: self.reasons[reason]+=1
         return sorted(plans,key=lambda p:(PRIORITY[p['strategy']],p['opportunity_id']))
 

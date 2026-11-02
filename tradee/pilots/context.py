@@ -117,8 +117,8 @@ class Context:
         if self.shock_wait: return 'shock_cooldown'
         return None
 
-    def box_valid(self, frozen):
-        if self.state!='HEALTHY_RANGE' or not self.box or not frozen: return False
+    def box_valid(self, frozen, *, require_state=True):
+        if require_state and self.state!='HEALTHY_RANGE' or not self.box or not frozen: return False
         a=frozen['atr']; close=self.hour_rows[-1]['close']
         return (frozen['low']-dec('.25')*a <= close <= frozen['high']+dec('.25')*a
                 and abs(self.box['low']-frozen['low'])<=dec('.50')*a and abs(self.box['high']-frozen['high'])<=dec('.50')*a)

@@ -71,8 +71,8 @@ def funding(directory,symbol,start,end):
     return result
 
 
-def detect(directory,symbol,config,protocol):
-    engine=PilotEngine(symbol,'.1' if symbol=='BTCUSDT' else '.01',config)
+def detect(directory,symbol,config,protocol,mode_scope=None):
+    engine=PilotEngine(symbol,'.1' if symbol=='BTCUSDT' else '.01',config,mode_scope=mode_scope)
     plans=[]; states=[]; gaps=[]; previous=None
     start=ms(protocol['development_start']); end=ms(protocol['development_end'])
     for r in candles(directory,symbol,'15m',protocol['warmup_start'],protocol['development_end']):
@@ -98,9 +98,10 @@ def state_exit(plan,state):
     if state is None: return 'missing_context'
     d=1 if plan['side']=='long' else -1
     expected='HEALTHY_RANGE' if plan['mode']=='sweep_range' else 'TREND_UP' if d==1 else 'TREND_DOWN'
-    if state['state']!=expected: return 'state_exit'
+    filters=plan.get('filters',{})
+    if filters.get('regime_filter',True) and state['state']!=expected: return 'state_exit'
     if state['shock']: return 'shock_exit'
-    if state['dull_twice']: return 'dull_exit'
+    if filters.get('dull_filter',True) and state['dull_twice']: return 'dull_exit'
     c=dec(state['close']); b=dec(plan['b']); x=dec(plan['trigger_level'])
     if plan['mode']=='ema_trend': x=dec(state['ema200'])
     if d*(c-x)<=-b: return 'thesis_exit'
@@ -141,9 +142,9 @@ def model_trade(plan,book,states,settlements,blackouts,execution,*,state_times=N
             if d*(c-dec(p['trigger_level']))<dec(p['entry_level_buffer']): result['reason']='reclaim_lost'; return result
             entered=estimate['entry']; entry_ms=when; actual_risk=estimate['entry_risk']; entry_fee=fee*entered
             running=d*(c-entered)-entry_fee
-            result.update(status='open_modeled',entry_ms=when,entry=entered,entry_risk=actual_risk,
+            result.update(status='open_modeled',entry_ms=when,entry=entered,entry_mid=c,entry_risk=actual_risk,
                 expected_stopped_loss=estimate['stopped_loss'],entry_fee=entry_fee)
-            result['marks'].append(dict(at_ms=when,pnl=running,regime='DULL' if state['dull'] else state['state']))
+            result['marks'].append(dict(at_ms=when,pnl=running,price=c,regime='DULL' if state['dull'] else state['state']))
             last_state=state['end_ms']; continue
         stop_hit=l<=s if d==1 else h>=s; target_hit=h>=t if d==1 else l<=t
         if stop_hit and target_hit:
@@ -169,7 +170,7 @@ def model_trade(plan,book,states,settlements,blackouts,execution,*,state_times=N
             result.update(status='modeled_closed',reason=reason,exit_ms=when,exit=fill,net=net,net_r=net/actual_risk,
                 fees=fee*(entered+fill),funding=funding_value)
             running=net
-        result['marks'].append(dict(at_ms=when,pnl=running,regime='DULL' if state and state['dull'] else 'SHOCK' if state and state['shock'] else state['state'] if state else 'UNKNOWN'))
+        result['marks'].append(dict(at_ms=when,pnl=running,price=c,regime='DULL' if state and state['dull'] else 'SHOCK' if state and state['shock'] else state['state'] if state else 'UNKNOWN'))
         if reason: return jsonable(result)
     result.update(status='unresolved' if entered is not None else 'no_entry',reason='data_tail')
     return jsonable(result)

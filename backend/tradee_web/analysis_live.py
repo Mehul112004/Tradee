@@ -6,6 +6,7 @@ REST is used only for initial minute context and the collector's reconnect repai
 """
 
 from copy import deepcopy
+from collections import deque
 from decimal import Decimal, localcontext
 import json
 import threading
@@ -18,6 +19,7 @@ from tradee.c02.domain import MINUTE, aggregate, number
 from tradee.c02.live import Collector, connection
 from tradee.c02.provider import RestClient
 from tradee.c03.catalog import TIMEFRAMES
+from tradee.pilots.contracts import FAMILIES as PILOTS
 
 
 class C02LiveFeed:
@@ -40,6 +42,10 @@ class C02LiveFeed:
         self.stop = threading.Event()
         self.thread = None
         self.minutes = {s: {} for s in self.symbols}
+        self.execution_streams=any(f in PILOTS for f in session['spec']['strategies'])
+        self.quotes,self.marks={},{}
+        self.trades={s:deque(maxlen=20000) for s in self.symbols}
+        self.trade_ids={s:None for s in self.symbols}
         self.state, self.error = "connecting", ""
         self.last_message_ms, self.suppress_before_ms = 0, int(clock() * 1000)
         self.last_by_symbol = {s: 0 for s in self.symbols}
@@ -57,6 +63,8 @@ class C02LiveFeed:
                         feed.state = "connected"
                     elif action in ("disconnected", "reconnect_wait"):
                         feed.state = "reconnecting"
+                        feed.quotes.clear(); feed.marks.clear()
+                        for s in feed.symbols: feed.trades[s].clear(); feed.trade_ids[s]=None
                     elif action == "quarantined":
                         feed.state = "data_error"
                 feed.wake.set()
@@ -101,12 +109,29 @@ class C02LiveFeed:
                     feed.wake.set()
 
         self.collector = ObservedCollector(
-            self.store, self.symbols, ("candle",), connect=connect, rest=self.rest
+            self.store, self.symbols, ("candle","trade","quote","mark") if self.execution_streams else ("candle",), connect=connect, rest=self.rest
         )
 
     def _apply(self, event):
-        if event["symbol"] not in self.minutes or event["kind"] != "candle":
+        if event["symbol"] not in self.minutes:
             return
+        symbol,kind=event['symbol'],event['kind']
+        if kind in ('quote','mark'):
+            target=self.quotes if kind=='quote' else self.marks
+            old=target.get(symbol)
+            if old is None or (event['event_ms'],event['available_ms'],event['id'])>(old['event_ms'],old['available_ms'],old['id']): target[symbol]=event
+            return
+        if kind=='trade':
+            key=int(event['key']); previous=self.trade_ids[symbol]
+            if previous is not None and key<=previous:
+                if key==previous and self.trades[symbol] and event['data']==self.trades[symbol][-1]['data']: return
+                self.trades[symbol].clear()
+            elif previous is not None and key!=previous+1: self.trades[symbol].clear()
+            self.trade_ids[symbol]=key; self.trades[symbol].append(event)
+            cutoff=event['received_ms']-300000
+            while self.trades[symbol] and self.trades[symbol][0]['received_ms']<cutoff: self.trades[symbol].popleft()
+            return
+        if kind!='candle': return
         cache = self.minutes[event["symbol"]]
         opened = event["data"]["open_ms"]
         if opened < self.start_ms:
@@ -244,3 +269,23 @@ class C02LiveFeed:
                 )
             status["last_price"] = latest["data"]["close"]
         return dict(status=status, candles=bars, forming=forming)
+
+    def execution_evidence(self,symbol,start_ms):
+        now=int(self.clock()*1000)
+        with self.guard:
+            q=deepcopy(self.quotes.get(symbol)); m=deepcopy(self.marks.get(symbol))
+            trades=deepcopy([t for t in self.trades[symbol] if t['available_ms']<=now])
+            state='repairing' if self.repairing else self.state
+        def adapted(event):
+            return dict(event['data'],symbol=symbol,event_ms=event['event_ms'],received_ms=event['received_ms'],raw_sha256=event['raw_sha256']) if event and event['available_ms']<=now else None
+        path=None
+        before=[t for t in trades if t['event_ms']<=start_ms]
+        after=[t for t in trades if t['event_ms']>start_ms]
+        if before and after:
+            sequence=[before[-1]]+after
+            continuous=all(int(b['key'])==int(a['key'])+1 and b['event_ms']>=a['event_ms'] for a,b in zip(sequence,sequence[1:]))
+            path=dict(symbol=symbol,source='recorded_contract_trades',continuous=continuous,start_ms=start_ms,
+                end_ms=after[-1]['event_ms'],low=min((t['data']['price'] for t in after),key=Decimal),
+                high=max((t['data']['price'] for t in after),key=Decimal),
+                first_event_id=sequence[0]['id'],last_event_id=sequence[-1]['id'])
+        return dict(quote=adapted(q),mark=adapted(m),path=path,stream_state=state)

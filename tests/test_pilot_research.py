@@ -5,6 +5,7 @@ import unittest
 from tradee.pilots.calendar import blackout,parse_bls,parse_fed,reconstructed,timestamp
 from tradee.pilots.contracts import BAR,HOUR,DAY,dec
 from tradee.pilots.research import choose_training,metrics,model_trade,ms,walk_forward
+from tradee.pilots.comparisons import observation_controls
 
 T=2*DAY+HOUR
 
@@ -87,6 +88,16 @@ class TemporalSelection(unittest.TestCase):
             self.assertIsNone(choose_training({'1':trades},start,end)['winner'])
         trades=[self.trade(start+i*DAY,1) for i in range(35)]+[self.trade(start+50*DAY,1,'unresolved')]
         self.assertIsNone(choose_training({'1':trades},start,end)['winner'])
+
+    def test_observation_caps_ignore_future_profit_and_remove_unadmitted_fill_fields(self):
+        trades=[]
+        for i in range(4):
+            t=self.trade(2*DAY+i*4*BAR,1); t['plan']['opportunity_id']=str(i); t['fees']='1'; trades.append(t)
+        result=observation_controls(trades)
+        self.assertEqual(sum(t['status']=='modeled_closed' for t in result),3)
+        self.assertEqual(result[-1]['reason'],'observation_family_cap'); self.assertNotIn('entry_ms',result[-1]); self.assertNotIn('fees',result[-1])
+        changed=deepcopy(trades); changed[0]['net_r']='-1000'
+        self.assertEqual([t['status'] for t in observation_controls(changed)],[t['status'] for t in result])
 
 
 class Calendars(unittest.TestCase):
