@@ -2,6 +2,8 @@
 
 Start with [running the system](START_HERE.md). Each file below covers one user-facing feature or workflow: its purpose, prerequisites, steps, configuration, results and common issues. Existing component specifications remain the source for formulas and full JSON contracts.
 
+For everyday setup watching, use Analysis sessions. Research, portfolio and frozen paper deployments are separate evaluation workflows. The [quick-flow implementation reference](../dashboard/ANALYSIS_FLOW.md) records how the API prepares data, owns live collection and preserves setup evidence without requiring a research release.
+
 ## Learn the dashboard
 
 | Feature | What you will learn |

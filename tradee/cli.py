@@ -10,6 +10,8 @@ import time
 from .c01 import BinanceProvider, Policy, ProviderError, Registry
 from .c02 import cli as data_cli
 from .c03 import cli as feature_cli
+from .c04 import cli as context_cli
+from .c05 import cli as structure_cli
 from .c06 import cli as funding_cli
 from .c07 import cli as execution_cli
 from .c08 import cli as candidate_cli
@@ -53,6 +55,8 @@ def main(argv=None):
     watch.add_argument("--interval-seconds", type=int, default=900)
     data_cli.register(sub)
     feature_cli.register(sub)
+    context_cli.register(sub)
+    structure_cli.register(sub)
     funding_cli.register(sub)
     execution_cli.register(sub)
     candidate_cli.register(sub)
@@ -65,6 +69,10 @@ def main(argv=None):
     monitor_cli.register(sub)
     args = parser.parse_args(argv)
     try:
+        if args.command in ('context', 'structure'):
+            result = (context_cli if args.command == 'context' else structure_cli).execute(args)
+            print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
+            return 0
         if args.command == "monitor":
             result = monitor_cli.execute(args)
             print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))

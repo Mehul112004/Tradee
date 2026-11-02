@@ -85,9 +85,9 @@ class Evaluator:
             return imbalance(rows[-20:], quote=name.startswith('taker_quote'))
         if name == 'mean_trade_quote_notional':
             return mean_trade_notional(rows[-1])
-        if name in ('ema20','ema50'):
+        if name in ('ema20','ema50','ema200'):
             return self.series(name)[-1]
-        if name in ('ema20_prior','ema50_prior'):
+        if name in ('ema20_prior','ema50_prior','ema200_prior'):
             return self.series(name.removesuffix('_prior'))[-2]
         if name == 'atr14':
             return self.series('atr')[-1]
@@ -116,10 +116,14 @@ class Evaluator:
             return divide(dep('atr14'),c)
         if name == 'ema20_distance_atr14':
             return divide(c-dep('ema20'),dep('atr14'))
+        if name == 'ema200_distance_atr14':
+            return divide(c-dep('ema200'),dep('atr14'))
         if name == 'ema20_50_spread_atr14':
             return divide(dep('ema20')-dep('ema50'),dep('atr14'))
         if name == 'ema20_slope5_atr14':
             return divide(dep('ema20')-self.series('ema20')[-6],5*dep('atr14'))
+        if name == 'ema200_slope5_atr14':
+            return divide(dep('ema200')-self.series('ema200')[-6],5*dep('atr14'))
         if name == 'return_sd20':
             return sd0(self.series('returns')[-20:])
         if name == 'realized_variance20':

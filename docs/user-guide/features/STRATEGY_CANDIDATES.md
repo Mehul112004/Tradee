@@ -2,7 +2,11 @@
 
 C08 detects **potential setups**, before expectancy, execution and portfolio admission. A candidate is not automatically an eligible trade, a funded paper position or a Telegram message.
 
+For quick interactive watching/scanning of the supported definitions, use [Analysis sessions](ANALYSIS_SESSIONS.md). The API prepares data and manages live C02 collection without requiring a research dataset hash or release in that form. It stores observational matches in the analysis database; the standalone C08/C11 research artifacts described below remain separate. See [the shared-definition integration contract](../../dashboard/ANALYSIS_FLOW.md#contract-for-the-next-pilot-strategy-pass) before adding detectors.
+
 ## Implemented families
+
+The three additional pilots have [design specifications](../../strategies/PILOT_STRATEGY_DESIGN.md), including range/dull-market vetoes and execution policies, but are not part of the implemented catalog below. The design introduces four separately measured modes because liquidity sweep has trend-pullback and range-edge cases. Quick historical setup scans will remain distinct from costed backtests.
 
 | Family | Meaning | Preset |
 | --- | --- | --- |

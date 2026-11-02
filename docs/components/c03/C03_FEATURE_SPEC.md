@@ -37,7 +37,9 @@ First output: index `n-1`, after `n` closes. Recommended reusable periods: 20; o
 
 For `t >= n`: `EMA_n(t) = EMA_n(t-1) + alpha*(C_t-EMA_n(t-1))`.
 
-First output: `n` closes. Proposed periods: 20 and 50. Seed, segment start and smoothing coefficient are part of the definition. [TA-Lib EMA implementation](https://raw.githubusercontent.com/TA-Lib/ta-lib/main/src/ta_func/ta_EMA.c).
+First output: `n` closes. Supported periods: 20, 50 and 200. Seed, segment start and smoothing coefficient are part of the definition. [TA-Lib EMA implementation](https://raw.githubusercontent.com/TA-Lib/ta-lib/main/src/ta_func/ta_EMA.c).
+
+The EMA200 prerequisite extension also supplies `ema200_prior`, `(close-EMA200)/ATR14` and `(EMA200[t]-EMA200[t-5])/(5*ATR14[t])`. Their nominal bar minima are 201, 200 and 205. At seed tolerance `1e-6`, EMA200/current-prior/five-bar-slope require 1582/1583/1587 contiguous bars respectively. These optional measurements leave the baseline feature list unchanged. See [C04 prerequisites](../c04/C04_IMPLEMENTATION.md).
 
 ### One bar prior EMA
 

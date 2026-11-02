@@ -4,7 +4,7 @@ All project Markdown lives in this directory, grouped by purpose. Run command ex
 
 ## Start here: user documentation
 
-- **[Simple analysis sessions](user-guide/features/ANALYSIS_SESSIONS.md):** choose instruments, timeframe and strategies; prepare candles, inspect levels and receive Telegram setup observations.
+- **[Simple analysis sessions](user-guide/features/ANALYSIS_SESSIONS.md):** choose instruments/timeframe/strategies and start watching; the API prepares history and manages C02 streaming without a research release or manually started collector.
 - **[Running the system](user-guide/START_HERE.md):** concise startup report with commands, development/built frontend, viewer/operator access, processes and first tasks.
 - **[Feature-by-feature manual](user-guide/FEATURES.md):** a separate guide for each dashboard feature and core workflow, including a populated synthetic walkthrough.
 - **[Configuration reference](user-guide/CONFIGURATION_REFERENCE.md):** environment variables, JSON presets, database paths, units and immutable artifact identities.
@@ -18,6 +18,7 @@ All project Markdown lives in this directory, grouped by purpose. Run command ex
 
 ## Platform planning
 
+- [Pilot strategy design: shared gates, exact family rules and edge-case validation](strategies/PILOT_STRATEGY_DESIGN.md) — proposed specification only; no pilot code or performance claim
 - [Platform overview and implementation order](platform/PLATFORM_PLAN.md)
 - [Component responsibilities and dependencies](platform/COMPONENT_RESEARCH.md)
 - [Deferred features and future upgrades](platform/COMPONENT_UPGRADES.md)
@@ -30,6 +31,8 @@ Each component directory groups its research, implementation/specification and v
 - [C01 — instruments and universe](components/c01/)
 - [C02 — market data and replay](components/c02/)
 - [C03 — feature engine](components/c03/)
+- [C04 — market-context prerequisites](components/c04/C04_IMPLEMENTATION.md)
+- [C05 — price-structure prerequisites](components/c05/C05_IMPLEMENTATION.md)
 - [C06 — funding](components/c06/)
 - [C07 — execution and costs](components/c07/)
 - [C08 — setup generation](components/c08/)
@@ -43,6 +46,7 @@ Each component directory groups its research, implementation/specification and v
 
 ## Dashboard
 
+- [Quick analysis flow: runtime, API, storage and pilot integration](dashboard/ANALYSIS_FLOW.md)
 - [Product and UI plan](dashboard/DASHBOARD_PLAN.md)
 - [Chart specification](dashboard/DASHBOARD_CHARTS.md)
 - [Backend service plan](dashboard/DASHBOARD_SERVICE_PLAN.md)

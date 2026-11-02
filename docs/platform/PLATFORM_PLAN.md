@@ -1,5 +1,9 @@
 # Tradee platform plan
 
+**1 November 2026:** Authorized pilot prerequisites are implemented: optional EMA200 measurements, C04 continuous context and C05 causal levels/relationships. The [design-only pilot specifications](../strategies/PILOT_STRATEGY_DESIGN.md) now define liquidity sweep, EMA200 rejection and key-level retest with market-state routing, explicit entry/exit rules and adversarial validation requirements. No new strategy code or registrations are implemented. See [C04](../components/c04/C04_IMPLEMENTATION.md), [C05](../components/c05/C05_IMPLEMENTATION.md) and [verification](../components/c05/C05_VERIFICATION.md).
+
+**Pilot integration context:** understand and preserve the existing [quick analysis flow](../dashboard/ANALYSIS_FLOW.md) before implementing these detectors. Its API-owned Watch live / Scan history entry point requires no frozen research release. Shared detector integration, native-history/C02 availability, warm-up/retention and optional higher-timeframe acquisition must be addressed there; advanced research/paper qualification remains separate.
+
 ## Agreed component working order
 
 Updated 14 September 2026. For each component: **deep research and discussion → finalize its plan → user approval → implementation and verification**. The user authorized C01 implementation with Binance; its first version is now implemented. See [README.md](../getting-started/README.md) for operation and verification.
@@ -26,7 +30,7 @@ Status updated 20 October 2026: C01, C02, C03, C06 funding, C07 execution/costs,
 
 **Preparation before strategy experiments:** agree the basic C09 outcome definitions and C12 research/holdout rules before inspecting performance, even though their full implementations occur later.
 
-**Optional extensions:** C04 market-state filters, C05 price structure and predictive C06 positioning features follow the baseline pipeline. Bring an extension forward if the chosen initial strategy explicitly requires it.
+**Optional extensions:** C04/C05 measurement prerequisites were brought forward on 1 November 2026 for the proposed pilot families. Strategy filters/consumers and predictive C06 positioning remain future work. Bring any required extension forward before testing a strategy that depends on it.
 
 The numbers C01–C15 identify components, not build sequence. Each component initially delivers its agreed minimum scope and can be extended through later reviewed increments. The broader phases below group this work; this table is the current component working order.
 
@@ -289,4 +293,4 @@ C01, the initial C02 data/replay increment, C03 features, C06 funding accounting
 
 ## C03 implementation package — 21 September 2026
 
-References: [C03 architecture and dependencies](../components/c03/C03_RESEARCH_PLAN.md), [exact feature formulas and indicator conventions](../components/c03/C03_FEATURE_SPEC.md), [validation specification](../components/c03/C03_VALIDATION_PLAN.md), and [completed verification and limits](../components/c03/C03_VERIFICATION.md). C03 provides 14 baseline outputs, 45 named definitions (including the C08-required one-bar-prior EMAs) plus parameterized simple returns, explicit availability/warm-up policies, optional diagnostics, atomic checkpoints and an inspection/run CLI. It supplies measurements to later components; strategy expectancy and Telegram signals remain downstream work.
+References: [C03 architecture and dependencies](../components/c03/C03_RESEARCH_PLAN.md), [exact feature formulas and indicator conventions](../components/c03/C03_FEATURE_SPEC.md), [validation specification](../components/c03/C03_VALIDATION_PLAN.md), and [completed verification and limits](../components/c03/C03_VERIFICATION.md). C03 provides 14 baseline outputs, 49 named definitions (including one-bar-prior EMAs and four EMA200 prerequisites) plus parameterized simple returns, explicit availability/warm-up policies, optional diagnostics, atomic checkpoints and an inspection/run CLI. It supplies measurements to later components; strategy expectancy and Telegram signals remain downstream work.

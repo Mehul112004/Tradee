@@ -1,5 +1,9 @@
 # Component implementation and future upgrades
 
+**1 November 2026 prerequisite increment:** C04 continuous market context, C05 causal level snapshots and four optional EMA200 measurements are implemented. The proposed liquidity-sweep, EMA200-rejection and key-level-retest strategies remain undefined for the next pass. See [C04 scope](../components/c04/C04_IMPLEMENTATION.md), [C05 scope](../components/c05/C05_IMPLEMENTATION.md) and [verification](../components/c05/C05_VERIFICATION.md).
+
+**Design-only follow-up:** [Pilot strategy specifications](../strategies/PILOT_STRATEGY_DESIGN.md) now define the three families, shared market-state/cost/risk gates, timing and edge-case validation. This supersedes “undefined” above as design status only. Classifier/touch policies, detector state machines, longer warm-up, quote/calendar qualification, structural lifecycle and quick-flow integration are still unimplemented; none of the proposed thresholds has market-performance evidence.
+
 Updated 21 October 2026. Tradee implements each component's agreed initial scope, verifies that scope, and extends it when its dependencies and evidence are available. C01, C02 and C03 are complete within their documented initial scope; C06 adds funding accounting, C07 adds market execution/costs, C08 adds two independent setup families, and C09 adds shared paper trade lifecycles/accounting. C11/C10/C12 add historical simulation, frozen expectancy and chronological research controls; C13 adds shared-capital paper allocation and replay; C14 adds bounded shadow/paper orchestration, durable notifications and Telegram transport; C15 adds prospective paper/shadow measurement, reconciliation and predeclared monitoring. Some broader functionality and operational validation remain outstanding. The tables below make those gaps explicit for all fifteen components.
 
 This register consolidates the currently identified work in [the platform plan](PLATFORM_PLAN.md), [component research](COMPONENT_RESEARCH.md) and component verification reports. It is a maintained backlog, not a promise to implement every possible indicator or predictive model. New prospects belong here when identified; unnecessary extensions can be rejected with a recorded reason.
@@ -23,8 +27,8 @@ Each backlog entry has an ID, purpose, dependencies and a completion gate. After
 | C01 | Binance contract identity, rules, metadata history and explicit universe | Implemented | Historical metadata evidence and broader universe selection |
 | C02 | Public archive/REST acquisition, foreground live recorder, immutable datasets and replay | Implemented | Scale, tick/depth coverage and additional source adapters |
 | C03 | Shared causal mathematical features, optional diagnostics, persistence and CLI | Implemented | Long-history performance and separately justified feature extensions |
-| C04 | Market-state interpretation and filters | Deferred optional component | Establish added value against the baseline strategy |
-| C05 | Causal price levels and structure | Deferred optional component | Define levels and demonstrate added value |
+| C04 | Continuous same-prefix trend, volatility, participation and optional quote context | Implemented measurement scope | Strategy filters, broader context and incremental-value validation |
+| C05 | Complete UTC day/week levels, prior ranges, confirmed pivots and exact relationships | Implemented measurement scope | Pilot strategy integration, level policies and incremental-value validation |
 | C06 | Exact funding cash flows, observed estimates, coverage/boundary statuses, durable reports and E2E | Implemented funding scope | Audited calendar acquisition, account reconciliation and predictive derivatives extensions |
 | C07 | Market scenarios, exact fees/costs, rule/readiness/delay gates, durable replay and E2E | Implemented market scope | Passive/partial fills, empirical calibration, historical fidelity and account integration |
 | C08 | Independent 15m range-breakout and EMA recovery setups, full inventories and causal restart | Implemented two-family scope | C09 paper lifecycle now wired; C11/C12 after-cost evidence, more horizons/context and scale remain |
@@ -36,7 +40,7 @@ Each backlog entry has an ID, purpose, dependencies and a completion gate. After
 | C14 | Frozen bounded shadow/paper runtime, durable outbox and Telegram transport | Implemented paper baseline | Actionable pre-entry timing, real-service/load acceptance and supervision |
 | C15 | Prospective outcomes, delivery/cost telemetry, raw replay and predeclared monitoring | Implemented paper monitoring baseline | Representative forward validation, actual fills, cross-session inference, UI and drift/replacement extensions |
 
-C01–C03, C06–C15's documented baselines are implemented in the agreed dependency order, including C13 shared capital, C14 paper notification/recovery and C15 forward measurement. The full synthetic raw-input signal-to-matured-outcome workflow is programmatically testable. Next work is representative recorded-market research/forward validation and required execution/timing/operational upgrades before actionable signals. C04/C05 and predictive C06 additions remain optional. The dashboard now exposes this evidence locally; proven profitable strategies and automated exchange execution are not implied.
+C01–C03, C06–C15's documented baselines are implemented in the agreed dependency order, including C13 shared capital, C14 paper notification/recovery and C15 forward measurement. The full synthetic raw-input signal-to-matured-outcome workflow is programmatically testable. C04/C05 now provide bounded measurement prerequisites; their strategy consumers and predictive C06 remain future work. Representative market/forward validation and required timing/operational upgrades remain outstanding. Proven profitable strategies and automated exchange execution are not implied.
 
 ## C01 Instrument and universe registry
 
@@ -79,26 +83,26 @@ Implemented evidence: [C03 formula contract](../components/c03/C03_FEATURE_SPEC.
 | C03-U04 | Derivatives, cross-asset/context and fitted ML transforms | Conditional extensions | C04/C06 and C12 fold-controlled fitting; transforms preserve availability and fit boundaries |
 | C03-U05 | Predictive feature-family ablation after costs | Validation outstanding | C07/C08/C09/C11/C12; compare matched opportunities, costs, sample loss and uncertainty on later data |
 
-The current 45 named definitions and parameterized simple returns are implemented, including C08-required `ema20_prior`/`ema50_prior`. Adding more indicators does not substitute for C03-U01 or predictive evidence. Default daily EMA50 readiness needs 396 contiguous daily bars; a one-day benchmark does not validate that workload.
+The current 49 named definitions and parameterized simple returns are implemented, including C08-required `ema20_prior`/`ema50_prior` and the four EMA200 prerequisites. Adding indicators does not substitute for C03-U01 or predictive evidence. Default EMA200 five-bar-slope readiness needs 1587 contiguous bars; a short benchmark does not validate long-history workloads.
 
 ## C04 Market state
 
-This optional component has no implementation yet. C02 and C03 supply measurements; C08 and C10 can consume its outputs.
+The continuous measurement baseline is implemented with C02/C03 evidence, same-prefix timeframe joins, persistence and CLI. [Scope](../components/c04/C04_IMPLEMENTATION.md) and [verification](../components/c04/C04_VERIFICATION.md). No strategy filters or fitted regimes are introduced.
 
 | ID | Remaining work | Type | Dependencies and completion gate |
 | --- | --- | --- | --- |
-| C04-U01 | Continuous trend, volatility, liquidity, broad-market and time context | Deferred component scope | Baseline C08/C11/C12 first; quantify improvement and lost opportunities under matched coverage |
+| C04-U01 | Continuous trend, volatility, liquidity, broad-market and time context | Trend/volatility/participation/top-quote measurements implemented; broader context deferred | C08/C11/C12 strategy consumers and matched-coverage incremental-value experiments remain |
 | C04-U02 | Scheduled-event proximity and revision-aware event context | Conditional extension | C02-U05; event schedules and timezone conversions are available at each decision |
 | C04-U03 | Simple regimes, learned filtered state probabilities and state uncertainty | Conditional extension | C12 fitting isolation; no future-smoothed labels or unrecorded threshold tuning |
 
 ## C05 Price structure
 
-This optional component has no implementation yet. It supplies level snapshots to C08/C09 when a strategy requires them.
+The causal reference baseline is implemented: complete previous UTC day/week, prior ranges, confirmed swings and exact descriptive relationships. [Scope](../components/c05/C05_IMPLEMENTATION.md) and [verification](../components/c05/C05_VERIFICATION.md). Future C08/C09 policies choose how these levels enter a strategy.
 
 | ID | Remaining work | Type | Dependencies and completion gate |
 | --- | --- | --- | --- |
-| C05-U01 | Completed-period highs/lows, ranges and confirmed pivots | Deferred component scope | C02/C03 and strategy requirement; explicit confirmation lag, immutable availability and baseline comparison |
-| C05-U02 | Level merging, aging, touches, invalidation and normalized distances | Conditional extension | C05-U01; deterministic snapshots and measured incremental value |
+| C05-U01 | Completed-period highs/lows, ranges and confirmed pivots | Implemented measurement scope | Exact confirmation/knowledge timing, immutable revisions and raw-input verification; strategy baseline comparison outstanding |
+| C05-U02 | Level merging, aging, touches, invalidation and normalized distances | Exact touches/distances implemented; merging, aging and policy invalidation deferred | Future strategy requirements and measured incremental value |
 | C05-U03 | Zones, order blocks, fair-value gaps, BOS/CHOCH and sweeps | Conditional hypothesis extensions | Exact causal definitions and C12 trials; compare against simple range/ATR methods |
 
 ## C06 Funding and derivatives context

@@ -197,6 +197,20 @@ class AnalysisTests(unittest.TestCase):
         refs = {l["label"]: l for l in levels(daily, 86400000)}
         self.assertEqual(refs["Previous UTC day · high"]["price"], "111")
 
+    def test_display_swings_do_not_bridge_missing_candles(self):
+        rows = [candle(t * 60000) for t in (0, 1, 2, 4, 5)]
+        rows[2]["high"] = "110"
+        self.assertNotIn("Confirmed swing high", [l["label"] for l in levels(rows, 60000)])
+
+    def test_display_levels_preserve_late_receipt_and_market_confirmation(self):
+        rows = [candle(t * 60000) for t in range(5)]
+        rows[2]["high"] = "110"
+        for r in rows:
+            r["available_ms"] = r["open_ms"] + 63000
+        swing = next(l for l in levels(rows, 60000) if l["label"] == "Confirmed swing high")
+        self.assertEqual(swing["confirmed_ms"], 300000)
+        self.assertEqual(swing["known_ms"], 303000)
+
     def test_history_scan_creates_results_without_telegram(self):
         s = self.create(mode="history")
         with patch(

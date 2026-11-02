@@ -24,6 +24,7 @@ from tradee.c01.domain import canonical, fingerprint
 from tradee.c01.provider import BinanceProvider, ProviderError, verified_urlopen
 from tradee.c03.catalog import TIMEFRAMES
 from tradee.c03.evaluator import Evaluator
+from tradee.c05 import StructureConfig, reference_levels
 from tradee.c08 import StrategySpec
 from tradee.c08.strategy import prior_range, trend_recovery
 from tradee.c14.telegram import TelegramTransport
@@ -450,43 +451,25 @@ class CandleSource:
 
 
 def levels(rows, interval):
-    """Causal reference levels: prior range, completed UTC day, confirmed pivots."""
-    if not rows:
-        return []
-    result = []
-
-    def add(label, price, confirmed):
-        result.append(dict(label=label, price=price, confirmed_ms=confirmed))
-
-    if len(rows) >= 21:
-        p = prior_range(rows, 20, interval)
-        if p:
-            add("Previous 20 candles · high", p["upper"], rows[-1]["open_ms"])
-            add("Previous 20 candles · low", p["lower"], rows[-1]["open_ms"])
-    # At a midnight close the just-completed day becomes the previous UTC day.
-    day = (rows[-1]["open_ms"] + interval) // 86400000 * 86400000
-    prior = [r for r in rows if day - 86400000 <= r["open_ms"] < day]
-    if (
-        len(prior) == 86400000 // interval
-        and prior
-        and prior[0]["open_ms"] == day - 86400000
-    ):
-        add(
-            "Previous UTC day · high", max((r["high"] for r in prior), key=Decimal), day
-        )
-        add("Previous UTC day · low", min((r["low"] for r in prior), key=Decimal), day)
-    for name, cmp in (("high", max), ("low", min)):
-        for i in range(len(rows) - 3, 1, -1):
-            value = Decimal(rows[i][name])
-            neighbors = [Decimal(rows[j][name]) for j in (i - 2, i - 1, i + 1, i + 2)]
-            if value > cmp(neighbors) if name == "high" else value < cmp(neighbors):
-                add(
-                    "Confirmed swing " + name,
-                    rows[i][name],
-                    rows[i + 2]["open_ms"] + interval,
-                )
-                break
-    return result
+    """Display adapter over the same C05 definitions used by canonical replay."""
+    # The supplied display prefix is already selected by the feed's knowledge
+    # cutoff. Recorded candles can arrive after their market-time close.
+    as_of_ms = max(
+        (max(r["open_ms"] + interval, r.get("available_ms", 0)) for r in rows),
+        default=0,
+    )
+    references = reference_levels(
+        rows, interval, as_of_ms=as_of_ms,
+        config=StructureConfig(previous_week=False, max_pivots_per_side=1),
+    )
+    labels = {
+        "prior_range": "Previous 20 candles · ",
+        "previous_day": "Previous UTC day · ",
+        "swing": "Confirmed swing ",
+    }
+    return [dict(label=labels[level["kind"]] + level["side"], price=level["price"],
+                 confirmed_ms=level["confirmed_ms"], known_ms=level["known_ms"])
+            for level in references["levels"]]
 
 
 def evaluate(rows, spec, scan_start):

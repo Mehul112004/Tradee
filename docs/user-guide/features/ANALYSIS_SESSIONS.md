@@ -1,6 +1,8 @@
 # Analysis sessions: the everyday workflow
 
-**Location:** Analysis sessions, `/analysis`. The default Local recording home opens this screen. **Access:** read existing sessions as a viewer; creating, pausing, resuming and stopping require the local operator token. No research models, dataset hashes, worker or separate collector are required for this workflow.
+**Location:** Analysis sessions, `/analysis`. The default Local recording home opens this screen. **Access:** read existing sessions as a viewer; creating, pausing, resuming and stopping require the local operator token. No research models, dataset hashes, advanced worker or manually started collector are required. The API manages this flow and its C02 subscriptions.
+
+Use this flow to quickly watch for setup observations. The separate research/paper workflow measures outcomes and capital policies. Several supported strategies can be watched in the same analysis session without a research release. The new liquidity-sweep, EMA200-rejection and key-level-retest pilots are not selectable yet; their prerequisites exist and their [proposed rules](../../strategies/PILOT_STRATEGY_DESIGN.md) are documented, while detector implementation/integration remains future work. For the current flow and integration contract, see [Quick analysis flow](../../dashboard/ANALYSIS_FLOW.md).
 
 ## Start watching
 
@@ -20,9 +22,9 @@ This uses public market data, with no Binance account keys. Instrument eligibili
 - **EMA pullback:** a close recovering across EMA20 in the direction of the EMA20/EMA50 trend. Indicators use the existing C03 formulas and the C08 strategy predicate.
 - **Range levels:** high and low of the preceding 20 completed candles, excluding the current candle.
 - **Previous UTC day levels:** high and low of the fully covered preceding UTC day. Incomplete days are omitted.
-- **Confirmed swing levels:** latest strict pivot high/low with two completed candles on each side. A pivot is available only after its two right-hand candles close. These simple reference levels are not the full deferred C05 market-structure/zone engine.
+- **Confirmed swing levels:** latest strict pivot high/low with two completed candles on each side. A pivot is confirmed only after its two right-hand candles close, and becomes known when the required source data arrives. Analysis now shares C05's level-construction helper; it shows a smaller subset than the full C05 measurement output. Previous-week levels, EMA200 overlays and C04 multi-timeframe context are not automatically enabled by their core implementation.
 
-The chart displays up to 500 closed candles, a separately labelled forming candle when a contiguous live prefix exists, setup markers, stable EMA overlays and reference lines. Forming-candle prices/volume update from the stream; they never enter strategy/indicator evaluation. C02 records one-minute candles and only aggregates a finalized strategy candle when every constituent minute is final and present: a 15m setup waits for all 15 closes. Duplicate finals, late provisional updates and corrections cannot create a second setup for an already evaluated candle.
+The chart displays up to 500 closed candles, a separately labelled forming candle when a contiguous live prefix exists, setup markers, stable EMA20/50 overlays and reference lines. Forming-candle prices/volume update from the stream; they never enter strategy/indicator evaluation. C02 records one-minute candles and only aggregates a finalized strategy candle when every constituent minute is final and present: a 15m setup waits for all 15 closes. Duplicate finals, late provisional updates and corrections cannot create a second setup for an already evaluated candle. Saved level JSON distinguishes market-time `confirmed_ms` from source-availability `known_ms`; receipt can be later than confirmation. The level list displays confirmation time.
 
 **Binance WebSocket** reports the actual market-stream state and last message/price separately from the header's browser/API **Service connected** indicator. Connecting, repairing, reconnecting or stale streams suppress new notifications. The browser refreshes its backend view approximately once a second; this is not polling Binance. Values below the chart explain the levels and confirmation times. **Detected setups** retains observations, timestamps, trigger levels, explanations and delivery states. Select an observation to inspect the chart/levels known at that setup. Return to the latest chart afterward.
 
@@ -52,3 +54,17 @@ These observational alerts are separate from C14's research-gated paper-fill not
 - **Limits:** five running sessions, five instruments each, 2000 saved candles per instrument, and up to 24 hours per live session. The UI displays the latest 200 setups; the total includes all retained observations. Data errors pause the affected session with a visible message. These are bounded local sessions, not an unattended deployment supervisor.
 
 Analysis data lives beside the configured web-state database: default `data/web.sqlite3.analysis.sqlite3`. Back it up along with C01, C02 and the other stores. A single API owner processes these sessions and supervises their C02 collectors; the advanced worker remains independent. Subscriptions are bounded per analysis session and their symbols/timeframes; C02 deduplicates identical market events if subscriptions overlap. The raw C02 recording can grow faster than the bounded chart history. Changes to the backend/core build require a new analysis session so older evidence stays tied to its original implementation.
+
+## After changes or when something is quiet
+
+| Situation | Action |
+| --- | --- |
+| Backend restarted with the same implementation | Resume the paused session; repaired/missed setups stay out of the notification backlog. |
+| Backend/core code or session settings changed | Create a new analysis session. A C12 research-release regeneration is not required for quick watching. |
+| Preparing candles | Keep the API running; it checks instrument rules and fetches initial history. Starting the advanced worker does not accelerate this flow. |
+| Waiting for Binance stream / data behind | Inspect the chart's Binance state, network and freshness. There is no REST live-polling fallback. Resolve an interruption, then Resume. |
+| Warming up | Check consecutive complete bars: current range needs 21 and current EMA20/50 recovery needs 397. A gap resets context. |
+| No setups with ready data | A valid detector can remain quiet; historical scanning counts matches without measuring profitability. |
+| Telegram off, history-only, expired or uncertain | Inspect the saved delivery state. History/backlog never sends; uncertain attempts are not automatically resent. |
+
+These observations stay on the analysis page. They do not automatically appear in the advanced Signals ledger, which reads C14 paper deployments. See [Telegram](TELEGRAM.md), [Signals](SIGNALS.md), and the [runtime/API/storage reference](../../dashboard/ANALYSIS_FLOW.md).

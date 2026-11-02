@@ -36,7 +36,9 @@ python -m tradee --db data/c01.sqlite3 features \
   run DATASET_HASH --config configs/c03_baseline.json
 ```
 
-Each component must have a distinct store. Output inspection must use the same custom paths used to create it. The core currently uses C01, C02, C03, C06–C15; a consecutive `c01`–`c15` filename range does not imply every component store exists.
+Each component must have a distinct store. Output inspection must use the same custom paths used to create it. C04/C05 measurement commands additionally use `--observation-db`, defaulting to `data/c04.sqlite3` and `data/c05.sqlite3`; these stores are created when explicitly materialized and are not automatically added to dashboard profiles.
+
+Quick **Analysis sessions** take their settings from the form/direct analysis API and save them in `<state_path>.analysis.sqlite3`, default `data/web.sqlite3.analysis.sqlite3`. They do not automatically load the C08/C14 JSON presets below or require C04/C05 materialization runs. The API owns their history preparation, stream subscriptions and observational delivery. See [the exact spec, storage and build-change rules](../dashboard/ANALYSIS_FLOW.md).
 
 ## Strategy and research JSON files
 
@@ -45,6 +47,9 @@ These are engineering presets/schema examples, not established profitable settin
 | File | Main settings / purpose | User guide |
 | --- | --- | --- |
 | [c03_baseline.json](../../configs/c03_baseline.json) | Feature names, timeframes, stability, quote/candle freshness and processing delay | [Features](features/FEATURE_ENGINE.md) |
+| [c03_structure_prerequisites.json](../../configs/c03_structure_prerequisites.json) | Optional EMA200/current-prior, ATR distance/slope and ATR14 measurements | [Context prerequisites](../components/c04/C04_IMPLEMENTATION.md) |
+| [c04_observations.json](../../configs/c04_observations.json) | Context timeframes, seed tolerance and freshness; optional output limits retain warm-up | [Context prerequisites](../components/c04/C04_IMPLEMENTATION.md) |
+| [c05_observations.json](../../configs/c05_observations.json) | UTC period levels, prior range and left/right swing confirmation; no strategy triggers | [Structure prerequisites](../components/c05/C05_IMPLEMENTATION.md) |
 | [c06_funding.json](../../configs/c06_funding.json) | Funding accounting/estimate policy; settlement calendars are separate declared inputs | [Costs](features/EXECUTION_AND_COSTS.md) |
 | [c07_execution.json](../../configs/c07_execution.json) | Recorded quote model, observed metadata, manual delay, spread/impact/drift constraints | [Costs](features/EXECUTION_AND_COSTS.md) |
 | [c07_fee_assumptions.json](../../configs/c07_fee_assumptions.json) | Explicit assumed fees; not authenticated account fee tiers | [Costs](features/EXECUTION_AND_COSTS.md) |

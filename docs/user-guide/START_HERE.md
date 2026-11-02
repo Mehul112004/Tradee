@@ -4,6 +4,8 @@ This is the short operating guide. Read it first, then use the [feature-by-featu
 
 For the simplest workflow, start with **[Analysis sessions](features/ANALYSIS_SESSIONS.md)**: choose instruments, timeframe and strategies, then watch live or scan history. The API prepares history and supervises the existing C02 WebSocket collector for live sessions; no manually started worker/collector or research release is required. Setups are evaluated only on fully closed candles. Existing research/paper tools remain available separately.
 
+Changing backend/core code requires a **new analysis session**, rather than regenerating a C12 release for this quick flow. A same-build server restart only requires deliberately resuming the paused session. The [analysis flow reference](../dashboard/ANALYSIS_FLOW.md) explains ownership, storage, notifications and the integration requirements for future detectors.
+
 ## 1. Install once
 
 Prerequisites: the `tradee` Conda environment, Python 3.13 and Node 20.19+ with npm. No Docker, PostgreSQL, Redis or separate database server is required. SQLite stores component data in local `data/*.sqlite3` files.

@@ -1,0 +1,6 @@
+{
+  "features": ["ema200", "ema200_prior", "ema200_distance_atr14", "ema200_slope5_atr14", "atr14"],
+  "timeframes": ["15m", "1h", "4h"],
+  "require_stable": true,
+  "seed_threshold": 0.000001
+}

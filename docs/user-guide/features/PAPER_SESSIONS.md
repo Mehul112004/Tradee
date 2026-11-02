@@ -2,6 +2,8 @@
 
 **Location:** Operations → Session controls / Research & data jobs / Process ownership. **Access:** operator plus worker for UI actions. **Prerequisites:** a current-source compatible C12/C13 research release, captured source data, a reviewed C14 session specification and a prospective C15 monitor policy.
 
+For quick setup watching, use **[Analysis sessions](ANALYSIS_SESSIONS.md)** instead. That API-owned flow prepares history, manages live collection and optionally sends observational alerts without a C12/C14 deployment. Its controls and build-change recovery differ from the paper workflow documented here; see [the comparison](../../dashboard/ANALYSIS_FLOW.md#two-independent-entry-points).
+
 A **session** is a frozen bounded deployment definition. A **runner** repeatedly advances its recorded-prefix paper processing. A **collector** records market data. A **worker** executes dashboard jobs. None of these is interchangeable.
 
 ## Create, then explicitly start

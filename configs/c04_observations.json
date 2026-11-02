@@ -1,0 +1,6 @@
+{
+  "timeframes": ["15m", "1h", "4h"],
+  "seed_threshold": 0.000001,
+  "max_quote_age_ms": 5000,
+  "candle_grace_ms": 5000
+}

@@ -26,6 +26,8 @@ def add(name, units, bars, formula, dependencies=(), smoothers=(), inputs=('cand
         params['wilder_period'] = 14
     if '50' in name:
         params['slow_period'] = 50
+    if name.startswith('ema200'):
+        params['period'] = 200
     if 'slope5' in name:
         params['lag'] = 5
     if name == 'range_atr14_prior':
@@ -57,7 +59,7 @@ def add(name, units, bars, formula, dependencies=(), smoothers=(), inputs=('cand
 for horizon in (1, 4, 12):
     add(f'log_return_{horizon}', 'log_return_fraction', horizon+1, f'ln(C[t]/C[t-{horizon}])')
 add('sma20', 'price', 20, 'mean(C[t-19:t+1])')
-for n in (20, 50):
+for n in (20, 50, 200):
     add(f'ema{n}', 'price', n, f'SMA seed over {n} closes, then alpha=2/({n}+1)', smoothers=((n,n,'ema',0),))
     add(f'ema{n}_prior', 'price', n+1, f'EMA{n}[t-1]; current close excluded', (f'ema{n}',), ((n,n,'ema',1),))
 add('tr', 'price', 2, 'max(H-L, abs(H-Cprev), abs(L-Cprev)); no TR0')
@@ -67,6 +69,9 @@ add('ema20_distance_atr14', 'atr_multiples', 20, '(C-EMA20)/ATR14', ('ema20','at
 add('ema20_50_spread_atr14', 'atr_multiples', 50, '(EMA20-EMA50)/ATR14', ('ema20','ema50','atr14'))
 add('ema20_slope5_atr14', 'atr_multiples_per_bar', 25, '(EMA20[t]-EMA20[t-5])/(5*ATR14[t])',
     ('ema20','atr14'), ((20,20,'ema',5),))
+add('ema200_distance_atr14', 'atr_multiples', 200, '(C-EMA200)/ATR14', ('ema200','atr14'))
+add('ema200_slope5_atr14', 'atr_multiples_per_bar', 205, '(EMA200[t]-EMA200[t-5])/(5*ATR14[t])',
+    ('ema200','atr14'), ((200,200,'ema',5),))
 add('return_sd20', 'log_return_fraction', 21, 'population_sd(last 20 one-bar log returns)', ('log_return_1',))
 add('realized_variance20', 'squared_log_return', 21, 'sum(r*r over last 20 returns)', ('log_return_1',))
 add('realized_vol20', 'log_return_fraction', 21, 'sqrt(realized_variance20)', ('realized_variance20',))

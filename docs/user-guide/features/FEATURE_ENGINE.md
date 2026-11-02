@@ -33,3 +33,9 @@ Changing the output range does not create preceding warm-up bars. Capture earlie
 C08/C11 can compute their required production features internally; a manual C03 materialization is useful for reusable inspection/charts and is not a substitute for those stages' own compatible feature snapshots.
 
 Related: [Markets](MARKETS_AND_CHARTS.md), [strategy candidates](STRATEGY_CANDIDATES.md), [formula specification](../../components/c03/C03_FEATURE_SPEC.md), [C03 operation/validation](../../components/c03/C03_VERIFICATION.md).
+
+## Price-structure pilot prerequisites
+
+EMA200/current-prior values, ATR-normalized distance and five-bar slope are available with [a dedicated measurement preset](../../../configs/c03_structure_prerequisites.json). The original baseline is unchanged. At the default seed tolerance, EMA200 stabilizes after 1582 contiguous bars and its five-bar slope after 1587; 200 candles supply only the nominal seed.
+
+`python -m tradee context explain` and `python -m tradee structure explain` describe the new measurement contracts. Both support local materialization, summaries, paginated records, snapshots, manifests and lineage. See [C04 operation](../../components/c04/C04_IMPLEMENTATION.md) and [C05 operation](../../components/c05/C05_IMPLEMENTATION.md). These prerequisites do not add pilot strategies to the strategy selector.

@@ -14,16 +14,20 @@ APP_ID = 0x54524433
 
 
 class FeatureStore:
+    APP_ID = APP_ID
+    ENGINE = FeatureEngine
+    COMPONENT = 'C03'
+
     def __init__(self, path='data/c03.sqlite3', forbidden_paths=(), clock=time.time):
         if str(path)==':memory:' or Path(path).resolve() in {Path(p).resolve() for p in forbidden_paths}:
-            raise ValidationError('C03 requires its own persistent database')
+            raise ValidationError(f'{self.COMPONENT} requires its own persistent database')
         self.path,self.clock = str(path),clock
         Path(path).parent.mkdir(parents=True,exist_ok=True)
         with self.connection() as db:
             tables = db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
             app,version = db.execute('PRAGMA application_id').fetchone()[0],db.execute('PRAGMA user_version').fetchone()[0]
-            if (tables and app!=APP_ID) or version not in (0,1):
-                raise ValidationError('Not a supported C03 database')
+            if (tables and app!=self.APP_ID) or version not in (0,1):
+                raise ValidationError(f'Not a supported {self.COMPONENT} database')
             db.executescript('''
                 CREATE TABLE IF NOT EXISTS runs(hash TEXT PRIMARY KEY, document TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS lineage(hash TEXT PRIMARY KEY, document TEXT NOT NULL);
@@ -33,7 +37,7 @@ class FeatureStore:
                 CREATE TABLE IF NOT EXISTS checkpoints(run_hash TEXT PRIMARY KEY REFERENCES runs(hash),
                     document TEXT NOT NULL, checksum TEXT NOT NULL);
             ''')
-            db.execute(f'PRAGMA application_id={APP_ID}')
+            db.execute(f'PRAGMA application_id={self.APP_ID}')
             db.execute('PRAGMA user_version=1')
 
     @contextmanager
@@ -125,10 +129,10 @@ class FeatureStore:
         if type(batch_size) is not int or batch_size<1:
             raise ValidationError('Batch size must be positive')
         dataset=market.dataset(dataset_hash)
-        engine=FeatureEngine(dataset,config)
+        engine=self.ENGINE(dataset,config)
         checkpoint=self.load_checkpoint(engine.manifest.digest)
         if checkpoint:
-            engine=FeatureEngine.restore(dataset,config,checkpoint)
+            engine=self.ENGINE.restore(dataset,config,checkpoint)
         pending=[]
         count=0
         for event in market.replay(dataset_hash,after_id=engine.cursor[1] if engine.cursor else None):

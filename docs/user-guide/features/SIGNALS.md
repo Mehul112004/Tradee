@@ -2,6 +2,8 @@
 
 **Location:** Signals, `/signals`. **Access:** viewer. **Prerequisites:** a selected C14 session with at least one recorded cycle/candidate. Historical detector/backtest results alone do not create this prospective ledger.
 
+Quick **[Analysis sessions](ANALYSIS_SESSIONS.md)** keep their own **Detected setups** list and optional Telegram observations. Those observations remain on the analysis page and do not automatically become C14 candidates, admitted paper trades or rows in this ledger. See [the flow/storage reference](../../dashboard/ANALYSIS_FLOW.md).
+
 ## Investigate a candidate
 
 1. Choose the workspace/session and current or recorded [knowledge cursor](HISTORICAL_REPLAY.md).

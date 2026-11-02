@@ -1,0 +1,10 @@
+{
+  "timeframes": ["15m", "1h", "4h"],
+  "range_bars": 20,
+  "pivot_left": 2,
+  "pivot_right": 2,
+  "max_pivots_per_side": 20,
+  "previous_day": true,
+  "previous_week": true,
+  "candle_grace_ms": 5000
+}

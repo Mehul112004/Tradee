@@ -210,6 +210,8 @@ Every feature declares units, lookback, warm-up, dependency datasets, missingnes
 
 ### C04 — Market-state context
 
+**Implementation update — 1 November 2026:** Continuous EMA200 trend, volatility, participation and optional quote measurements, same-prefix timeframe context, persistence and CLI are implemented as pilot prerequisites. Strategy gates, fitted regimes and broader context remain future work. See [scope](../components/c04/C04_IMPLEMENTATION.md) and [verification](../components/c04/C04_VERIFICATION.md).
+
 **Depends on / receives from:** D: [C02](#c02--point-in-time-market-data-and-deterministic-replay), [C03](#c03--feature-engine).
 
 **Used by / supplies to:** O: [C08](#c08--candidate-generation-and-hypothesis-registry), [C10](#c10--conditional-net-expectancy-and-uncertainty).
@@ -239,6 +241,8 @@ An event module can consume official [FOMC calendars](https://www.federalreserve
 **Acceptance:** compare the same base policy with and without a context gate. Report net return, expectancy, risk and lost opportunities. A filter that raises average R while removing most useful trades may not improve the policy.
 
 ### C05 — Price structure, support/resistance and level construction
+
+**Implementation update — 1 November 2026:** Complete previous UTC day/week levels, prior ranges, delayed-confirmation swings and exact relationships are implemented with immutable snapshots and replay/persistence. Pilot sweep/rejection/retest strategies remain undefined. See [scope](../components/c05/C05_IMPLEMENTATION.md) and [verification](../components/c05/C05_VERIFICATION.md).
 
 **Depends on / receives from:** D: [C02](#c02--point-in-time-market-data-and-deterministic-replay), [C03](#c03--feature-engine).
 

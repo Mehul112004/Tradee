@@ -32,6 +32,15 @@ Playwright uses `python` from the active environment; `TRADEE_PYTHON` can explic
 
 For actual public Binance connectivity use `python -m tradee.check_connectivity`. For actual Telegram delivery use [the explicit Telegram command](TELEGRAM.md). These are separate tests; do not interpret mocked HTTP acceptance as real delivery.
 
+To verify the quick analysis path independently of the full research suite:
+
+```sh
+PYTHON_DOTENV_DISABLED=1 python -m unittest backend.tests.test_analysis backend.tests.test_analysis_live -v
+TRADEE_PYTHON=python npm run test:e2e --prefix frontend -- analysis.spec.ts
+```
+
+The Python checks exercise the actual C02 Collector with scripted stream/repair seams, closed-bar detection, saved levels, controls and observational delivery. Browser checks use the existing disposable server. See [the implementation and extension contract](../../dashboard/ANALYSIS_FLOW.md).
+
 ## Common symptoms
 
 | Symptom | Check / action |
@@ -40,7 +49,7 @@ For actual public Binance connectivity use `python -m tradee.check_connectivity`
 | UI shell opens but API requests fail | Start Python API on 8787; Vite only serves frontend/proxies requests |
 | Port already in use | Use the existing intended service or stop its owner; do not start duplicate APIs/Vite instances |
 | Built page missing or stale | Run `npm run build --prefix frontend`; development changes are served by Vite at 5173 |
-| Local recording is empty | Acquire data and create snapshots/research/session artifacts, or use the synthetic demo; GET requests do not fill stores |
+| Local recording is empty | For quick watching, create an Analysis session; the API prepares history and streaming. Advanced views require acquired snapshots/research/paper artifacts or the separate synthetic demo; GET requests do not create them |
 | Job stays queued | Start one worker and verify matching API/worker profile/state paths and heartbeat |
 | Operator button disabled / unauthorized | Set nonempty backend token, restart API, paste matching token in Settings, leave historical cursor and review required confirmation/reason |
 | Empty/invalid job template | Fill actual hashes and full component JSON contracts; empty objects are not a runnable experiment |
@@ -49,7 +58,8 @@ For actual public Binance connectivity use `python -m tradee.check_connectivity`
 | Missing indicators | Materialize compatible features/timeframe with sufficient finalized warm-up; inspect validity/stability |
 | `ready=false` or CLI exit 2 | Read evidence reasons; a completed result can correctly be insufficient, rejected or unresolved |
 | Research result locked | Check final holdout status; do not open final evidence just to bypass a lock |
-| Frozen producer/runtime changed | Create a compatible new counted release; do not rewrite historical hashes |
+| Analysis code changed | Create a new analysis session; no research-release regeneration is required for this quick flow |
+| Frozen research/paper producer/runtime changed | Create compatible new counted research/deployment evidence; do not rewrite historical hashes |
 | Telegram accepted but no phone alert | Notifications are silent; inspect the exact chat/test ID and receipt |
 | Telegram timed out / unknown outcome | Inspect the chat before another test; follow durable reconciliation for strategy notices |
 | Source corrupt/unsupported schema | Stop relevant writes, preserve the evidence and inspect integrity/schema; do not auto-migrate or delete it to hide the error |

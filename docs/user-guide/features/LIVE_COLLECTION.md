@@ -1,6 +1,8 @@
 # Live Binance collection
 
-The collector is a separate Python process that records public Binance WebSocket observations into C02. The browser reads local evidence through the API; it does not maintain the Binance recording connection. Viewer/operator permission does not start or stop this process.
+For **[Analysis sessions](ANALYSIS_SESSIONS.md)**, select Watch live and the API automatically supervises an existing C02 Collector for that session. No separate collector terminal or worker is needed. Pause/stop releases that managed subscription; other sessions or manual collectors may continue recording. See [runtime ownership and data flow](../../dashboard/ANALYSIS_FLOW.md).
+
+The commands below describe the **standalone research/paper collector**, a separate Python process recording public Binance WebSocket observations into C02. The browser reads local evidence through the API and does not own the Binance connection. Viewer/operator permission alone does not start or stop the standalone process.
 
 ## Start
 

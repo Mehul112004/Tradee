@@ -8,6 +8,8 @@ Implemented 21 October 2026. Run everything from the repository root unless a co
 
 Analysis **Watch live** now uses the existing C02 WebSocket Collector/MarketStore, supervised automatically per active analysis subscription. REST supplies initial native history and the collector's one-minute gap/reconnect repair; it is not a live polling fallback. The chart can show forming candles and actual stream health, but strategies consume only complete finalized timeframe aggregates. Pause/stop closes the subscription; other subscriptions/manual collectors may continue recording. Historical scans and the advanced paper runners retain their own workflows.
 
+The [analysis flow reference](ANALYSIS_FLOW.md) documents the exact owner/data/API/storage path and future pilot-detector integration. A backend/core build change requires a new quick analysis session; it does not require a C12 release before exploratory watching. Research-qualified C14 deployment compatibility remains a separate workflow.
+
 ## Repository layout
 
 ```text
