@@ -45,6 +45,11 @@ class PilotEngine:
         d=1 if side=='long' else -1
         return values['crosses']<=2 and d*(price-values['ema200'])>=b
 
+    def ema_slope_ok(self,side,v):
+        if v['slope'] is None: return False
+        value=(1 if side=='long' else -1)*v['slope']
+        return value>0 if self.config.context_profile=='balanced_v2' else value>=dec('.01')
+
     def confirmation(self, row, v, side, atr):
         if row['high']<=row['low'] or v['rv'] is None or v['rv']<1 or v['tr']>self.g('2.5',atr): return False
         body=row['close']-row['open']; clv=(row['close']-row['low'])/(row['high']-row['low'])
@@ -111,7 +116,7 @@ class PilotEngine:
         result=[]; atr=prior['atr']; e=prior['ema200']; band=max(self.g('.15',atr),2*self.tick)
         for side in ('long','short'):
             d=1 if side=='long' else -1
-            if not self.allowed(side,'ema_trend') or self.config.regime_filter and (v['crosses']>2 or v['slope'] is None or d*v['slope']<dec('.01')): continue
+            if not self.allowed(side,'ema_trend') or self.config.regime_filter and (v['crosses']>2 or not self.ema_slope_ok(side,v)): continue
             separated=True; far=False
             for i in range(len(history)-9,len(history)-1):
                 r,a,p=history[i],values[i],values[i-1]
@@ -196,7 +201,7 @@ class PilotEngine:
         else:
             depth=x-p['low'] if d==1 else p['high']-x
             if depth>self.g('.35',atr) or d*(row['close']-x)<=-b or abs(v['ema200']-x)>self.g('.15',atr): return 'reject','ema_failed'
-            if self.config.regime_filter and (v['slope'] is None or d*v['slope']<dec('.01')): return 'reject','ema_slope_failed'
+            if self.config.regime_filter and not self.ema_slope_ok(p['side'],v): return 'reject','ema_slope_failed'
             strength=d*(row['close']-x)>=p['band'] and d*(row['close']-v['ema200'])>=b
         extra=age==0 or d*(row['close']-(p['seed_high'] if d==1 else p['seed_low']))>b
         aligned=p['mode']=='sweep_range' or self.trend_execution(p['side'],v,b,row['close'])

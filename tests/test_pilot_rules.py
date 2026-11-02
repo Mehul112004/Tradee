@@ -119,6 +119,23 @@ class PublishedGeometry(unittest.TestCase):
 
 
 class CausalContext(unittest.TestCase):
+    def test_balanced_profile_is_fixed_research_variant_and_keeps_dull_veto(self):
+        cfg=PilotConfig(context_profile='balanced_v2'); e=PilotEngine('BTCUSDT','.01',cfg)
+        self.assertTrue(e.ema_slope_ok('long',values(slope=D('.001'))))
+        self.assertFalse(engine().ema_slope_ok('long',values(slope=D('.001'))))
+        self.assertFalse(e.ema_slope_ok('long',values(slope=D('0'))))
+        for changes in ({'geometry_scale':'0.8'},{'dull_filter':False},{'regime_neighbor':'loose'}):
+            with self.assertRaises(ValidationError): PilotConfig(context_profile='balanced_v2',**changes)
+
+    def test_balanced_context_requires_two_hours_and_does_not_enable_opposite_side(self):
+        for profile,expected in [('strict_v1','TRANSITION'),('balanced_v2','TREND_UP')]:
+            c=Context('BTCUSDT','.01',PilotConfig(context_profile=profile))
+            c.hour.push=lambda r:dict(stable=True,atr=D('1'),ema20=D('104'),ema50=D('99'),ema200=D('100'),slope=D('.001'),er=D('.30'))
+            for i in range(8):
+                c.update_hour(row('105','106','104','105',T+i*BAR))
+                if i==3: self.assertEqual(c.state,'TRANSITION')
+            self.assertEqual(c.state,expected)
+
     def test_known_time_exhaustion_displacement_and_consumption(self):
         e=engine(); l=level(); r=row()
         self.assertTrue(e.eligible(l,'long',FAMILIES[0],r,D('1')))

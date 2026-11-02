@@ -70,10 +70,13 @@ class Context:
         self.hour_pivots=[p for p in self.hour_pivots if p['confirmed_ms']+48*HOUR>h['open_ms']+HOUR]
         self.box=None
         ah=v['atr']; last=list(self.hour_rows)[-24:]
+        balanced=self.config.context_profile=='balanced_v2'
         if ah and len(last)==24:
             lo=min(r['low'] for r in last); hi=max(r['high'] for r in last)
             def edge(side, price):
-                anchors=sorted(p['anchor_ms'] for p in self.hour_pivots if p['side']==side and p['anchor_ms']>=last[0]['open_ms'] and abs(p['price']-price)<=dec('.25')*self.config.scale*ah and p['known_ms']<=h['available_ms'])
+                earliest=h['open_ms']-47*HOUR if balanced else last[0]['open_ms']
+                tolerance=dec('.50' if balanced else '.25')
+                anchors=sorted(p['anchor_ms'] for p in self.hour_pivots if p['side']==side and p['anchor_ms']>=earliest and abs(p['price']-price)<=tolerance*self.config.scale*ah and p['known_ms']<=h['available_ms'])
                 return bool(anchors and anchors[-1]-anchors[0]>=3*HOUR)
             if 4*self.config.scale <= (hi-lo)/ah <= 10*self.config.scale and edge('low',lo) and edge('high',hi):
                 self.box=dict(low=lo,high=hi,atr=ah,mid=(lo+hi)/2,hour_end_ms=h['open_ms']+HOUR)
@@ -82,9 +85,14 @@ class Context:
             'tight':('.40','.20','.012','.004')}[self.config.regime_neighbor]
         raw='TRANSITION'
         if v['stable'] and ah and v['slope'] is not None and v['er'] is not None:
-            if h['close']>v['ema200']+dec('.25')*ah and v['ema20']>v['ema50']>v['ema200'] and (v['ema20']-v['ema50'])/ah>=dec('.25') and v['slope']>=dec(trend_slope) and v['er']>=dec(trend_er): raw='TREND_UP'
-            elif h['close']<v['ema200']-dec('.25')*ah and v['ema20']<v['ema50']<v['ema200'] and (v['ema50']-v['ema20'])/ah>=dec('.25') and v['slope']<=-dec(trend_slope) and v['er']>=dec(trend_er): raw='TREND_DOWN'
-            elif v['er']<=dec(range_er) and abs(v['slope'])<=dec(range_slope) and self.box: raw='HEALTHY_RANGE'
+            up_stack=v['ema20']>v['ema50'] and (balanced or v['ema50']>v['ema200'])
+            down_stack=v['ema20']<v['ema50'] and (balanced or v['ema50']<v['ema200'])
+            up_slope=v['slope']>0 if balanced else v['slope']>=dec(trend_slope)
+            down_slope=v['slope']<0 if balanced else v['slope']<=-dec(trend_slope)
+            er_cutoff=dec('.30') if balanced else dec(trend_er)
+            if h['close']>v['ema200']+dec('.25')*ah and up_stack and (v['ema20']-v['ema50'])/ah>=dec('.25') and up_slope and v['er']>=er_cutoff: raw='TREND_UP'
+            elif h['close']<v['ema200']-dec('.25')*ah and down_stack and (v['ema50']-v['ema20'])/ah>=dec('.25') and down_slope and v['er']>=er_cutoff: raw='TREND_DOWN'
+            elif v['er']<=dec(range_er) and abs(v['slope'])<=dec('.01' if balanced else range_slope) and self.box: raw='HEALTHY_RANGE'
         self.raw_count=self.raw_count+1 if raw==self.raw else 1
         self.raw=raw; self.state=raw if raw!='TRANSITION' and self.raw_count>=2 else 'TRANSITION'
 

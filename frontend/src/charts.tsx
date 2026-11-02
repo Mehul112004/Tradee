@@ -262,7 +262,7 @@ export function CandleChart({
       })),
     );
     if (overlay) {
-      for (const key of ["ema20", "ema50", "vwap_utc_session"]) {
+      for (const key of ["ema20", "ema50", "ema200", "vwap_utc_session"]) {
         const unique = new Map<number, number | null>();
         for (const f of data.features || []) {
           const v = f.values?.[key];
@@ -286,7 +286,9 @@ export function CandleChart({
                 ? "#b8a5ff"
                 : key === "ema50"
                   ? "#e9b675"
-                  : "#64b8ee",
+                  : key === "ema200"
+                    ? "#43caaa"
+                    : "#64b8ee",
             lineWidth: 1,
             title: key,
           });

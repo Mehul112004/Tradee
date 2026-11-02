@@ -111,10 +111,11 @@ def state_exit(plan,state):
     return None
 
 
-def model_trade(plan,book,states,settlements,blackouts,execution,*,state_times=None):
+def model_trade(plan,book,states,settlements,blackouts,execution,*,state_times=None,audit_states=None,audit_times=None):
     p=plan; d=1 if p['side']=='long' else -1; start=p['end_ms']; a=dec(p['atr']); risk0=dec(p['reference_risk'])
     s,t=dec(p['stop']),dec(p['target']); fee=dec(execution['fee_each_side']); slip=dec(execution['slippage_bps_each_side'])/10000
     stimes=state_times if state_times is not None else [x['end_ms'] for x in states]; ftimes=[f[0] for f in settlements]
+    if audit_states is not None and audit_times is None: audit_times=[x['end_ms'] for x in audit_states]
     result=dict(plan=p,status='no_entry',reason=None,net_r=None,strict_net_r=None,mature=False,marks=[])
     entered=None; estimate=None; entry_ms=None; mfe=dec(0); expected=start; last_state=None; running=dec(0); funding_value=dec(0)
     for minute in book.window(p['symbol'],start,start+p['max_hold_ms']+240000):
@@ -123,6 +124,8 @@ def model_trade(plan,book,states,settlements,blackouts,execution,*,state_times=N
             result.update(status='unresolved' if entered is not None else 'no_entry',reason='minute_gap'); return jsonable(result)
         expected=opened+60000
         state=state_at(states,stimes,when)
+        audit=state_at(audit_states,audit_times,when) if audit_states is not None else state
+        regime='UNKNOWN' if not audit else 'DULL' if audit['dull'] else 'SHOCK' if audit['shock'] else audit['state']
         if entered is None:
             if l<=min(s,t) or h>=max(s,t): result['reason']='level_hit_before_entry'; return result
             if when<start+execution['entry_delay_seconds']*1000: continue
@@ -143,7 +146,7 @@ def model_trade(plan,book,states,settlements,blackouts,execution,*,state_times=N
             running=d*(c-entered)-entry_fee
             result.update(status='open_modeled',entry_ms=when,entry=entered,entry_mid=c,entry_risk=actual_risk,
                 expected_stopped_loss=estimate['stopped_loss'],entry_fee=entry_fee)
-            result['marks'].append(dict(at_ms=when,pnl=running,price=c,regime='DULL' if state['dull'] else state['state']))
+            result['marks'].append(dict(at_ms=when,pnl=running,price=c,regime=regime,strategy_regime=state['state']))
             last_state=state['end_ms']; continue
         stop_hit=l<=s if d==1 else h>=s; target_hit=h>=t if d==1 else l<=t
         if stop_hit and target_hit:
@@ -169,7 +172,7 @@ def model_trade(plan,book,states,settlements,blackouts,execution,*,state_times=N
             result.update(status='modeled_closed',reason=reason,exit_ms=when,exit=fill,net=net,net_r=net/actual_risk,
                 fees=fee*(entered+fill),funding=funding_value)
             running=net
-        result['marks'].append(dict(at_ms=when,pnl=running,price=c,regime='DULL' if state and state['dull'] else 'SHOCK' if state and state['shock'] else state['state'] if state else 'UNKNOWN'))
+        result['marks'].append(dict(at_ms=when,pnl=running,price=c,regime=regime,strategy_regime=state['state'] if state else 'UNKNOWN'))
         if reason: return jsonable(result)
     result.update(status='unresolved' if entered is not None else 'no_entry',reason='data_tail')
     return jsonable(result)
@@ -210,7 +213,7 @@ def walk_forward(cohorts,mode,protocol):
     folds=[]; date=protocol['outer_start']; end=protocol['development_end']; selected_all=[]
     while date<end:
         test_end=min(add_months(date,protocol['test_months']),end); train_start=add_months(date,-protocol['train_months'])
-        variants={scale:cohorts[scale][mode] for scale in protocol['geometry_scales']}
+        variants={scale:cohorts[scale][mode] for scale in protocol.get('selection_variants',protocol['geometry_scales'])}
         training=choose_training(variants,ms(train_start),ms(date),protocol['purge_hours']*HOUR)
         selected=[]
         if training['winner'] is not None:

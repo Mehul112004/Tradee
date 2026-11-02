@@ -38,12 +38,21 @@ def task(directory,output,protocol,calendar,name,config,symbol,scope,code,datase
     if target.exists():
         saved=json.loads(target.read_text())
         if (saved['implementation_hash']!=code or saved['config']!=config or saved['protocol_hash']!=fingerprint(protocol)
-                or saved['calendar_hash']!=fingerprint(calendar) or saved['dataset_hash']!=dataset_hash): raise ValidationError('Comparison cache mismatch; use a new output path')
+                or saved['calendar_hash']!=fingerprint(calendar) or saved['dataset_hash']!=dataset_hash or saved['scope']!=scope): raise ValidationError('Comparison cache mismatch; use a new output path')
         return name,symbol,str(target)
     cfg=PilotConfig(**config); data=detect(directory,symbol,cfg,protocol,scope)
+    audit_path=Path(output)/f'audit-{symbol}.json'
+    if name=='base':
+        audit_path.write_text(json.dumps(dict(implementation_hash=code,dataset_hash=dataset_hash,states=data['states']),separators=(',',':'))+'\n')
+        audit_states=data['states']
+    else:
+        common=json.loads(audit_path.read_text())
+        if common['implementation_hash']!=code or common['dataset_hash']!=dataset_hash: raise ValidationError('Common regime audit belongs to different evidence')
+        audit_states=common['states']
+    audit_times=[s['end_ms'] for s in audit_states]
     book=MinuteBook(directory,protocol['development_end']); settlements=funding(directory,symbol,protocol['warmup_start'],protocol['development_end'])
     blackouts=reconstructed(calendar); stimes=[s['end_ms'] for s in data['states']]
-    trades=[model_trade(p,book,data['states'],settlements,blackouts,protocol['modeled_execution'],state_times=stimes) for p in data['plans']]
+    trades=[model_trade(p,book,data['states'],settlements,blackouts,protocol['modeled_execution'],state_times=stimes,audit_states=audit_states,audit_times=audit_times) for p in data['plans']]
     stresses={}
     if name=='base':
         variants={'fees':dict(fee_each_side='0.00075'),'slippage':dict(slippage_bps_each_side='4',exit_spread_bps='10'),
@@ -52,8 +61,8 @@ def task(directory,output,protocol,calendar,name,config,symbol,scope,code,datase
         # Freeze baseline detector plans. Changed execution eligibility remains explicit.
         for label,changes in variants.items():
             execution=dict(protocol['modeled_execution'],**changes)
-            stresses[label]=[model_trade(p,book,data['states'],settlements,blackouts,execution,state_times=stimes) for p in data['plans']]
-    saved=dict(implementation_hash=code,protocol_hash=fingerprint(protocol),calendar_hash=fingerprint(calendar),dataset_hash=dataset_hash,config=config,
+            stresses[label]=[model_trade(p,book,data['states'],settlements,blackouts,execution,state_times=stimes,audit_states=audit_states,audit_times=audit_times) for p in data['plans']]
+    saved=dict(implementation_hash=code,protocol_hash=fingerprint(protocol),calendar_hash=fingerprint(calendar),dataset_hash=dataset_hash,config=config,scope=scope,
         detection={k:v for k,v in data.items() if k not in ('states','plans')},trades=trades,stresses=stresses)
     target.write_text(json.dumps(saved,separators=(',',':'))+'\n')
     return name,symbol,str(target)
@@ -71,20 +80,23 @@ def main():
         'loose':(PilotConfig(regime_neighbor='loose'),None),'tight':(PilotConfig(regime_neighbor='tight'),None),
         'raw':(PilotConfig(regime_filter=False,dull_filter=False,exhaustion_filter=False),None),
         'raw_range':(PilotConfig(regime_filter=False,dull_filter=False,exhaustion_filter=False),'sweep_range')}
+    configs['balanced']=(PilotConfig(context_profile='balanced_v2'),None)
     sources=audit(args.archives,protocol); dataset_hash=fingerprint(sources)
     manifest=dict(implementation_hash=code,protocol=protocol,calendar_hash=fingerprint(calendar),dataset_hash=dataset_hash,sources=sources,
         git_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),holdout_accessed=False,live_approved=False,
         configs={n:dict(config=c.document(),scope=s) for n,(c,s) in configs.items()},
+        new_recipe_count=62,regime_audit='Common strict-v1 point-in-time labels for every variant; strategy labels retained separately',
         note='Modeled diagnostics only. No-exhaustion removes level episode caps and EMA clean-separation; break/retest timing and attempt/risk controls remain. Stress freezes detector plans, not baseline fills. Unknown historical trial count prevents adjusted significance.')
     manifest['run_id']=fingerprint(manifest); (output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     datasets=defaultdict(list); detections=defaultdict(dict); stress=defaultdict(list)
     with ProcessPoolExecutor(max_workers=args.workers) as pool:
-        futures=[pool.submit(task,args.archives,args.output,protocol,calendar,n,c.document(),s,scope,code,dataset_hash) for n,(c,scope) in configs.items() for s in protocol['symbols']]
-        for f in as_completed(futures):
-            name,symbol,path=f.result(); saved=json.loads(Path(path).read_text())
-            datasets[name]+=saved['trades']; detections[name][symbol]=saved['detection']
-            for label,trades in saved['stresses'].items(): stress[label]+=trades
-            print(json.dumps(dict(completed=name,symbol=symbol,plans=len(saved['trades']))),flush=True)
+        for batch in (['base'],[n for n in configs if n!='base']):
+            futures=[pool.submit(task,args.archives,args.output,protocol,calendar,n,configs[n][0].document(),s,configs[n][1],code,dataset_hash) for n in batch for s in protocol['symbols']]
+            for f in as_completed(futures):
+                name,symbol,path=f.result(); saved=json.loads(Path(path).read_text())
+                datasets[name]+=saved['trades']; detections[name][symbol]=saved['detection']
+                for label,trades in saved['stresses'].items(): stress[label]+=trades
+                print(json.dumps(dict(completed=name,symbol=symbol,plans=len(saved['trades']))),flush=True)
     variants={}; capital={}; controlled={}
     datasets['raw']=[t for t in datasets['raw'] if t['plan']['mode']!='sweep_range']+datasets.pop('raw_range')
     for name,trades in datasets.items():
@@ -93,6 +105,8 @@ def main():
         capital[name]={m:replay_capital(ts) for m,ts in controlled[name].items()}
     stress_report={label:{m:metrics(observation_controls([t for t in trades if t['plan']['mode']==m])) for m in MODES} for label,trades in stress.items()}
     wf_cohorts={scale:controlled[name] for scale,name in [('0.8','geom08'),('1','base'),('1.2','geom12')]}
+    wf_cohorts['balanced_v2']=controlled['balanced']
+    selection_protocol=dict(protocol,selection_variants=['0.8','1','1.2','balanced_v2'])
     # One fixed primary-plan portfolio per confirmation/instrument, before considering outcome labels.
     def bundle(trades):
         grouped=defaultdict(list); result=[]
@@ -105,7 +119,7 @@ def main():
             result.append(primary)
         return observation_controls(result)
     report=dict(manifest=manifest,detection=detections,variants=variants,capital=capital,stress=stress_report,
-        walk_forward={m:walk_forward(wf_cohorts,m,protocol) for m in MODES},
+        walk_forward={m:walk_forward(wf_cohorts,m,selection_protocol) for m in MODES},
         combined_capital=replay_capital(bundle(datasets['base'])),combined_adverse_capital=replay_capital(bundle(stress['combined'])),
         promotion=dict(accepted=False,reasons=['modeled_execution_only','historical_trials_unknown','unattested_reserved_evidence','forward_paper_outstanding']))
     (output/'report.json').write_text(json.dumps(report,indent=2)+'\n')

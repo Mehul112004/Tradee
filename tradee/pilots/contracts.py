@@ -47,6 +47,7 @@ class PilotConfig:
     dull_filter: bool = True
     exhaustion_filter: bool = True
     regime_neighbor: str = 'base'
+    context_profile: str = 'strict_v1'
 
     def __post_init__(self):
         if type(self.version) is not int or self.version != 1: raise ValidationError('Unsupported pilot version')
@@ -56,6 +57,9 @@ class PilotConfig:
         for name in ('regime_filter', 'dull_filter', 'exhaustion_filter'):
             if type(getattr(self, name)) is not bool: raise ValidationError('Explicit filter booleans required')
         if self.regime_neighbor not in ('base', 'loose', 'tight'): raise ValidationError('Unsupported regime neighbor')
+        if self.context_profile not in ('strict_v1','balanced_v2'): raise ValidationError('Unknown context profile')
+        if self.context_profile=='balanced_v2' and (self.geometry_scale!='1' or self.regime_neighbor!='base' or not all((self.regime_filter,self.dull_filter,self.exhaustion_filter))):
+            raise ValidationError('Balanced v2 is one fixed research definition, not an extra search grid')
 
     @property
     def scale(self): return dec(self.geometry_scale)

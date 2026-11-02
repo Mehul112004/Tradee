@@ -69,6 +69,15 @@ class ModeledExecution(unittest.TestCase):
         r=model_trade(plan(),Book([minute(T,'100','100.1','99.9','100'),minute(T+120000,'100','100.1','99.9','100')]),states(),FUND,[],EXEC)
         self.assertEqual(r['status'],'unresolved'); self.assertEqual(r['reason'],'minute_gap'); self.assertIn('entry_ms',r)
 
+    def test_common_regime_audit_cannot_be_relabelled_by_strategy_context(self):
+        rows=[minute(T,'100','100.1','99.9','100'),minute(T+60000,'100','105.2','99.9','105.1')]
+        audit=[dict(s,state='TRANSITION') for s in states()]
+        r=model_trade(plan(),Book(rows),states(),FUND,[],EXEC,audit_states=audit)
+        self.assertEqual(r['status'],'modeled_closed')
+        self.assertEqual({m['regime'] for m in r['marks']},{'TRANSITION'})
+        self.assertEqual({m['strategy_regime'] for m in r['marks']},{'TREND_UP'})
+        self.assertEqual(D(metrics([r])['time_in_regime_net_r']['TRANSITION']),D(r['net_r']))
+
 
 class TemporalSelection(unittest.TestCase):
     def trade(self,end,net,status='modeled_closed'):
