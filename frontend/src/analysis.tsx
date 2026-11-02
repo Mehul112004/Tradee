@@ -614,8 +614,11 @@ export function Analysis() {
                       )}
                       <p className="muted">
                         {market.contiguous_bars} consecutive candles available.
-                        EMA pullback requires 397. Last candle closed{" "}
-                        <Time value={market.last_close_ms} />.{" "}
+                        {market.pilot
+                          ? " Structural pilots require stable execution and hourly EMA200 context. "
+                          : " EMA pullback requires 397. "}
+                        Last candle closed <Time value={market.last_close_ms} />
+                        .{" "}
                         {market.stale
                           ? market.message
                           : historical

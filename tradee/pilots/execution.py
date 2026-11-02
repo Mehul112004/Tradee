@@ -1,5 +1,6 @@
 """Strict qualification and explicit modeled costs; no alert is a fill."""
 from .contracts import BAR, DAY, HOUR, FAMILIES, dec, jsonable
+from tradee.c01.domain import fingerprint
 
 
 def costs(plan, bid, ask, *, fee='.0005', slippage_bps='2', exit_spread_bps='5'):
@@ -85,4 +86,5 @@ def qualify(plan, evidence, now_ms, *, context=None, purpose='entry'):
             d=1 if plan['side']=='long' else -1; mid=(dec(q['ask'])+dec(q['bid']))/2
             if d*(mid-context.values[-1]['ema200'])<dec(plan['b']): reasons.append('ema_reclaim_lost')
     return jsonable(dict(qualified=not reasons,reasons=sorted(set(reasons)),estimate=estimate,
+                        evidence_hash=fingerprint(jsonable(evidence)),evidence=evidence,
                         assessed_ms=now_ms,entry_not_before_ms=plan['detected_ms']+30000,live_approved=False))

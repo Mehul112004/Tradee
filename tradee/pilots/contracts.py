@@ -52,6 +52,7 @@ class PilotConfig:
         if type(self.version) is not int or self.version != 1: raise ValidationError('Unsupported pilot version')
         if dec(self.geometry_scale) not in (dec('.8'), dec('1'), dec('1.2')):
             raise ValidationError('Only preregistered geometry neighbors are supported')
+        object.__setattr__(self,'geometry_scale',format(dec(self.geometry_scale).normalize(),'f'))
         for name in ('regime_filter', 'dull_filter', 'exhaustion_filter'):
             if type(getattr(self, name)) is not bool: raise ValidationError('Explicit filter booleans required')
         if self.regime_neighbor not in ('base', 'loose', 'tight'): raise ValidationError('Unsupported regime neighbor')
@@ -75,7 +76,7 @@ def candle(row, interval=BAR):
     if not r['low'] <= min(r['open'], r['close']) <= max(r['open'], r['close']) <= r['high']:
         raise ValidationError('Invalid pilot candle envelope')
     values = {float(r[k]): r[k] for k in ('open', 'high', 'low', 'close')}
-    if len(values) != len({r[k] for k in ('open', 'high', 'low', 'close')}) or not all(math.isfinite(v) for v in values):
+    if (len(values) != len({r[k] for k in ('open', 'high', 'low', 'close')}) or not all(math.isfinite(v) and v>0 for v in values)):
         raise ValidationError('Source price distinctions lost in float64')
     r['available_ms'] = row.get('available_ms', row['open_ms'] + interval)
     if type(r['available_ms']) is not int or r['available_ms'] < row['open_ms'] + interval:

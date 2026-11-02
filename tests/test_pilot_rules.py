@@ -126,6 +126,13 @@ class CausalContext(unittest.TestCase):
             changed=dict(l,**update); self.assertFalse(e.eligible(changed,'long',FAMILIES[0],r,D('1')))
         e.consume([l],'long',r,FAMILIES[0]); self.assertFalse(e.eligible(l,'long',FAMILIES[0],r,D('1')))
 
+    def test_pending_ema_and_level_attempt_can_coexist_without_a_fake_level(self):
+        e=engine(); r=row(); e.pending=[e.base(FAMILIES[1],'ema_trend','long',r,D('1'))]
+        self.assertIsNone(e.pending[0]['level'])
+        self.assertTrue(e.eligible(level(),'long',FAMILIES[0],r,D('1')))
+        e.pending.append(e.base(FAMILIES[0],'sweep_trend','long',r,D('1'),level()))
+        self.assertFalse(e.eligible(level(),'long',FAMILIES[0],r,D('1')))
+
     def test_immutable_birth_scale_and_two_outside_episode_reset(self):
         c=Context('BTCUSDT','.01',PilotConfig()); l=level(); c.levels=[l]
         for i,lo in enumerate(('99.9','100.5','99.9')): c.update_behavior(row('100.6','101',lo,'100.8',T+i*BAR))
@@ -139,6 +146,16 @@ class CausalContext(unittest.TestCase):
         rows=[row('100',h,'99','100',T+i*BAR) for i,h in enumerate(('101','102','103','102','101'))]
         self.assertEqual(pivot(rows[:4]),[]); self.assertEqual(pivot(rows)[0]['anchor_ms'],T+2*BAR)
         rows[-1]['high']=D('103'); self.assertEqual(pivot(rows),[])
+
+    def test_native_pivot_matches_c05_confirmation_and_receipt_oracle(self):
+        from tradee.c05 import reference_levels,StructureConfig
+        rows=[row('100',h,'99','100',T+i*BAR) for i,h in enumerate(('101','102','103','102','101'))]
+        rows[-1]['available_ms']+=1000
+        actual=pivot(rows)[0]
+        expected=next(l for l in reference_levels([jsonable(r) for r in rows],BAR,as_of_ms=rows[-1]['available_ms'],
+            config=StructureConfig(previous_week=False))['levels'] if l['kind']=='swing' and l['side']=='high')
+        self.assertEqual(actual['price'],D(expected['price'])); self.assertEqual(actual['anchor_ms'],expected['anchor_ms'])
+        self.assertEqual(actual['confirmed_ms']+BAR,expected['confirmed_ms']); self.assertEqual(actual['known_ms'],expected['known_ms'])
 
     def test_c03_incremental_sma_seed_and_slope_match_independent_batch(self):
         m=Measurements(); rows=[]
@@ -171,7 +188,7 @@ class CausalContext(unittest.TestCase):
     def test_warmup_cannot_emit_and_bad_inputs_fail(self):
         e=PilotEngine('BTCUSDT','.01')
         self.assertEqual(list(e.run([jsonable(row(t=T+i*BAR)) for i in range(50)])),[])
-        for change in ({'close':'NaN'},{'open_ms':T+1},{'high':'98'},{'available_ms':T+BAR-1}):
+        for change in ({'close':'NaN'},{'open_ms':T+1},{'high':'98'},{'available_ms':T+BAR-1},dict.fromkeys(('open','high','low','close'),'1e-1000')):
             with self.assertRaises(ValidationError): candle(dict(jsonable(row()),**change))
 
 

@@ -54,7 +54,7 @@ class PilotEngine:
         if not dec('.5')<=atr/level['atr']<=2 or level['known_ms']>row['open_ms']-3*BAR: return False
         if self.config.exhaustion_filter and level['prior_touches']>2: return False
         key=(level['id'],side,row['open_ms']//DAY)
-        if key in self.attempts or any(p.get('level',{}).get('id')==level['id'] and p['side']==side for p in self.pending): return False
+        if key in self.attempts or any((p.get('level') or {}).get('id')==level['id'] and p['side']==side for p in self.pending): return False
         if family==FAMILIES[0] and level['prior_accepted_down' if side=='long' else 'prior_accepted_up']: return False
         if family==FAMILIES[2] and level['prior_accepted_up' if side=='long' else 'prior_accepted_down']: return False
         return True

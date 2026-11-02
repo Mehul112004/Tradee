@@ -31,9 +31,8 @@ def add_months(date,n):
 
 
 def implementation_hash():
-    root=Path(__file__).parent; h=hashlib.sha256()
-    for p in sorted(root.glob('*.py')): h.update(p.name.encode()); h.update(p.read_bytes())
-    return h.hexdigest()
+    from tradee.c06.engine import code_hash
+    return code_hash()  # Includes C03/C05 primitives and every imported core implementation.
 
 
 class MinuteBook:

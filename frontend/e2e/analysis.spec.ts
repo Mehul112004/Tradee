@@ -150,3 +150,34 @@ test("synthetic evidence stays separate and analysis fits mobile", async ({
     fullPage: true,
   });
 });
+
+test("structural pilots prepare hourly context automatically and retain pattern-only history", async ({
+  page,
+}) => {
+  await authorize(page);
+  await page.getByRole("button", { name: "New analysis session" }).click();
+  await page.getByLabel("Session name").fill("Structural pilot walkthrough");
+  await page.getByLabel("What would you like to do?").selectOption("history");
+  await page.getByLabel("Historical candles to scan").selectOption("100");
+  await page.getByLabel("Strategy timeframe").selectOption("1m");
+  await page.getByLabel("Liquidity sweep", { exact: false }).check();
+  await page.getByLabel("200 EMA rejection", { exact: false }).check();
+  await page.getByLabel("Key-level retest", { exact: false }).check();
+  await expect(page.getByLabel("Strategy timeframe")).toHaveValue("15m");
+  await expect(page.getByLabel("Strategy timeframe")).toBeDisabled();
+  await page.getByLabel("Range breakout", { exact: false }).uncheck();
+  await page.getByRole("button", { name: "Scan historical setups" }).click();
+  await expect(page.getByText(/complete hourly candles prepared/)).toBeVisible({
+    timeout: 30000,
+  });
+  await expect(
+    page.getByText(/Historical scans measure patterns only/),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: /BTCUSDT actual closed OHLCV/ }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: "test-results/structural-pilots-history.png",
+    fullPage: true,
+  });
+});

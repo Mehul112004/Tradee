@@ -11,8 +11,9 @@ from tradee.pilots.contracts import DAY
 
 class PilotSources:
     def __init__(self,path,clock):
-        self.calendar=CalendarCache(path); self.clock=clock
+        self.calendar=CalendarCache(path,clock=clock); self.clock=clock
         self.offset=None; self.offset_at=0; self.calendar_value=None
+        self.clock_observation=None
         self.thread=None; self.next_ms=0
 
     def prepare(self,now):
@@ -27,6 +28,7 @@ class PilotSources:
                 offset=server-(before+after)//2
                 if type(server) is int and 0<=after-before<=1000 and abs(offset)+(after-before)/2<=1000:
                     self.offset,self.offset_at=offset,after
+                    self.clock_observation=dict(source='https://fapi.binance.com/fapi/v1/time',server_ms=server,request_ms=before,received_ms=after)
                 else: self.offset=None
             except Exception: self.offset=None
             self.calendar_value=self.calendar.view(int(self.clock()*1000))
@@ -36,6 +38,7 @@ class PilotSources:
         self.prepare(now)
         value=feed.execution_evidence(plan['symbol'],plan['end_ms']) if feed and hasattr(feed,'execution_evidence') else {}
         return dict(value,metadata=metadata,calendar=self.calendar_value if self.calendar_value and now-self.calendar_value['refreshed_ms']<=DAY else None,
+                    clock_observation=self.clock_observation,
                     clock_offset_ms=self.offset if now-self.offset_at<300000 else None)
 
     def status(self,now):

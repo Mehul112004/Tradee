@@ -14,6 +14,12 @@ DAY = 86400000
 WEEK = 7 * DAY
 
 
+def strict_swing_extreme(value,neighbors,side):
+    """Shared exact strict-extremum rule; callers own contiguous confirmation windows."""
+    if side not in ('high','low') or not neighbors: raise ValidationError('Swing side and neighbors required')
+    return value>max(neighbors) if side=='high' else value<min(neighbors)
+
+
 def _contiguous(rows, interval):
     return bool(rows) and all(b['open_ms'] == a['open_ms'] + interval for a, b in zip(rows, rows[1:]))
 
@@ -108,7 +114,7 @@ def reference_levels(rows, interval, *, as_of_ms=None, instrument_id='display', 
                 continue
             value = Decimal(rows[i][side])
             neighbors = [Decimal(r[side]) for j, r in enumerate(window) if j != left]
-            if (value > max(neighbors) if side == 'high' else value < min(neighbors)):
+            if strict_swing_extreme(value,neighbors,side):
                 # Price belongs to the pivot; all neighbors are confirmation evidence.
                 add('swing', side, [rows[i]], rows[i]['open_ms'], rows[i+right]['open_ms'] + interval, interval)
                 level = result[-1]

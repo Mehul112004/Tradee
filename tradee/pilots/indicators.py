@@ -3,6 +3,7 @@ from collections import deque
 from statistics import median
 
 from tradee.c03.rolling import Smoother
+from tradee.c05.levels import strict_swing_extreme
 from .contracts import dec
 
 
@@ -60,7 +61,7 @@ def pivot(rows):
     w = list(rows)[-5:]; result=[]
     for side in ('high','low'):
         x=w[2][side]; others=[r[side] for i,r in enumerate(w) if i != 2]
-        if x > max(others) if side == 'high' else x < min(others):
+        if strict_swing_extreme(x,others,side):
             result.append(dict(side=side, price=x, anchor_ms=w[2]['open_ms'],
                                confirmed_ms=w[-1]['open_ms'], known_ms=max(r['available_ms'] for r in w)))
     return result

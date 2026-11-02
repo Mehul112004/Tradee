@@ -1,8 +1,13 @@
 from copy import deepcopy
 from decimal import Decimal as D
+import calendar
+import json
+from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
 
-from tradee.pilots.calendar import blackout,parse_bls,parse_fed,reconstructed,timestamp
+from tradee.pilots.calendar import CalendarCache,blackout,parse_bls,parse_fed,reconstructed,timestamp
 from tradee.pilots.contracts import BAR,HOUR,DAY,dec
 from tradee.pilots.research import choose_training,metrics,model_trade,ms,walk_forward
 from tradee.pilots.comparisons import observation_controls
@@ -109,6 +114,20 @@ class Calendars(unittest.TestCase):
     def test_unverified_calendar_markup_cannot_claim_empty_coverage(self):
         for fn in (parse_bls,parse_fed):
             with self.assertRaises(Exception): fn('<html>no supported events</html>',2024,0)
+
+    def test_calendar_knowledge_uses_final_receipt_and_retains_raw_sources(self):
+        now=ms('2024-01-01'); clock=[now]
+        bls=''.join(f'Monday, {calendar.month_name[m]} 01, 2024 08:30 AM {title} for fixture ' for m in range(1,11) for title in ('Consumer Price Index','Employment Situation'))
+        fed='2024 FOMC Meetings'+''.join(f'<div class="fomc-meeting__month">{calendar.month_name[m]}</div><div class="fomc-meeting__date">1-2</div>' for m in range(1,9))
+        def get(url,limit):
+            clock[0]+=1000; return (bls if 'bls.gov' in url else fed).encode()
+        with tempfile.TemporaryDirectory() as root,patch('tradee.pilots.calendar.get',side_effect=get) as fetch:
+            cache=CalendarCache(Path(root)/'latest.json',clock=lambda:clock[0]/1000)
+            result=cache.view(now)
+            self.assertEqual(result['refreshed_ms'],now+2000)
+            self.assertTrue(all(e['known_ms']==now+2000 for e in result['blackouts']))
+            self.assertEqual(len(list(Path(root).glob('calendar-source-*.html'))),2)
+            self.assertEqual(cache.view(now+3000),result); self.assertEqual(fetch.call_count,2)
 
 
 if __name__=='__main__': unittest.main()
